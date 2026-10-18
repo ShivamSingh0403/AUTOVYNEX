@@ -63,3 +63,24 @@ class CarComparison(models.Model):
 
     def __str__(self):
         return f"Comparison session {self.session_key[:8]}"
+
+
+class CarValuationRecord(models.Model):
+    user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='car_valuations')
+    make_name = models.CharField(max_length=80)
+    model_name = models.CharField(max_length=80)
+    year = models.PositiveIntegerField()
+    mileage = models.PositiveIntegerField(help_text="Odometer in KM")
+    fuel_type = models.CharField(max_length=30)
+    transmission = models.CharField(max_length=30)
+    condition = models.CharField(max_length=30, choices=[('excellent', 'Excellent'), ('good', 'Good'), ('fair', 'Fair')], default='good')
+    estimated_price_min = models.DecimalField(max_digits=12, decimal_places=2, help_text="Lower bound estimate in INR")
+    estimated_price_max = models.DecimalField(max_digits=12, decimal_places=2, help_text="Upper bound estimate in INR")
+    is_estimate_only = models.BooleanField(default=True, help_text="Market estimate only; not a guaranteed purchase offer")
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"Valuation: {self.year} {self.make_name} {self.model_name} (₹{self.estimated_price_min:,.0f} - ₹{self.estimated_price_max:,.0f})"

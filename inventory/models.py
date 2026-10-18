@@ -45,7 +45,16 @@ class Brand(models.Model):
         return self.name
 
 
+Category = ProductCategory
+
+
 class Product(models.Model):
+    CONDITION_CHOICES = [
+        ('new', 'Brand New (OEM)'),
+        ('refurbished', 'Factory Refurbished'),
+        ('oem_surplus', 'OEM Surplus'),
+    ]
+
     name = models.CharField(max_length=220)
     slug = models.SlugField(max_length=250, unique=True, blank=True)
     sku = models.CharField(max_length=60, unique=True)
@@ -54,6 +63,7 @@ class Product(models.Model):
     price = models.DecimalField(max_digits=10, decimal_places=2, help_text="Price in INR (₹)")
     discount_price = models.DecimalField(max_digits=10, decimal_places=2, blank=True, null=True, help_text="Discounted price if on sale")
     stock_quantity = models.PositiveIntegerField(default=10)
+    condition = models.CharField(max_length=30, choices=CONDITION_CHOICES, default='new')
     short_description = models.CharField(max_length=300)
     full_description = models.TextField()
     specifications = models.JSONField(default=dict, blank=True, help_text="Key-value pairs of technical specs")
@@ -94,6 +104,20 @@ class Product(models.Model):
 
     def __str__(self):
         return f"{self.name} ({self.sku})"
+
+
+class ProductImage(models.Model):
+    product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='gallery_images')
+    image = models.ImageField(upload_to='products/gallery/')
+    is_primary = models.BooleanField(default=False)
+    alt_text = models.CharField(max_length=200, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-is_primary', 'created_at']
+
+    def __str__(self):
+        return f"Image for {self.product.name}"
 
 
 class ProductFitment(models.Model):

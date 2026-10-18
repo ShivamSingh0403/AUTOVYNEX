@@ -26,8 +26,24 @@ class ServiceProvider(models.Model):
             self.slug = slugify(f"{self.name}-{self.city}")
         super().save(*args, **kwargs)
 
+class ServiceCategory(models.Model):
+    name = models.CharField(max_length=100, unique=True)
+    slug = models.SlugField(max_length=120, unique=True, blank=True)
+    icon_name = models.CharField(max_length=50, default='wrench', help_text="Lucide icon identifier")
+    description = models.TextField(blank=True)
+    sort_order = models.PositiveIntegerField(default=0)
+
+    class Meta:
+        verbose_name_plural = 'Service Categories'
+        ordering = ['sort_order', 'name']
+
+    def save(self, *args, **kwargs):
+        if not self.slug:
+            self.slug = slugify(self.name)
+        super().save(*args, **kwargs)
+
     def __str__(self):
-        return f"{self.name} ({self.city}) ★{self.rating}"
+        return self.name
 
 
 class Service(models.Model):

@@ -78,7 +78,54 @@ def offers(request):
 
 
 def car_valuation(request):
-    return render(request, 'core/car_valuation.html')
+    valuation_record = None
+    if request.method == 'POST':
+        make_name = request.POST.get('make_name', 'Maruti Suzuki').strip()
+        model_name = request.POST.get('model_name', 'Swift').strip()
+        year = int(request.POST.get('year', 2022))
+        mileage = int(request.POST.get('mileage', 35000))
+        fuel_type = request.POST.get('fuel_type', 'Petrol').strip()
+        transmission = request.POST.get('transmission', 'Manual').strip()
+        condition = request.POST.get('condition', 'good').strip()
+        orig_price = float(request.POST.get('original_price', 1000000))
+
+        # Algorithmic depreciation estimation
+        age = max(0, 2026 - year)
+        depreciation_rate = min(0.70, 0.15 + (age * 0.08) + (mileage / 100000 * 0.10))
+        if condition == 'excellent':
+            depreciation_rate -= 0.05
+        elif condition == 'fair':
+            depreciation_rate += 0.08
+
+        base_val = orig_price * (1 - depreciation_rate)
+        min_val = round(base_val * 0.94, -2)
+        max_val = round(base_val * 1.06, -2)
+
+        from used_cars.models import CarValuationRecord
+        valuation_record = CarValuationRecord.objects.create(
+            user=request.user if request.user.is_authenticated else None,
+            make_name=make_name,
+            model_name=model_name,
+            year=year,
+            mileage=mileage,
+            fuel_type=fuel_type,
+            transmission=transmission,
+            condition=condition,
+            estimated_price_min=min_val,
+            estimated_price_max=max_val,
+            is_estimate_only=True
+        )
+
+        from django.http import JsonResponse
+        if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+            return JsonResponse({
+                'status': 'success',
+                'min_price': float(min_val),
+                'max_price': float(max_val),
+                'disclaimer': 'Estimated fair market value range. Not a guaranteed purchase offer.'
+            })
+
+    return render(request, 'core/car_valuation.html', {'valuation_record': valuation_record})
 
 
 def fuel_calculator(request):

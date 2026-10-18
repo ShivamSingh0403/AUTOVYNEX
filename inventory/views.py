@@ -126,6 +126,8 @@ def product_detail(request, slug):
             fitment_record = ProductFitment.objects.filter(product=product, variant=active_vehicle).first()
             if fitment_record:
                 fitment_status = fitment_record.fitment_status
+            elif not ProductFitment.objects.filter(product=product).exists():
+                fitment_status = 'unverified'
             else:
                 fitment_status = 'incompatible'
         except VehicleVariant.DoesNotExist:

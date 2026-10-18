@@ -21,11 +21,16 @@ def missing_part_request(request):
         contact_email = request.POST.get('contact_email', '').strip()
         contact_phone = request.POST.get('contact_phone', '').strip()
         contact_pref = request.POST.get('contact_preference', 'whatsapp')
-        image = request.FILES.get('damaged_part_image')
-
-        if not (part_name and vehicle_details and description and contact_name and contact_phone and contact_email):
-            messages.error(request, "Please fill in all mandatory inquiry and contact fields.")
-            return redirect('enquiries:missing_part_request')
+        image = request.FILES.get('sample_photo')
+        # File validation
+        if image:
+            if image.size > 5 * 1024 * 1024:
+                messages.error(request, "Image file size exceeds the 5MB limit.")
+                return redirect('enquiries:missing_part_request')
+            ext = image.name.split('.')[-1].lower()
+            if ext not in ['jpg', 'jpeg', 'png', 'webp']:
+                messages.error(request, "Invalid image format. Supported formats: JPG, PNG, WEBP.")
+                return redirect('enquiries:missing_part_request')
 
         enquiry = MissingPartEnquiry.objects.create(
             user=request.user if request.user.is_authenticated else None,
@@ -41,6 +46,14 @@ def missing_part_request(request):
             contact_preference=contact_pref,
             damaged_part_image=image,
             status='submitted'
+        )
+
+        from .models import EnquiryStatusHistory
+        EnquiryStatusHistory.objects.create(
+            enquiry=enquiry,
+            status='submitted',
+            notes='Enquiry created and assigned to logistics sourcing queue.',
+            changed_by=request.user if request.user.is_authenticated else None
         )
 
         messages.success(request, f"Your missing part enquiry has been dispatched to logistics! Reference: {enquiry.reference_code}")

@@ -93,3 +93,10 @@ class VehicleVariant(models.Model):
     @property
     def display_name(self):
         return f"{self.model.make.name} {self.model.name} - {self.name} [{self.fuel_type} • {self.transmission} • {self.year_from}-{self.year_to}]"
+
+
+def __getattr__(name):
+    if name == 'CustomerVehicle':
+        from garage.models import CustomerVehicle
+        return CustomerVehicle
+    raise AttributeError(f"module {__name__!r} has no attribute {name!r}")

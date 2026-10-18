@@ -12,7 +12,7 @@ from vehicles.models import VehicleMake, VehicleModel, VehicleVariant
 from inventory.models import ProductCategory, Brand, Product, ProductFitment, InventoryRecord
 from orders.models import Order, OrderItem
 from garage.models import CustomerVehicle, MaintenanceRecord, MaintenanceReminder, VehicleDocument
-from services.models import ServiceProvider, Service, ServiceBooking, InstallationRequest
+from services.models import ServiceCategory, ServiceProvider, Service, ServiceBooking, InstallationRequest
 from enquiries.models import MissingPartEnquiry
 from used_cars.models import UsedCarListing
 from assistance.models import RoadsideAssistanceRequest
@@ -329,7 +329,24 @@ class Command(BaseCommand):
 
         self.stdout.write(self.style.SUCCESS(f"[OK] Product fitments created: {fitment_count} compatibility records active."))
 
-        # 7. Service Providers
+        # 7. Service Categories
+        service_categories_data = [
+            ('General Periodic Servicing', 'general', 'wrench', 'Factory recommended periodic maintenance intervals for trouble-free driving.'),
+            ('Oil & Filter Replacement', 'oil', 'droplets', 'Engine lubricant flush, synthetic oil change, and OEM filter replacement.'),
+            ('Brake Inspection & Overhaul', 'brakes', 'disc', 'Brake pads, rotors, caliper slide pins greasing, and hydraulic bleed.'),
+            ('Battery Diagnostics & Power', 'battery', 'battery-charging', 'Conductance battery health testing, terminal service, and replacement.'),
+            ('Air Conditioning Service & Gas', 'ac', 'wind', 'Compressor check, refrigerant recharge, and antibacterial cabin sanitation.'),
+            ('Premium Washing & Detailing', 'washing', 'sparkles', 'Ceramic spray, snow foam washing, and upholstery deep steam cleaning.'),
+            ('Tyres, Alignment & Balancing', 'tyre', 'circle', 'Computerized 3D laser wheel alignment, balancing, and tyre rotation.'),
+            ('Suspension & Mechanical', 'mechanical', 'git-commit', 'Struts, control arm bushings, steering rack, and link rod overhauls.'),
+        ]
+        for cname, cslug, cicon, cdesc in service_categories_data:
+            ServiceCategory.objects.get_or_create(
+                slug=cslug,
+                defaults={'name': cname, 'icon_name': cicon, 'description': cdesc}
+            )
+
+        # 8. Service Providers
         providers_data = [
             ('AUTOVYNEX TechCenter Indiranagar', 'Bengaluru', '100 Feet Road, HAL 2nd Stage, Indiranagar, Bengaluru - 560038', Decimal('4.9'), 248, '+91 80 4125 9901'),
             ('Apex Automotive Care Whitefield', 'Bengaluru', 'ITPL Main Road, Hoodi, Whitefield, Bengaluru - 560066', Decimal('4.8'), 182, '+91 80 2841 3320'),

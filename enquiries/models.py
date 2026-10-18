@@ -55,3 +55,28 @@ class MissingPartEnquiry(models.Model):
 
     def __str__(self):
         return f"{self.reference_code} - {self.part_name} ({self.get_status_display()})"
+
+
+class EnquiryImage(models.Model):
+    enquiry = models.ForeignKey(MissingPartEnquiry, on_delete=models.CASCADE, related_name='additional_images')
+    image = models.ImageField(upload_to='missing_parts/additional/')
+    caption = models.CharField(max_length=200, blank=True)
+    uploaded_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"Image for {self.enquiry.reference_code}"
+
+
+class EnquiryStatusHistory(models.Model):
+    enquiry = models.ForeignKey(MissingPartEnquiry, on_delete=models.CASCADE, related_name='status_history')
+    status = models.CharField(max_length=30)
+    notes = models.TextField(blank=True)
+    changed_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-created_at']
+        verbose_name_plural = 'Enquiry Status Histories'
+
+    def __str__(self):
+        return f"{self.enquiry.reference_code} status changed to {self.status}"

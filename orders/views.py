@@ -43,12 +43,22 @@ def cart_detail(request):
 @require_POST
 def add_to_cart(request, product_id):
     product = get_object_or_404(Product, pk=product_id, is_active=True)
-    quantity = int(request.POST.get('quantity', 1))
+    try:
+        quantity = int(request.POST.get('quantity', 1))
+    except (ValueError, TypeError):
+        quantity = 1
+
+    if quantity < 1:
+        quantity = 1
+
     buy_and_install = request.POST.get('buy_and_install') == '1'
 
     if not product.in_stock:
         messages.error(request, f"Sorry, {product.name} is currently out of stock.")
         return redirect(request.META.get('HTTP_REFERER', 'inventory:shop'))
+
+    if quantity > product.stock_quantity:
+        quantity = product.stock_quantity
 
     if request.user.is_authenticated:
         cart_item, created = CartItem.objects.get_or_create(
@@ -65,6 +75,8 @@ def add_to_cart(request, product_id):
 
     if not created:
         cart_item.quantity += quantity
+        if cart_item.quantity > product.stock_quantity:
+            cart_item.quantity = product.stock_quantity
         if buy_and_install:
             cart_item.buy_and_install = True
         cart_item.save()
@@ -86,7 +98,10 @@ def add_to_cart(request, product_id):
 
 @require_POST
 def update_cart_item(request, item_id):
-    cart_item = get_object_or_404(CartItem, pk=item_id)
+    if request.user.is_authenticated:
+        cart_item = get_object_or_404(CartItem, pk=item_id, user=request.user)
+    else:
+        cart_item = get_object_or_404(CartItem, pk=item_id, session_key=request.session.session_key)
     action = request.POST.get('action')
 
     if action == 'increment':

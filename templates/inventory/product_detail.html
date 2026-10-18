@@ -85,6 +85,13 @@
                 <div style="font-size:0.85rem; color:#0284c7; margin-top:2px;">
                   Fits universally across passenger cars and SUVs.
                 </div>
+              {% elif fitment_status == 'unverified' %}
+                <div style="color:#b45309; font-weight:700; font-size:0.95rem; display:flex; align-items:center; gap:6px;">
+                  <i data-lucide="help-circle" style="width:18px;"></i> Compatibility not verified
+                </div>
+                <div style="font-size:0.85rem; color:#b45309; margin-top:2px;">
+                  No compatibility data exists yet for your <strong>{{ active_vehicle.model.make.name }} {{ active_vehicle.model.name }}</strong>.
+                </div>
               {% else %}
                 <div style="color:#b91c1c; font-weight:700; font-size:0.95rem; display:flex; align-items:center; gap:6px;">
                   <i data-lucide="alert-octagon" style="width:18px;"></i> Incompatible or Not Confirmed

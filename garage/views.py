@@ -124,6 +124,15 @@ def add_maintenance_record(request, vehicle_id):
         notes = request.POST.get('notes', '').strip()
         invoice = request.FILES.get('invoice_file')
 
+        if invoice:
+            if invoice.size > 5 * 1024 * 1024:
+                messages.error(request, "Invoice file exceeds the 5MB size limit.")
+                return redirect('garage:vehicle_detail', vehicle_id=vehicle.id)
+            ext = invoice.name.split('.')[-1].lower()
+            if ext not in ['pdf', 'jpg', 'jpeg', 'png', 'webp']:
+                messages.error(request, "Invalid invoice format. Allowed formats: PDF, JPG, PNG, WEBP.")
+                return redirect('garage:vehicle_detail', vehicle_id=vehicle.id)
+
         if service_date and cost and workshop:
             MaintenanceRecord.objects.create(
                 customer_vehicle=vehicle,
@@ -194,6 +203,15 @@ def upload_document(request, vehicle_id):
         doc_file = request.FILES.get('document_file')
         expiry_date = request.POST.get('expiry_date') or None
         notes = request.POST.get('notes', '').strip()
+
+        if doc_file:
+            if doc_file.size > 5 * 1024 * 1024:
+                messages.error(request, "Document exceeds the 5MB size limit.")
+                return redirect('garage:vehicle_detail', vehicle_id=vehicle.id)
+            ext = doc_file.name.split('.')[-1].lower()
+            if ext not in ['pdf', 'jpg', 'jpeg', 'png', 'webp']:
+                messages.error(request, "Invalid document format. Allowed formats: PDF, JPG, PNG, WEBP.")
+                return redirect('garage:vehicle_detail', vehicle_id=vehicle.id)
 
         if title and doc_file:
             VehicleDocument.objects.create(

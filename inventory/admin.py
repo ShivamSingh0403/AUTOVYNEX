@@ -1,5 +1,10 @@
 from django.contrib import admin
-from .models import ProductCategory, Brand, Product, ProductFitment, InventoryRecord, WishlistItem
+from .models import ProductCategory, Brand, Product, ProductImage, ProductFitment, InventoryRecord, WishlistItem
+
+
+class ProductImageInline(admin.TabularInline):
+    model = ProductImage
+    extra = 1
 
 
 class ProductFitmentInline(admin.TabularInline):
@@ -10,11 +15,18 @@ class ProductFitmentInline(admin.TabularInline):
 
 @admin.register(Product)
 class ProductAdmin(admin.ModelAdmin):
-    list_display = ('name', 'sku', 'category', 'brand', 'price', 'discount_price', 'stock_quantity', 'is_active', 'is_featured')
-    list_filter = ('category', 'brand', 'is_active', 'is_featured', 'is_installable')
+    list_display = ('name', 'sku', 'category', 'brand', 'price', 'discount_price', 'stock_quantity', 'condition', 'is_active', 'is_featured')
+    list_filter = ('category', 'brand', 'condition', 'is_active', 'is_featured', 'is_installable')
     search_fields = ('name', 'sku', 'brand__name')
     prepopulated_fields = {'slug': ('name',)}
-    inlines = [ProductFitmentInline]
+    inlines = [ProductImageInline, ProductFitmentInline]
+
+
+@admin.register(ProductImage)
+class ProductImageAdmin(admin.ModelAdmin):
+    list_display = ('product', 'is_primary', 'alt_text', 'created_at')
+    list_filter = ('is_primary', 'created_at')
+    search_fields = ('product__name', 'product__sku', 'alt_text')
 
 
 @admin.register(ProductCategory)

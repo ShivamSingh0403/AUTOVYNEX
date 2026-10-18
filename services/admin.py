@@ -1,5 +1,12 @@
 from django.contrib import admin
-from .models import ServiceProvider, Service, ServiceBooking, InstallationRequest
+from .models import ServiceCategory, ServiceProvider, Service, ServiceBooking, InstallationRequest
+
+
+@admin.register(ServiceCategory)
+class ServiceCategoryAdmin(admin.ModelAdmin):
+    list_display = ('name', 'icon_name', 'sort_order')
+    prepopulated_fields = {'slug': ('name',)}
+    search_fields = ('name',)
 
 
 @admin.register(ServiceProvider)

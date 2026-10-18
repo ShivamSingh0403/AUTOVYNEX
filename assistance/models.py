@@ -47,6 +47,7 @@ class RoadsideAssistanceRequest(models.Model):
     assigned_patrol = models.CharField(max_length=120, blank=True, default='AUTOVYNEX Rapid Response Unit #4')
     estimated_arrival_minutes = models.PositiveIntegerField(default=25)
     admin_notes = models.TextField(blank=True)
+    is_simulated = models.BooleanField(default=True, help_text="Simulated for academic/demonstration purposes; no real emergency vehicle dispatched")
 
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
