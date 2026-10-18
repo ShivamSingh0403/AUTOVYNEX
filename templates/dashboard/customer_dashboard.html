@@ -1,0 +1,196 @@
+{% extends 'base.html' %}
+
+{% block title %}Customer Dashboard — AUTOVYNEX Driver Hub{% endblock %}
+
+{% block content %}
+<div class="container" style="padding-top:24px;">
+  <!-- Welcome Top Bar -->
+  <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:16px; margin-bottom:28px;">
+    <div>
+      <div style="font-size:0.85rem; color:var(--text-muted); margin-bottom:4px;">
+        <span>AUTOVYNEX Mobility OS</span> / <span>Driver Control Hub</span>
+      </div>
+      <h1 style="font-size:1.85rem; margin:0;">Welcome back, {{ user.first_name|default:user.username }}</h1>
+      <p style="color:var(--text-muted); font-size:0.95rem; margin-top:4px;">
+        Overview of your garage vehicles, order tracking, and scheduled maintenance appointments.
+      </p>
+    </div>
+
+    <div style="display:flex; gap:10px;">
+      <a href="{% url 'inventory:shop' %}" class="btn btn-primary btn-sm">
+        <i data-lucide="package"></i> Shop Spare Parts
+      </a>
+      <a href="{% url 'garage:index' %}" class="btn btn-secondary btn-sm">
+        <i data-lucide="warehouse"></i> My Garage
+      </a>
+    </div>
+  </div>
+
+  <!-- Key Metrics Row -->
+  <div class="grid-4" style="margin-bottom:36px;">
+    <div class="card" style="display:flex; align-items:center; gap:16px;">
+      <div style="width:48px; height:48px; border-radius:var(--radius-md); background:rgba(2, 132, 199, 0.1); color:var(--color-primary); display:flex; align-items:center; justify-content:center; flex-shrink:0;">
+        <i data-lucide="car" style="width:24px; height:24px;"></i>
+      </div>
+      <div>
+        <div style="font-size:0.8rem; color:var(--text-muted);">Saved Vehicles</div>
+        <div style="font-family:var(--font-heading); font-size:1.45rem; font-weight:800; color:var(--text-main);">{{ total_vehicles }}</div>
+      </div>
+    </div>
+
+    <div class="card" style="display:flex; align-items:center; gap:16px;">
+      <div style="width:48px; height:48px; border-radius:var(--radius-md); background:rgba(16, 185, 129, 0.1); color:#10b981; display:flex; align-items:center; justify-content:center; flex-shrink:0;">
+        <i data-lucide="truck" style="width:24px; height:24px;"></i>
+      </div>
+      <div>
+        <div style="font-size:0.8rem; color:var(--text-muted);">Orders Placed</div>
+        <div style="font-family:var(--font-heading); font-size:1.45rem; font-weight:800; color:var(--text-main);">{{ recent_orders.count }}</div>
+      </div>
+    </div>
+
+    <div class="card" style="display:flex; align-items:center; gap:16px;">
+      <div style="width:48px; height:48px; border-radius:var(--radius-md); background:rgba(6, 182, 212, 0.1); color:#06b6d4; display:flex; align-items:center; justify-content:center; flex-shrink:0;">
+        <i data-lucide="calendar" style="width:24px; height:24px;"></i>
+      </div>
+      <div>
+        <div style="font-size:0.8rem; color:var(--text-muted);">Service Bookings</div>
+        <div style="font-family:var(--font-heading); font-size:1.45rem; font-weight:800; color:var(--text-main);">{{ service_bookings.count }}</div>
+      </div>
+    </div>
+
+    <div class="card" style="display:flex; align-items:center; gap:16px;">
+      <div style="width:48px; height:48px; border-radius:var(--radius-md); background:rgba(245, 158, 11, 0.1); color:#d97706; display:flex; align-items:center; justify-content:center; flex-shrink:0;">
+        <i data-lucide="search" style="width:24px; height:24px;"></i>
+      </div>
+      <div>
+        <div style="font-size:0.8rem; color:var(--text-muted);">Part Enquiries</div>
+        <div style="font-family:var(--font-heading); font-size:1.45rem; font-weight:800; color:var(--text-main);">{{ missing_enquiries.count }}</div>
+      </div>
+    </div>
+  </div>
+
+  <div style="display:grid; grid-template-columns: 1.2fr 0.8fr; gap:36px; margin-bottom:48px;" class="grid-customer-dashboard">
+    <!-- Left Column: Recent Orders & Garage -->
+    <div style="display:flex; flex-direction:column; gap:32px;">
+      <!-- Recent Orders Card -->
+      <div class="card">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px; border-bottom:1px solid var(--border-subtle); padding-bottom:12px;">
+          <h3 style="font-size:1.2rem; margin:0;"><i data-lucide="truck" style="color:var(--color-primary); vertical-align:middle;"></i> Recent Orders</h3>
+          <a href="{% url 'orders:order_history' %}" style="font-size:0.82rem; color:var(--color-primary); font-weight:600;">View All Orders</a>
+        </div>
+
+        {% if recent_orders %}
+        <div style="display:flex; flex-direction:column; gap:14px;">
+          {% for ord in recent_orders %}
+            <div style="padding:14px; background:var(--bg-surface-subtle); border-radius:var(--radius-md); display:flex; justify-content:space-between; align-items:center; gap:12px;">
+              <div>
+                <div style="font-weight:700; font-size:0.95rem; color:var(--text-main);">Order #{{ ord.order_number }}</div>
+                <div style="font-size:0.78rem; color:var(--text-muted);">{{ ord.created_at|date:"d M Y" }} • {{ ord.items.count }} item(s)</div>
+              </div>
+              <div style="display:flex; align-items:center; gap:12px;">
+                <span class="badge {% if ord.status == 'delivered' %}badge-verified{% else %}badge-universal{% endif %}" style="font-size:0.75rem;">
+                  {{ ord.get_status_display }}
+                </span>
+                <a href="{% url 'orders:order_detail' ord.order_number %}" class="btn btn-secondary btn-sm" style="padding:4px 10px; font-size:0.75rem;">
+                  Track
+                </a>
+              </div>
+            </div>
+          {% endfor %}
+        </div>
+        {% else %}
+        <p style="font-size:0.88rem; color:var(--text-muted); margin:0;">No orders placed yet.</p>
+        {% endif %}
+      </div>
+
+      <!-- Garage Vehicles Card -->
+      <div class="card">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px; border-bottom:1px solid var(--border-subtle); padding-bottom:12px;">
+          <h3 style="font-size:1.2rem; margin:0;"><i data-lucide="warehouse" style="color:var(--color-primary); vertical-align:middle;"></i> Vehicles in Garage</h3>
+          <a href="{% url 'garage:index' %}" style="font-size:0.82rem; color:var(--color-primary); font-weight:600;">Manage Garage</a>
+        </div>
+
+        {% if garage_vehicles %}
+        <div style="display:flex; flex-direction:column; gap:14px;">
+          {% for gv in garage_vehicles %}
+            <div style="padding:14px; background:var(--bg-surface-subtle); border-radius:var(--radius-md); display:flex; justify-content:space-between; align-items:center; gap:12px;">
+              <div>
+                <div style="font-weight:700; font-size:0.95rem; color:var(--text-main);">
+                  {{ gv.display_title }}
+                  {% if gv.is_default %}<span class="badge badge-verified" style="font-size:0.65rem; margin-left:4px;">Primary</span>{% endif %}
+                </div>
+                <div style="font-size:0.78rem; color:var(--text-muted);">Reg: {{ gv.registration_number }} • {{ gv.current_mileage|floatformat:0 }} KM</div>
+              </div>
+              <a href="{% url 'garage:vehicle_detail' gv.id %}" class="btn btn-secondary btn-sm" style="padding:4px 10px; font-size:0.75rem;">
+                Logs & Docs
+              </a>
+            </div>
+          {% endfor %}
+        </div>
+        {% else %}
+        <p style="font-size:0.88rem; color:var(--text-muted); margin:0;">No vehicles in garage. <a href="{% url 'garage:index' %}">Add your car</a>.</p>
+        {% endif %}
+      </div>
+    </div>
+
+    <!-- Right Column: Service Bookings & Sourcing Enquiries -->
+    <div style="display:flex; flex-direction:column; gap:32px;">
+      <!-- Service Appointments Card -->
+      <div class="card">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px; border-bottom:1px solid var(--border-subtle); padding-bottom:12px;">
+          <h3 style="font-size:1.2rem; margin:0;"><i data-lucide="calendar" style="color:var(--color-primary); vertical-align:middle;"></i> Service Appointments</h3>
+          <a href="{% url 'services:book' %}" class="btn btn-primary btn-sm" style="padding:4px 10px; font-size:0.75rem;">+ Book</a>
+        </div>
+
+        {% if service_bookings %}
+        <div style="display:flex; flex-direction:column; gap:12px;">
+          {% for bk in service_bookings %}
+            <div style="padding:12px 14px; background:var(--bg-surface-subtle); border-radius:var(--radius-md); font-size:0.88rem;">
+              <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+                <div>
+                  <strong>{{ bk.service.name }}</strong>
+                  <div style="font-size:0.75rem; color:var(--text-muted);">{{ bk.provider.name }}</div>
+                  <div style="font-size:0.78rem; color:var(--color-primary); margin-top:2px;">{{ bk.booking_date|date:"d M Y" }} ({{ bk.time_slot }})</div>
+                </div>
+                <span class="badge {% if bk.status == 'confirmed' %}badge-verified{% else %}badge-universal{% endif %}" style="font-size:0.7rem;">
+                  {{ bk.get_status_display }}
+                </span>
+              </div>
+            </div>
+          {% endfor %}
+        </div>
+        {% else %}
+        <p style="font-size:0.88rem; color:var(--text-muted); margin:0;">No active service appointments.</p>
+        {% endif %}
+      </div>
+
+      <!-- Missing Part Enquiries Card -->
+      <div class="card">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px; border-bottom:1px solid var(--border-subtle); padding-bottom:12px;">
+          <h3 style="font-size:1.2rem; margin:0;"><i data-lucide="search" style="color:var(--color-primary); vertical-align:middle;"></i> Rare Part Enquiries</h3>
+          <a href="{% url 'enquiries:missing_part_request' %}" class="btn btn-secondary btn-sm" style="padding:4px 10px; font-size:0.75rem;">+ New</a>
+        </div>
+
+        {% if missing_enquiries %}
+        <div style="display:flex; flex-direction:column; gap:12px;">
+          {% for enq in missing_enquiries %}
+            <div style="padding:12px 14px; background:var(--bg-surface-subtle); border-radius:var(--radius-md); display:flex; justify-content:space-between; align-items:center; font-size:0.88rem;">
+              <div>
+                <strong>{{ enq.part_name }}</strong>
+                <div style="font-size:0.75rem; color:var(--text-muted);">Ref: {{ enq.reference_code }}</div>
+              </div>
+              <div style="display:flex; align-items:center; gap:8px;">
+                <span class="badge badge-unconfirmed" style="font-size:0.7rem;">{{ enq.get_status_display }}</span>
+                <a href="{% url 'enquiries:enquiry_status' enq.reference_code %}" class="btn btn-secondary btn-sm" style="padding:2px 8px; font-size:0.72rem;">Status</a>
+              </div>
+            </div>
+          {% endfor %}
+        </div>
+        {% else %}
+        <p style="font-size:0.88rem; color:var(--text-muted); margin:0;">No missing part inquiries logged.</p>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

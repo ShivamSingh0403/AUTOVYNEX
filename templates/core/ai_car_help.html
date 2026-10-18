@@ -1,0 +1,72 @@
+{% extends 'base.html' %}
+
+{% block title %}AI Car Help — Automotive Symptom Diagnostic Assistant | AUTOVYNEX{% endblock %}
+
+{% block content %}
+<div class="container" style="padding-top:24px;">
+  <div style="max-width:920px; margin:0 auto;">
+    <div style="text-align:center; margin-bottom:36px;">
+      <div class="demo-academic-badge" style="margin-bottom:12px;">
+        <i data-lucide="bot"></i>
+        <span>Rule-Based Expert Diagnostic Demonstrator</span>
+      </div>
+      <h1>Intelligent Automotive Symptom Assistant</h1>
+      <p style="color:var(--text-muted); font-size:1.05rem; max-width:640px; margin:8px auto 0;">
+        Identify warning signs, understand probable mechanical explanations, perform safe roadside checks, and book certified technician inspections when critical safety is at stake.
+      </p>
+    </div>
+
+    <!-- Rule-Based Diagnostic Notice Banner as required by prompt -->
+    <div class="alert-banner alert-info" style="margin-bottom:28px;">
+      <i data-lucide="info"></i>
+      <div>
+        <strong>Demonstration Notice:</strong> This assistant operates on a verified rule-based mechanical knowledge engine with safety heuristics. It is labeled as an educational assistant and is architected for future LLM integration. It does not provide certified legal mechanical guarantees.
+      </div>
+    </div>
+
+    <!-- Quick Symptom Presets -->
+    <div class="card" style="margin-bottom:28px;">
+      <h3 style="font-size:1.1rem; margin-bottom:16px;">Select Common Vehicle Symptom:</h3>
+      <div style="display:flex; flex-wrap:wrap; gap:10px;">
+        <button type="button" class="btn btn-secondary btn-sm symptom-preset-btn" data-symptom="engine_light">
+          <i data-lucide="alert-triangle" style="color:#f59e0b;"></i> Check Engine Light
+        </button>
+        <button type="button" class="btn btn-secondary btn-sm symptom-preset-btn" data-symptom="battery_dead">
+          <i data-lucide="battery-charging" style="color:#0284c7;"></i> Engine Won't Start / Dead Battery
+        </button>
+        <button type="button" class="btn btn-secondary btn-sm symptom-preset-btn" data-symptom="brake_noise">
+          <i data-lucide="disc" style="color:#ef4444;"></i> Brake Squeal or Grinding Sound
+        </button>
+        <button type="button" class="btn btn-secondary btn-sm symptom-preset-btn" data-symptom="overheating">
+          <i data-lucide="thermometer" style="color:#ef4444;"></i> Engine Overheating / Steam
+        </button>
+        <button type="button" class="btn btn-secondary btn-sm symptom-preset-btn" data-symptom="tyre_pressure">
+          <i data-lucide="circle" style="color:#10b981;"></i> Tyre Pressure / Puncture Concern
+        </button>
+      </div>
+
+      <!-- Freeform Symptom Query Input -->
+      <div style="margin-top:20px; display:flex; gap:12px;">
+        <input type="text" id="ai-custom-query" class="form-control" placeholder="Or type your vehicle symptom (e.g. vibration while braking at 80 km/h, black exhaust smoke)...">
+        <button type="button" id="ai-analyze-btn" class="btn btn-primary" style="flex-shrink:0;">
+          <i data-lucide="sparkles"></i> Analyze Symptom
+        </button>
+      </div>
+    </div>
+
+    <!-- Active Diagnosis Output Stream -->
+    <div id="ai-chat-thread">
+      <!-- Default Initial Prompt Card -->
+      <div class="card" style="background:var(--bg-surface-subtle); text-align:center; padding:36px;">
+        <div style="width:52px; height:52px; border-radius:50%; background:rgba(2, 132, 199, 0.12); color:var(--color-primary); display:flex; align-items:center; justify-content:center; margin:0 auto 16px;">
+          <i data-lucide="help-circle" style="width:26px; height:26px;"></i>
+        </div>
+        <h4>No Symptom Selected Yet</h4>
+        <p style="font-size:0.9rem; color:var(--text-muted); max-width:480px; margin:8px auto 0;">
+          Click any of the quick symptom buttons above or type what you're noticing with your vehicle to generate probable explanations and safe checks.
+        </p>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

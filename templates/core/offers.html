@@ -1,0 +1,59 @@
+{% extends 'base.html' %}
+
+{% block title %}Offers & Discounts — AUTOVYNEX Savings Hub{% endblock %}
+
+{% block content %}
+<div class="container" style="padding-top:24px;">
+  <div style="display:flex; justify-content:space-between; align-items:flex-end; margin-bottom:32px; flex-wrap:wrap; gap:16px;">
+    <div>
+      <div class="demo-academic-badge" style="margin-bottom:8px;">
+        <i data-lucide="tag"></i>
+        <span>Festive & Season Deals</span>
+      </div>
+      <h1>Active Automotive Discounts & Bundles</h1>
+      <p style="color:var(--text-muted); font-size:1.05rem; margin-top:4px;">
+        Verified OEM components on limited-time promotions with free shipping and subsidized installation.
+      </p>
+    </div>
+    <div style="background:linear-gradient(135deg, #0284c7 0%, #06b6d4 100%); color:#fff; padding:12px 20px; border-radius:var(--radius-lg); text-align:center;">
+      <div style="font-size:0.75rem; text-transform:uppercase; font-weight:700;">Promo Coupon</div>
+      <div style="font-family:var(--font-heading); font-size:1.2rem; font-weight:800; letter-spacing:0.05em;">VYNEX500</div>
+      <div style="font-size:0.7rem; opacity:0.9;">₹500 OFF on orders above ₹4,000</div>
+    </div>
+  </div>
+
+  <div class="grid-4">
+    {% for prod in discounted_products %}
+      <div class="product-card">
+        <div class="product-image-container">
+          <span class="product-discount-tag">{{ prod.discount_percent }}% OFF</span>
+          <div style="color:#0284c7;">
+            <i data-lucide="{{ prod.category.icon_name|default:'package' }}" style="width:54px; height:54px;"></i>
+          </div>
+        </div>
+        <div class="product-card-body">
+          <div class="product-category-brand">{{ prod.brand.name }} • {{ prod.category.name }}</div>
+          <a href="{% url 'inventory:product_detail' prod.slug %}" class="product-title">{{ prod.name }}</a>
+          <div class="product-price-row">
+            <span class="product-final-price">₹{{ prod.final_price|floatformat:0 }}</span>
+            <span class="product-original-price">₹{{ prod.price|floatformat:0 }}</span>
+          </div>
+          <div style="display:flex; gap:8px;">
+            <a href="{% url 'inventory:product_detail' prod.slug %}" class="btn btn-secondary btn-sm" style="flex:1;">View Deal</a>
+            <form method="POST" action="{% url 'orders:add_to_cart' prod.id %}">
+              {% csrf_token %}
+              <button type="submit" class="btn btn-primary btn-sm"><i data-lucide="shopping-cart"></i></button>
+            </form>
+          </div>
+        </div>
+      </div>
+    {% empty %}
+      <div class="card" style="grid-column: 1 / -1; text-align:center; padding:48px;">
+        <i data-lucide="tag" style="width:48px; height:48px; color:var(--text-muted); margin-bottom:12px;"></i>
+        <h3>No Discounted Products Active</h3>
+        <p style="color:var(--text-muted);">Check back soon for upcoming season flash promotions.</p>
+      </div>
+    {% endfor %}
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,69 @@
+{% extends 'base.html' %}
+
+{% block title %}My Wishlist — AUTOVYNEX Saved Parts{% endblock %}
+
+{% block content %}
+<div class="container" style="padding-top:24px;">
+  <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:28px;">
+    <div>
+      <div style="font-size:0.85rem; color:var(--text-muted); margin-bottom:4px;">
+        <a href="{% url 'dashboard:customer_dashboard' %}">Dashboard</a> / <span>Wishlist</span>
+      </div>
+      <h1 style="font-size:1.85rem; margin:0;">Saved Spare Parts & Accessories</h1>
+    </div>
+    <a href="{% url 'inventory:shop' %}" class="btn btn-secondary btn-sm">
+      <i data-lucide="shopping-bag"></i> Continue Shopping
+    </a>
+  </div>
+
+  {% if wishlist_items %}
+  <div class="grid-4">
+    {% for item in wishlist_items %}
+      <div class="product-card">
+        <div class="product-image-container">
+          <a href="{% url 'inventory:toggle_wishlist' item.product.id %}" class="product-wishlist-toggle active" title="Remove from Wishlist">
+            <i data-lucide="heart" style="width:18px; height:18px; fill:#ef4444; color:#ef4444;"></i>
+          </a>
+          <div style="color:#0284c7;">
+            <i data-lucide="{{ item.product.category.icon_name|default:'package' }}" style="width:56px; height:56px;"></i>
+          </div>
+        </div>
+
+        <div class="product-card-body">
+          <div class="product-category-brand">{{ item.product.brand.name }} • {{ item.product.category.name }}</div>
+          <a href="{% url 'inventory:product_detail' item.product.slug %}" class="product-title">{{ item.product.name }}</a>
+          
+          <div class="product-price-row">
+            <span class="product-final-price">₹{{ item.product.final_price|floatformat:0 }}</span>
+            {% if item.product.discount_price %}
+              <span class="product-original-price">₹{{ item.product.price|floatformat:0 }}</span>
+            {% endif %}
+          </div>
+
+          <div style="display:flex; gap:8px;">
+            <a href="{% url 'inventory:product_detail' item.product.slug %}" class="btn btn-secondary btn-sm" style="flex:1;">View</a>
+            <form method="POST" action="{% url 'orders:add_to_cart' item.product.id %}">
+              {% csrf_token %}
+              <button type="submit" class="btn btn-primary btn-sm"><i data-lucide="shopping-cart"></i></button>
+            </form>
+          </div>
+        </div>
+      </div>
+    {% endfor %}
+  </div>
+  {% else %}
+  <div class="card" style="text-align:center; padding:64px 20px;">
+    <div style="width:64px; height:64px; border-radius:50%; background:rgba(239, 68, 68, 0.1); color:#ef4444; display:flex; align-items:center; justify-content:center; margin:0 auto 16px;">
+      <i data-lucide="heart" style="width:32px; height:32px;"></i>
+    </div>
+    <h3>Your Wishlist is Empty</h3>
+    <p style="color:var(--text-muted); max-width:440px; margin:8px auto 24px;">
+      Explore 300+ spare parts and click the heart icon on any product to save items for future maintenance cycles.
+    </p>
+    <a href="{% url 'inventory:shop' %}" class="btn btn-primary">
+      <i data-lucide="shopping-bag"></i> Browse Spare Parts Catalogue
+    </a>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

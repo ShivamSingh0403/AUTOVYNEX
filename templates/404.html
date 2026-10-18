@@ -1,0 +1,29 @@
+{% extends 'base.html' %}
+
+{% block title %}404 — Road Not Found | AUTOVYNEX{% endblock %}
+
+{% block content %}
+<div class="container" style="text-align:center; padding:60px 0;">
+  <div style="width:90px; height:90px; border-radius:50%; background:rgba(239, 68, 68, 0.1); color:#ef4444; display:flex; align-items:center; justify-content:center; margin:0 auto 24px;">
+    <i data-lucide="compass" style="width:48px; height:48px;"></i>
+  </div>
+  <div class="demo-academic-badge" style="margin-bottom:16px;">
+    <span>Error Code 404:</span> Off-Road Dead End
+  </div>
+  <h1 style="margin-bottom:16px;">This Route Doesn't Exist</h1>
+  <p style="max-width:540px; margin:0 auto 32px; color:var(--text-muted); font-size:1.05rem;">
+    The automotive destination or part listing you are looking for has been moved, removed, or never existed in the AUTOVYNEX network.
+  </p>
+  <div style="display:flex; justify-content:center; gap:16px; flex-wrap:wrap;">
+    <a href="{% url 'core:home' %}" class="btn btn-primary">
+      <i data-lucide="home"></i> Return to Homepage
+    </a>
+    <a href="{% url 'inventory:shop' %}" class="btn btn-secondary">
+      <i data-lucide="shopping-bag"></i> Browse Spare Parts
+    </a>
+    <a href="{% url 'services:directory' %}" class="btn btn-secondary">
+      <i data-lucide="wrench"></i> Automotive Services
+    </a>
+  </div>
+</div>
+{% endblock %}

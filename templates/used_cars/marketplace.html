@@ -1,0 +1,125 @@
+{% extends 'base.html' %}
+
+{% block title %}Used Car Marketplace — Inspected Pre-Owned Cars | AUTOVYNEX{% endblock %}
+
+{% block content %}
+<div class="container" style="padding-top:24px;">
+  <!-- Title & Action Bar -->
+  <div style="display:flex; justify-content:space-between; align-items:flex-end; flex-wrap:wrap; gap:16px; margin-bottom:28px;">
+    <div>
+      <div class="demo-academic-badge" style="margin-bottom:8px;">
+        <i data-lucide="shield-check"></i>
+        <span>100-Point Inspected Vehicles</span>
+      </div>
+      <h1 style="font-size:1.85rem; margin:0;">Pre-Owned Automotive Marketplace</h1>
+      <p style="color:var(--text-muted); font-size:1rem; margin-top:4px;">
+        Explore inspected verified used cars across major Indian metros with transparent mechanical health ratings.
+      </p>
+    </div>
+
+    <div style="display:flex; gap:10px; align-items:center;">
+      {% if comparison_ids %}
+        <a href="{% url 'used_cars:compare_view' %}" class="btn btn-primary btn-sm">
+          <i data-lucide="columns-3"></i> Compare Matrix ({{ comparison_ids|length }})
+        </a>
+      {% endif %}
+      <a href="{% url 'used_cars:create_listing' %}" class="btn btn-secondary btn-sm">
+        <i data-lucide="plus"></i> Sell Your Car
+      </a>
+      <a href="{% url 'core:car_valuation' %}" class="btn btn-secondary btn-sm">
+        <i data-lucide="calculator"></i> Valuation Tool
+      </a>
+    </div>
+  </div>
+
+  <!-- Filters Row -->
+  <div class="card" style="padding:16px 20px; margin-bottom:32px; background:var(--bg-surface-elevated);">
+    <form method="GET" action="{% url 'used_cars:marketplace' %}" style="display:grid; grid-template-columns: 2fr 1fr 1fr 1fr auto; gap:12px; align-items:center;" class="grid-used-filters">
+      <input type="text" name="q" value="{{ q|default:'' }}" placeholder="Search by model, city, or title..." class="form-control" style="font-size:0.88rem; padding:8px 14px;">
+
+      <select name="make" class="form-select" style="font-size:0.88rem; padding:8px 12px;">
+        <option value="">All Makes</option>
+        {% for m in makes_list %}
+          <option value="{{ m }}" {% if selected_make == m %}selected{% endif %}>{{ m }}</option>
+        {% endfor %}
+      </select>
+
+      <select name="fuel" class="form-select" style="font-size:0.88rem; padding:8px 12px;">
+        <option value="">All Fuels</option>
+        <option value="Petrol" {% if selected_fuel == 'Petrol' %}selected{% endif %}>Petrol</option>
+        <option value="Diesel" {% if selected_fuel == 'Diesel' %}selected{% endif %}>Diesel</option>
+        <option value="CNG" {% if selected_fuel == 'CNG' %}selected{% endif %}>CNG</option>
+        <option value="EV" {% if selected_fuel == 'EV' %}selected{% endif %}>Electric (EV)</option>
+      </select>
+
+      <select name="trans" class="form-select" style="font-size:0.88rem; padding:8px 12px;">
+        <option value="">All Transmissions</option>
+        <option value="Manual" {% if selected_trans == 'Manual' %}selected{% endif %}>Manual</option>
+        <option value="Automatic" {% if selected_trans == 'Automatic' %}selected{% endif %}>Automatic</option>
+      </select>
+
+      <button type="submit" class="btn btn-primary btn-sm" style="padding:8px 18px;">
+        <i data-lucide="filter"></i> Filter
+      </button>
+    </form>
+  </div>
+
+  <!-- Listings Grid -->
+  <div class="grid-3" style="margin-bottom:48px;">
+    {% for car in listings %}
+      <div class="card card-interactive" style="padding:0; overflow:hidden; display:flex; flex-direction:column;">
+        <div style="height:200px; background:#1e293b; color:#fff; display:flex; flex-direction:column; justify-content:center; align-items:center; position:relative;">
+          <i data-lucide="car" style="width:72px; height:72px; color:#38bdf8; stroke-width:1.5;"></i>
+          <span class="badge badge-verified" style="position:absolute; top:12px; right:12px;">
+            ★ {{ car.condition_rating }} Inspection
+          </span>
+          <div style="position:absolute; bottom:12px; left:16px; font-size:0.8rem; background:rgba(0,0,0,0.6); padding:2px 8px; border-radius:4px;">
+            {{ car.location_city }} • {{ car.registration_state }}
+          </div>
+        </div>
+
+        <div style="padding:20px; display:flex; flex-direction:column; flex-grow:1;">
+          <h3 style="font-size:1.15rem; margin-bottom:12px; line-height:1.4;">
+            <a href="{% url 'used_cars:listing_detail' car.slug %}" style="color:var(--text-main);">{{ car.title }}</a>
+          </h3>
+
+          <div style="display:flex; gap:8px; flex-wrap:wrap; font-size:0.8rem; color:var(--text-muted); margin-bottom:16px;">
+            <span class="badge badge-universal">{{ car.year }}</span>
+            <span class="badge badge-universal">{{ car.mileage|floatformat:0 }} KM</span>
+            <span class="badge badge-universal">{{ car.fuel_type }}</span>
+            <span class="badge badge-universal">{{ car.transmission }}</span>
+            <span class="badge" style="background:var(--bg-surface-subtle); color:var(--text-muted);">{{ car.owners_count }} Owner</span>
+          </div>
+
+          <div style="display:flex; justify-content:space-between; align-items:center; border-top:1px solid var(--border-subtle); padding-top:16px; margin-top:auto;">
+            <div>
+              <div style="font-size:0.75rem; color:var(--text-muted);">Offered Price</div>
+              <div style="font-family:var(--font-heading); font-size:1.4rem; font-weight:800; color:var(--color-primary);">
+                ₹{{ car.expected_price|floatformat:0 }}
+              </div>
+            </div>
+
+            <div style="display:flex; gap:8px;">
+              <a href="{% url 'used_cars:toggle_compare' car.id %}" class="btn btn-secondary btn-sm" title="Add to Comparison Matrix">
+                <i data-lucide="columns-3" style="width:16px; {% if car.id in comparison_ids %}color:var(--color-primary);{% endif %}"></i>
+              </a>
+              <a href="{% url 'used_cars:listing_detail' car.slug %}" class="btn btn-primary btn-sm">
+                Details
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+    {% empty %}
+      <div class="card" style="grid-column: 1 / -1; text-align:center; padding:64px 20px;">
+        <i data-lucide="car" style="width:54px; height:54px; color:var(--text-muted); margin-bottom:16px;"></i>
+        <h3>No Pre-Owned Vehicles Match Your Filters</h3>
+        <p style="color:var(--text-muted); max-width:440px; margin:8px auto 20px;">
+          Try resetting your price or fuel filters to explore our full inventory of verified vehicles.
+        </p>
+        <a href="{% url 'used_cars:marketplace' %}" class="btn btn-secondary btn-sm">Reset Filters</a>
+      </div>
+    {% endfor %}
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,79 @@
+<div id="vehicle-selector-modal" class="modal-overlay">
+  <div class="modal-dialog">
+    <div class="modal-header">
+      <div style="display:flex; align-items:center; gap:10px;">
+        <div style="width:36px; height:36px; border-radius:8px; background:rgba(2, 132, 199, 0.12); display:flex; align-items:center; justify-content:center; color:#0284c7;">
+          <i data-lucide="car"></i>
+        </div>
+        <div>
+          <h3 style="font-size:1.15rem; margin:0;">Select Your Vehicle</h3>
+          <p style="font-size:0.78rem; color:var(--text-muted); margin:0;">Ensures 100% verified compatibility for every spare part</p>
+        </div>
+      </div>
+      <button type="button" class="close-vehicle-modal-btn icon-btn" style="border:none; background:transparent;">
+        <i data-lucide="x"></i>
+      </button>
+    </div>
+
+    <form method="POST" action="{% url 'vehicles:select_vehicle_session' %}">
+      {% csrf_token %}
+      <div class="modal-body">
+        {% if user.is_authenticated and user.garage_vehicles.exists %}
+        <div style="margin-bottom:20px; padding:12px; background:var(--bg-surface-subtle); border-radius:var(--radius-md); border:1px solid var(--border-subtle);">
+          <div style="font-size:0.8rem; font-weight:700; color:var(--color-primary); margin-bottom:8px; text-transform:uppercase;">
+            Pick From My Garage
+          </div>
+          <div style="display:flex; flex-direction:column; gap:8px;">
+            {% for gcar in user.garage_vehicles.all %}
+              <button type="submit" name="variant_id" value="{{ gcar.variant.id }}" class="btn btn-secondary btn-sm" style="justify-content:space-between; width:100%; text-align:left;">
+                <span><strong>{{ gcar.display_title }}</strong> ({{ gcar.registration_number }})</span>
+                <span class="badge badge-verified" style="font-size:0.7rem;">Select</span>
+              </button>
+            {% endfor %}
+          </div>
+        </div>
+        <div style="text-align:center; position:relative; margin:16px 0;">
+          <hr style="border:0; border-top:1px solid var(--border-subtle);">
+          <span style="position:absolute; top:50%; left:50%; transform:translate(-50%, -50%); background:var(--bg-surface-elevated); padding:0 12px; font-size:0.75rem; color:var(--text-muted); text-transform:uppercase;">or select any car</span>
+        </div>
+        {% endif %}
+
+        <div class="form-group">
+          <label class="form-label" for="modal-select-make">Manufacturer / Make</label>
+          <select id="modal-select-make" class="form-select" required>
+            <option value="">Select Manufacturer...</option>
+            {% for make in popular_makes %}
+              <option value="{{ make.id }}">{{ make.name }} ({{ make.country }})</option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="modal-select-model">Model</label>
+          <select id="modal-select-model" class="form-select" disabled required>
+            <option value="">Select Model...</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="modal-select-variant">Variant, Fuel & Transmission</label>
+          <select id="modal-select-variant" name="variant_id" class="form-select" disabled required>
+            <option value="">Select Variant...</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        {% if selected_vehicle %}
+        <a href="{% url 'vehicles:clear_vehicle_session' %}" class="btn btn-secondary btn-sm" style="margin-right:auto; color:var(--color-danger);">
+          <i data-lucide="trash-2"></i> Clear Selection
+        </a>
+        {% endif %}
+        <button type="button" class="btn btn-secondary btn-sm close-vehicle-modal-btn">Cancel</button>
+        <button type="submit" id="modal-submit-vehicle" class="btn btn-primary btn-sm" disabled>
+          <i data-lucide="check"></i> Confirm Vehicle
+        </button>
+      </div>
+    </form>
+  </div>
+</div>

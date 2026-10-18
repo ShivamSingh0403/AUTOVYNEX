@@ -1,0 +1,81 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}AUTOVYNEX — The Future of Every Drive{% endblock %}</title>
+  <meta name="description" content="{% block meta_description %}Premium automotive technology platform in India for genuine spare parts, verified service booking, digital garage maintenance, and intelligent vehicle tools.{% endblock %}">
+
+  <!-- Favicon Road-inspired 'A' SVG -->
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 48'><rect width='48' height='48' rx='10' fill='%23101820'/><path d='M11 41 L21.5 11 M37 41 L26.5 11' stroke='%23087EFF' stroke-width='4' stroke-linecap='round'/><line x1='24' y1='39' x2='24' y2='31' stroke='white' stroke-width='3' stroke-linecap='round'/><path d='M15.5 28 H32.5' stroke='%2300D2FF' stroke-width='3.5' stroke-linecap='round'/><circle cx='24' cy='9.5' r='3' fill='%2300D2FF'/></svg>">
+
+  <!-- Core Design System CSS -->
+  <link rel="stylesheet" href="{% static 'css/styles.css' %}">
+  <link rel="stylesheet" href="{% static 'css/style.css' %}">
+
+  <!-- Lucide Lightweight Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+
+  {% block extra_head %}{% endblock %}
+</head>
+<body>
+
+  <!-- Navigation Bar (Includes Mobile Drawer & Brand Emblem) -->
+  {% include 'includes/navbar.html' %}
+
+  <!-- Active Vehicle Context Ribbon (When a car is selected in session) -->
+  {% if selected_vehicle %}
+  <div style="background:linear-gradient(90deg, #087EFF 0%, #0062cc 100%); color:#ffffff; padding:9px 0; font-size:0.85rem; font-weight:600; margin-top:var(--nav-height); border-bottom:1px solid rgba(255,255,255,0.2); box-shadow:0 2px 8px rgba(8,126,255,0.2);">
+    <div class="container" style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:8px;">
+      <div style="display:flex; align-items:center; gap:8px;">
+        <i data-lucide="shield-check" style="width:16px; height:16px; color:#00D2FF;"></i>
+        <span>Active Vehicle: <strong>{{ selected_vehicle.display_name }}</strong> ({{ selected_vehicle.fuel_type }}, {{ selected_vehicle.transmission }}) — Verified compatibility active</span>
+      </div>
+      <div style="display:flex; align-items:center; gap:12px;">
+        <button type="button" class="open-vehicle-modal-btn" style="background:rgba(255,255,255,0.2); color:#fff; border:none; padding:4px 12px; border-radius:4px; cursor:pointer; font-size:0.78rem; font-weight:700; transition:background 0.2s;">
+          Switch Car
+        </button>
+        <a href="{% url 'vehicles:clear_vehicle_session' %}" style="color:rgba(255,255,255,0.85); font-size:0.78rem; text-decoration:underline;">
+          Clear Selection
+        </a>
+      </div>
+    </div>
+  </div>
+  {% endif %}
+
+  <!-- Global Flash Messages -->
+  {% include 'includes/messages.html' %}
+
+  <!-- Main View Content -->
+  <main class="main-content" {% if selected_vehicle %}style="padding-top:20px;"{% endif %}>
+    {% block content %}
+    {% endblock %}
+  </main>
+
+  <!-- Vehicle Selector Modal -->
+  {% include 'includes/vehicle_selector_modal.html' %}
+
+  <!-- Toast Notification Container (Floating) -->
+  <div id="toast-container" class="toast-container" aria-live="polite"></div>
+
+  <!-- Site Footer -->
+  {% include 'includes/footer.html' %}
+
+  <!-- Core Scripts -->
+  <script src="{% static 'js/main.js' %}"></script>
+  <script src="{% static 'js/calculators.js' %}"></script>
+  <script src="{% static 'js/ai_help.js' %}"></script>
+
+  <script>
+    // Initialize Lucide icons on any freshly rendered elements
+    document.addEventListener('DOMContentLoaded', () => {
+      if (typeof lucide !== 'undefined') {
+        lucide.createIcons();
+      }
+    });
+  </script>
+
+  {% block extra_scripts %}{% endblock %}
+</body>
+</html>

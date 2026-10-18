@@ -1,0 +1,163 @@
+{% extends 'base.html' %}
+
+{% block title %}Order #{{ order.order_number }} — AUTOVYNEX Tracking{% endblock %}
+
+{% block content %}
+<div class="container" style="padding-top:24px;">
+  <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:16px; margin-bottom:28px;">
+    <div>
+      <div style="font-size:0.85rem; color:var(--text-muted); margin-bottom:4px;">
+        <a href="{% url 'dashboard:customer_dashboard' %}">Dashboard</a> /
+        <a href="{% url 'orders:order_history' %}">Orders</a> /
+        <span>{{ order.order_number }}</span>
+      </div>
+      <h1 style="font-size:1.85rem; margin:0;">Order #{{ order.order_number }}</h1>
+      <div style="font-size:0.85rem; color:var(--text-muted); margin-top:4px;">
+        Placed on {{ order.created_at|date:"d M Y, h:i A" }}
+      </div>
+    </div>
+    <div style="display:flex; gap:12px;">
+      <a href="{% url 'orders:order_history' %}" class="btn btn-secondary btn-sm">
+        <i data-lucide="arrow-left"></i> All Orders
+      </a>
+    </div>
+  </div>
+
+  <!-- Status Progress Bar -->
+  <div class="card" style="margin-bottom:32px; background:var(--bg-surface-elevated);">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; flex-wrap:wrap; gap:12px;">
+      <div>
+        <span class="badge {% if order.status == 'delivered' %}badge-verified{% elif order.status == 'shipped' %}badge-universal{% else %}badge-unconfirmed{% endif %}" style="font-size:0.82rem;">
+          {{ order.get_status_display }}
+        </span>
+        <div style="font-size:0.85rem; color:var(--text-muted); margin-top:6px;">
+          Courier: <strong>{{ order.tracking_courier }}</strong> • Tracking #: <strong>{{ order.tracking_number }}</strong>
+        </div>
+      </div>
+      <div class="demo-academic-badge">
+        <i data-lucide="info"></i>
+        <span>Demonstration Order:</span> Simulated Logistics Pipeline
+      </div>
+    </div>
+
+    <!-- Step Progress Diagram -->
+    <div style="display:grid; grid-template-columns: repeat(5, 1fr); gap:12px; text-align:center;">
+      <div style="padding:12px; border-radius:var(--radius-md); background:rgba(16, 185, 129, 0.12); color:#047857;">
+        <i data-lucide="check-circle" style="width:20px; height:20px; margin-bottom:4px;"></i>
+        <div style="font-size:0.8rem; font-weight:700;">1. Confirmed</div>
+      </div>
+      <div style="padding:12px; border-radius:var(--radius-md); {% if order.status in 'processing,shipped,out_for_delivery,delivered' %}background:rgba(16, 185, 129, 0.12); color:#047857;{% else %}background:var(--bg-surface-subtle); color:var(--text-muted);{% endif %}">
+        <i data-lucide="package" style="width:20px; height:20px; margin-bottom:4px;"></i>
+        <div style="font-size:0.8rem; font-weight:700;">2. Processing</div>
+      </div>
+      <div style="padding:12px; border-radius:var(--radius-md); {% if order.status in 'shipped,out_for_delivery,delivered' %}background:rgba(16, 185, 129, 0.12); color:#047857;{% else %}background:var(--bg-surface-subtle); color:var(--text-muted);{% endif %}">
+        <i data-lucide="truck" style="width:20px; height:20px; margin-bottom:4px;"></i>
+        <div style="font-size:0.8rem; font-weight:700;">3. Shipped</div>
+      </div>
+      <div style="padding:12px; border-radius:var(--radius-md); {% if order.status in 'out_for_delivery,delivered' %}background:rgba(16, 185, 129, 0.12); color:#047857;{% else %}background:var(--bg-surface-subtle); color:var(--text-muted);{% endif %}">
+        <i data-lucide="map-pin" style="width:20px; height:20px; margin-bottom:4px;"></i>
+        <div style="font-size:0.8rem; font-weight:700;">4. Out for Delivery</div>
+      </div>
+      <div style="padding:12px; border-radius:var(--radius-md); {% if order.status == 'delivered' %}background:rgba(16, 185, 129, 0.12); color:#047857;{% else %}background:var(--bg-surface-subtle); color:var(--text-muted);{% endif %}">
+        <i data-lucide="shield-check" style="width:20px; height:20px; margin-bottom:4px;"></i>
+        <div style="font-size:0.8rem; font-weight:700;">5. Delivered</div>
+      </div>
+    </div>
+  </div>
+
+  <div style="display:grid; grid-template-columns: 1fr 360px; gap:36px;" class="grid-order-detail-layout">
+    <!-- Order Items Column -->
+    <div class="card" style="padding:0; overflow:hidden;">
+      <div style="padding:16px 24px; background:var(--bg-surface-subtle); border-bottom:1px solid var(--border-subtle); font-weight:700; font-size:0.9rem;">
+        Purchased Products & Assemblies ({{ order.items.count }})
+      </div>
+
+      <div style="display:flex; flex-direction:column;">
+        {% for itm in order.items.all %}
+          <div style="padding:20px 24px; border-bottom:1px solid var(--border-subtle); display:flex; justify-content:space-between; align-items:center; gap:16px;">
+            <div style="display:flex; gap:16px; align-items:center;">
+              <div style="width:48px; height:48px; border-radius:var(--radius-md); background:var(--bg-surface-subtle); color:var(--color-primary); display:flex; align-items:center; justify-content:center;">
+                <i data-lucide="{{ itm.product.category.icon_name|default:'package' }}" style="width:24px; height:24px;"></i>
+              </div>
+              <div>
+                <a href="{% url 'inventory:product_detail' itm.product.slug %}" style="font-weight:700; font-size:0.95rem; color:var(--text-main);">
+                  {{ itm.product_name }}
+                </a>
+                <div style="font-size:0.78rem; color:var(--text-muted);">
+                  SKU: {{ itm.product_sku }} • Unit: ₹{{ itm.unit_price|floatformat:0 }} × {{ itm.quantity }}
+                </div>
+                {% if itm.buy_and_install %}
+                  <div class="badge badge-verified" style="margin-top:6px; font-size:0.7rem;">
+                    <i data-lucide="wrench"></i> Professional Installation (+₹{{ itm.installation_fee|floatformat:0 }})
+                  </div>
+                {% endif %}
+              </div>
+            </div>
+
+            <div style="text-align:right;">
+              <div style="font-family:var(--font-heading); font-size:1.15rem; font-weight:800; color:var(--text-main);">
+                ₹{{ itm.total_price|floatformat:0 }}
+              </div>
+            </div>
+          </div>
+        {% endfor %}
+      </div>
+    </div>
+
+    <!-- Summary & Shipping Info Column -->
+    <div style="display:flex; flex-direction:column; gap:24px;">
+      <!-- Cost Summary Card -->
+      <div class="card" style="padding:24px;">
+        <h3 style="font-size:1.15rem; margin-bottom:16px; border-bottom:1px solid var(--border-subtle); padding-bottom:10px;">
+          Financial Summary
+        </h3>
+
+        <div style="display:flex; flex-direction:column; gap:10px; font-size:0.9rem; margin-bottom:16px;">
+          <div style="display:flex; justify-content:space-between;">
+            <span style="color:var(--text-muted);">Subtotal</span>
+            <strong>₹{{ order.subtotal|floatformat:2 }}</strong>
+          </div>
+          {% if order.discount_amount > 0 %}
+          <div style="display:flex; justify-content:space-between; color:#059669;">
+            <span>Discount Applied</span>
+            <strong>-₹{{ order.discount_amount|floatformat:2 }}</strong>
+          </div>
+          {% endif %}
+          <div style="display:flex; justify-content:space-between;">
+            <span style="color:var(--text-muted);">Shipping</span>
+            <strong>{% if order.shipping_fee == 0 %}FREE{% else %}₹{{ order.shipping_fee|floatformat:2 }}{% endif %}</strong>
+          </div>
+          <div style="display:flex; justify-content:space-between;">
+            <span style="color:var(--text-muted);">GST</span>
+            <strong>₹{{ order.tax_amount|floatformat:2 }}</strong>
+          </div>
+          <div style="border-top:1px solid var(--border-subtle); padding-top:12px; margin-top:4px; display:flex; justify-content:space-between; align-items:baseline;">
+            <span style="font-weight:700; font-size:1rem;">Total Amount</span>
+            <span style="font-family:var(--font-heading); font-size:1.45rem; font-weight:800; color:var(--color-primary);">₹{{ order.total_amount|floatformat:2 }}</span>
+          </div>
+        </div>
+
+        <div style="padding:10px; background:var(--bg-surface-subtle); border-radius:var(--radius-md); font-size:0.8rem; color:var(--text-muted);">
+          <div><strong>Payment Method:</strong> {{ order.get_payment_method_display }}</div>
+          <div><strong>Status:</strong> <span style="color:#059669; font-weight:600;">{{ order.payment_status }}</span></div>
+        </div>
+      </div>
+
+      <!-- Shipping Address Details -->
+      <div class="card" style="padding:24px;">
+        <h3 style="font-size:1.15rem; margin-bottom:12px; display:flex; align-items:center; gap:8px;">
+          <i data-lucide="map-pin" style="color:var(--color-primary); width:18px;"></i> Delivery Address
+        </h3>
+        <div style="font-size:0.9rem; line-height:1.6; color:var(--text-main);">
+          <strong>{{ order.full_name }}</strong><br>
+          {{ order.shipping_address }}<br>
+          {{ order.city }}, {{ order.state }} - {{ order.pincode }}<br>
+          <div style="margin-top:8px; color:var(--text-muted); font-size:0.82rem;">
+            Phone: {{ order.phone }} • Email: {{ order.email }}
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

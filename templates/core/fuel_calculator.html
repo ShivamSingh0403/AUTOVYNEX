@@ -1,0 +1,83 @@
+{% extends 'base.html' %}
+
+{% block title %}Fuel Cost Calculator — AUTOVYNEX Engineering Tools{% endblock %}
+
+{% block content %}
+<div class="container" style="padding-top:24px;">
+  <div style="max-width:880px; margin:0 auto;">
+    <div style="text-align:center; margin-bottom:36px;">
+      <div class="demo-academic-badge" style="margin-bottom:12px;">
+        <i data-lucide="gauge"></i>
+        <span>Mileage & Cost Modeling</span>
+      </div>
+      <h1>Automotive Fuel Cost Calculator</h1>
+      <p style="color:var(--text-muted); font-size:1.05rem; max-width:620px; margin:8px auto 0;">
+        Project your daily commute expenses, monthly fuel consumption, and annual highway budget with real-time per-kilometer cost estimation.
+      </p>
+    </div>
+
+    <div class="grid-2" style="align-items:start; gap:32px;">
+      <!-- Form Input -->
+      <div class="card">
+        <h3 style="margin-bottom:20px;">Commute Inputs</h3>
+        <form id="fuel-calc-form">
+          <div class="form-group">
+            <label class="form-label">Daily Driving Distance (KM)</label>
+            <input type="number" id="fuel-daily-km" class="form-control" value="45" min="1" max="1000" step="1">
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Real-World Vehicle Mileage (KM / Litre or KG)</label>
+            <input type="number" id="fuel-mileage" class="form-control" value="16.5" min="1" max="100" step="0.5">
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Fuel Price Per Litre / KG (₹)</label>
+            <input type="number" id="fuel-price-per-l" class="form-control" value="102.5" min="10" max="300" step="0.5">
+            <small style="font-size:0.75rem; color:var(--text-muted);">Current Indian average: Petrol ₹102, Diesel ₹88, CNG ₹82</small>
+          </div>
+        </form>
+      </div>
+
+      <!-- Realtime Output Display -->
+      <div class="card" style="background:var(--bg-surface-elevated); border-color:var(--color-primary-light);">
+        <h3 style="margin-bottom:20px; color:var(--color-primary);">Cost Projections</h3>
+        
+        <div style="display:flex; flex-direction:column; gap:16px;">
+          <div style="padding:14px; background:var(--bg-surface-subtle); border-radius:var(--radius-md); display:flex; justify-content:space-between; align-items:center;">
+            <div>
+              <div style="font-size:0.8rem; color:var(--text-muted);">Daily Expense</div>
+              <div id="fuel-out-daily" style="font-family:var(--font-heading); font-size:1.4rem; font-weight:800; color:var(--text-main);">₹279</div>
+            </div>
+            <i data-lucide="sun" style="color:var(--color-primary);"></i>
+          </div>
+
+          <div style="padding:14px; background:var(--bg-surface-subtle); border-radius:var(--radius-md); display:flex; justify-content:space-between; align-items:center;">
+            <div>
+              <div style="font-size:0.8rem; color:var(--text-muted);">Monthly Expense (30 Days)</div>
+              <div id="fuel-out-monthly" style="font-family:var(--font-heading); font-size:1.4rem; font-weight:800; color:var(--color-primary);">₹8,386</div>
+            </div>
+            <i data-lucide="calendar" style="color:var(--color-primary);"></i>
+          </div>
+
+          <div style="padding:14px; background:var(--bg-surface-subtle); border-radius:var(--radius-md); display:flex; justify-content:space-between; align-items:center;">
+            <div>
+              <div style="font-size:0.8rem; color:var(--text-muted);">Annual Fuel Budget (365 Days)</div>
+              <div id="fuel-out-annual" style="font-family:var(--font-heading); font-size:1.4rem; font-weight:800; color:var(--text-main);">₹1,02,034</div>
+            </div>
+            <i data-lucide="trending-up" style="color:var(--color-primary);"></i>
+          </div>
+
+          <div style="padding:14px; background:rgba(16, 185, 129, 0.1); border:1px solid rgba(16, 185, 129, 0.25); border-radius:var(--radius-md); display:flex; justify-content:space-between; align-items:center;">
+            <div>
+              <div style="font-size:0.8rem; color:#047857;">Running Cost Per KM</div>
+              <div id="fuel-out-per-km" style="font-family:var(--font-heading); font-size:1.4rem; font-weight:800; color:#047857;">₹6.21 / km</div>
+            </div>
+            <i data-lucide="check-circle" style="color:#047857;"></i>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

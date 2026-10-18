@@ -1,0 +1,98 @@
+{% extends 'base.html' %}
+
+{% block title %}5-Year Total Cost of Ownership (TCO) Calculator | AUTOVYNEX{% endblock %}
+
+{% block content %}
+<div class="container" style="padding-top:24px;">
+  <div style="max-width:920px; margin:0 auto;">
+    <div style="text-align:center; margin-bottom:36px;">
+      <div class="demo-academic-badge" style="margin-bottom:12px;">
+        <i data-lucide="pie-chart"></i>
+        <span>Financial Life-Cycle Analysis</span>
+      </div>
+      <h1>5-Year Total Cost of Ownership (TCO)</h1>
+      <p style="color:var(--text-muted); font-size:1.05rem; max-width:640px; margin:8px auto 0;">
+        Look beyond the initial vehicle sticker price. Calculate insurance renewals, periodic services, fuel consumption, tyre replacements, and true depreciation over a 5-year ownership horizon.
+      </p>
+    </div>
+
+    <div class="grid-2" style="align-items:start; gap:32px;">
+      <div class="card">
+        <h3 style="margin-bottom:16px;">Vehicle & Usage Parameters</h3>
+        <form id="tco-calc-form">
+          <div class="form-group">
+            <label class="form-label">Vehicle On-Road / Purchase Price (₹)</label>
+            <input type="number" id="tco-car-price" class="form-control" value="1200000" min="200000" step="25000">
+          </div>
+
+          <div class="grid-2" style="gap:16px;">
+            <div class="form-group">
+              <label class="form-label">Annual Usage (KM)</label>
+              <input type="number" id="tco-annual-km" class="form-control" value="15000" min="1000" step="1000">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Mileage (KM/L)</label>
+              <input type="number" id="tco-mileage" class="form-control" value="16" min="5" step="1">
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Fuel Price Per Litre (₹)</label>
+            <input type="number" id="tco-fuel-rate" class="form-control" value="102" min="50" step="1">
+          </div>
+
+          <div class="grid-2" style="gap:16px;">
+            <div class="form-group">
+              <label class="form-label">Annual Insurance (₹)</label>
+              <input type="number" id="tco-insurance" class="form-control" value="28000" min="5000" step="1000">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Annual Service Cost (₹)</label>
+              <input type="number" id="tco-service" class="form-control" value="12500" min="2000" step="500">
+            </div>
+          </div>
+        </form>
+      </div>
+
+      <!-- TCO Summary Display -->
+      <div class="card" style="background:var(--bg-surface-elevated); border-color:var(--color-primary-light);">
+        <h3 style="margin-bottom:20px; color:var(--color-primary);">5-Year Expenditure Summary</h3>
+
+        <div style="display:flex; flex-direction:column; gap:16px;">
+          <div style="padding:14px; background:var(--bg-surface-subtle); border-radius:var(--radius-md); display:flex; justify-content:space-between;">
+            <div>
+              <div style="font-size:0.8rem; color:var(--text-muted);">5-Year Cumulative Fuel Expense</div>
+              <div id="tco-out-5yr-fuel" style="font-family:var(--font-heading); font-size:1.3rem; font-weight:800; color:var(--text-main);">₹4,78,125</div>
+            </div>
+            <i data-lucide="droplet" style="color:var(--color-primary);"></i>
+          </div>
+
+          <div style="padding:14px; background:var(--bg-surface-subtle); border-radius:var(--radius-md); display:flex; justify-content:space-between;">
+            <div>
+              <div style="font-size:0.8rem; color:var(--text-muted);">5-Year Maintenance & Wear/Tear</div>
+              <div id="tco-out-5yr-service" style="font-family:var(--font-heading); font-size:1.3rem; font-weight:800; color:var(--text-main);">₹68,750</div>
+            </div>
+            <i data-lucide="wrench" style="color:var(--color-primary);"></i>
+          </div>
+
+          <div style="padding:16px; background:rgba(2, 132, 199, 0.1); border:1px solid rgba(2, 132, 199, 0.3); border-radius:var(--radius-md); display:flex; justify-content:space-between; align-items:center;">
+            <div>
+              <div style="font-size:0.82rem; color:var(--color-primary); font-weight:700;">TOTAL 5-YEAR CASH OUTFLOW</div>
+              <div id="tco-out-5yr-total" style="font-family:var(--font-heading); font-size:1.8rem; font-weight:800; color:var(--text-main);">₹13,29,500</div>
+              <div style="font-size:0.75rem; color:var(--text-muted); margin-top:2px;">(Purchase + Fuel + Insurance + Services + Tyres - Residual Value)</div>
+            </div>
+          </div>
+
+          <div style="padding:14px; background:rgba(16, 185, 129, 0.1); border:1px solid rgba(16, 185, 129, 0.25); border-radius:var(--radius-md); display:flex; justify-content:space-between; align-items:center;">
+            <div>
+              <div style="font-size:0.8rem; color:#047857; font-weight:700;">TRUE COST PER KILOMETER DRIVEN</div>
+              <div id="tco-out-per-km" style="font-family:var(--font-heading); font-size:1.5rem; font-weight:800; color:#047857;">₹17.73 / km</div>
+            </div>
+            <i data-lucide="gauge" style="color:#047857;"></i>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

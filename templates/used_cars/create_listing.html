@@ -1,0 +1,102 @@
+{% extends 'base.html' %}
+
+{% block title %}Sell Your Car — AUTOVYNEX Verified Listing{% endblock %}
+
+{% block content %}
+<div class="container" style="padding-top:24px;">
+  <div style="max-width:860px; margin:0 auto;">
+    <div style="text-align:center; margin-bottom:36px;">
+      <div class="demo-academic-badge" style="margin-bottom:12px;">
+        <i data-lucide="tag"></i>
+        <span>Direct Seller Listing Portal</span>
+      </div>
+      <h1>List Your Pre-Owned Car for Sale</h1>
+      <p style="color:var(--text-muted); font-size:1.05rem; max-width:620px; margin:8px auto 0;">
+        Reach thousands of genuine verified automotive enthusiasts and motorists with zero brokerage.
+      </p>
+    </div>
+
+    <div class="card" style="margin-bottom:32px;">
+      <form method="POST" action="{% url 'used_cars:create_listing' %}" enctype="multipart/form-data">
+        {% csrf_token %}
+
+        <h3 style="font-size:1.15rem; margin-bottom:16px; color:var(--color-primary); display:flex; align-items:center; gap:8px;">
+          <i data-lucide="car"></i> 1. Vehicle Specifications
+        </h3>
+
+        <div class="form-group">
+          <label class="form-label">Listing Title *</label>
+          <input type="text" name="title" required class="form-control" placeholder="e.g. 2022 Hyundai Creta SX (O) Diesel AT (Single Owner, Pristine)">
+        </div>
+
+        <div class="grid-3" style="gap:16px; margin-bottom:16px;">
+          <div class="form-group">
+            <label class="form-label">Make / Manufacturer *</label>
+            <input type="text" name="make_name" required class="form-control" placeholder="e.g. Hyundai">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Model Name *</label>
+            <input type="text" name="model_name" required class="form-control" placeholder="e.g. Creta">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Variant Name *</label>
+            <input type="text" name="variant_name" required class="form-control" placeholder="e.g. 1.5 CRDi SX (O) AT">
+          </div>
+        </div>
+
+        <div class="grid-4" style="gap:16px; margin-bottom:16px;">
+          <div class="form-group">
+            <label class="form-label">Model Year *</label>
+            <input type="number" name="year" required class="form-control" value="2022" min="2005" max="2026">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Odometer (KM) *</label>
+            <input type="number" name="mileage" required class="form-control" value="32000" min="0">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Fuel Type *</label>
+            <select name="fuel_type" class="form-select">
+              <option value="Petrol">Petrol</option>
+              <option value="Diesel" selected>Diesel</option>
+              <option value="CNG">CNG</option>
+              <option value="EV">Electric (EV)</option>
+              <option value="Hybrid">Hybrid</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Transmission *</label>
+            <select name="transmission" class="form-select">
+              <option value="Manual">Manual</option>
+              <option value="Automatic" selected>Automatic</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="grid-3" style="gap:16px; margin-bottom:20px;">
+          <div class="form-group">
+            <label class="form-label">Previous Owners *</label>
+            <input type="number" name="owners_count" required class="form-control" value="1" min="1" max="6">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Asking Price (₹) *</label>
+            <input type="number" name="expected_price" required class="form-control" placeholder="e.g. 1550000" min="50000" step="5000">
+          </div>
+          <div class="form-group">
+            <label class="form-label">City Location *</label>
+            <input type="text" name="location_city" required class="form-control" value="Bengaluru">
+          </div>
+        </div>
+
+        <div class="form-group" style="margin-bottom:20px;">
+          <label class="form-label">Detailed Vehicle Condition & Maintenance History *</label>
+          <textarea name="description" required class="form-control" style="min-height:90px;" placeholder="Highlight tyre condition, authorized service records, insurance status, and any upgrades..."></textarea>
+        </div>
+
+        <button type="submit" class="btn btn-primary btn-lg" style="width:100%; justify-content:center;">
+          <i data-lucide="check-circle"></i> Submit Used Car Listing
+        </button>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}

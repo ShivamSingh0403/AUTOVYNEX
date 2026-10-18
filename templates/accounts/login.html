@@ -1,0 +1,52 @@
+{% extends 'base.html' %}
+
+{% block title %}Sign In — AUTOVYNEX Customer Portal{% endblock %}
+
+{% block content %}
+<div class="container" style="padding-top:36px; padding-bottom:36px;">
+  <div style="max-width:440px; margin:0 auto;">
+    <div style="text-align:center; margin-bottom:28px;">
+      <div class="brand-logo-emblem" style="margin:0 auto 16px; width:54px; height:54px; font-size:28px;">A</div>
+      <h1 style="font-size:1.85rem; margin-bottom:6px;">Sign In to AUTOVYNEX</h1>
+      <p style="color:var(--text-muted); font-size:0.9rem;">Access your vehicle garage, order history, and service logs.</p>
+    </div>
+
+    <!-- Quick Demo Credentials Hint Card -->
+    <div class="card" style="background:var(--bg-surface-subtle); padding:14px 18px; margin-bottom:24px; border-left:4px solid var(--color-primary);">
+      <div style="font-size:0.8rem; font-weight:700; color:var(--color-primary); margin-bottom:4px;">Demo Credentials:</div>
+      <div style="font-size:0.8rem; color:var(--text-main);">
+        <strong>Customer:</strong> <code>rahul</code> / <code>Customer@12345</code><br>
+        <strong>Administrator:</strong> <code>admin</code> / <code>Admin@12345</code>
+      </div>
+    </div>
+
+    <div class="card">
+      <form method="POST" action="{% url 'accounts:login' %}">
+        {% csrf_token %}
+        {% if request.GET.next %}<input type="hidden" name="next" value="{{ request.GET.next }}">{% endif %}
+
+        <div class="form-group">
+          <label class="form-label">Username or Registered Email *</label>
+          <input type="text" name="username" required class="form-control" placeholder="e.g. rahul or rahul.sharma@example.com" value="rahul">
+        </div>
+
+        <div class="form-group" style="margin-bottom:12px;">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+            <label class="form-label" style="margin:0;">Password *</label>
+            <a href="{% url 'accounts:forgot_password' %}" style="font-size:0.78rem; color:var(--color-primary);">Forgot password?</a>
+          </div>
+          <input type="password" name="password" required class="form-control" placeholder="••••••••" value="Customer@12345">
+        </div>
+
+        <button type="submit" class="btn btn-primary btn-lg" style="width:100%; justify-content:center; margin-top:16px;">
+          <i data-lucide="log-in"></i> Sign In to Account
+        </button>
+      </form>
+
+      <div style="text-align:center; margin-top:24px; padding-top:16px; border-top:1px solid var(--border-subtle); font-size:0.88rem; color:var(--text-muted);">
+        Don't have an AUTOVYNEX account? <a href="{% url 'accounts:register' %}" style="font-weight:700; color:var(--color-primary);">Register Now</a>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,54 @@
+{% extends 'base.html' %}
+
+{% block title %}Notifications — AUTOVYNEX{% endblock %}
+
+{% block content %}
+<div class="container" style="padding-top:24px;">
+  <div style="max-width:820px; margin:0 auto;">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:28px;">
+      <div>
+        <div style="font-size:0.85rem; color:var(--text-muted); margin-bottom:4px;">
+          <a href="{% url 'dashboard:customer_dashboard' %}">Dashboard</a> / <span>Notifications</span>
+        </div>
+        <h1 style="font-size:1.85rem; margin:0;">Notifications & Alerts</h1>
+      </div>
+      {% if notifications %}
+        <a href="?mark_read=1" class="btn btn-secondary btn-sm">
+          <i data-lucide="check-check"></i> Mark All as Read
+        </a>
+      {% endif %}
+    </div>
+
+    <div style="display:flex; flex-direction:column; gap:14px;">
+      {% for notif in notifications %}
+        <div class="card" style="padding:18px 24px; {% if not notif.is_read %}border-color:var(--color-primary); background:rgba(2, 132, 199, 0.04);{% endif %}">
+          <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:16px;">
+            <div style="display:flex; gap:16px; align-items:flex-start;">
+              <div style="width:40px; height:40px; border-radius:50%; background:rgba(2, 132, 199, 0.12); color:var(--color-primary); display:flex; align-items:center; justify-content:center; flex-shrink:0;">
+                <i data-lucide="{% if notif.notification_type == 'order' %}truck{% elif notif.notification_type == 'service' %}wrench{% elif notif.notification_type == 'reminder' %}clock{% else %}bell{% endif %}" style="width:20px; height:20px;"></i>
+              </div>
+              <div>
+                <h4 style="font-size:1.05rem; margin-bottom:4px; color:var(--text-main);">{{ notif.title }}</h4>
+                <p style="font-size:0.9rem; color:var(--text-muted); margin:0; line-height:1.5;">{{ notif.message }}</p>
+                <div style="font-size:0.75rem; color:var(--text-subtle); margin-top:6px;">
+                  {{ notif.created_at|date:"d M Y, h:i A" }}
+                </div>
+              </div>
+            </div>
+
+            {% if notif.link %}
+              <a href="{{ notif.link }}" class="btn btn-primary btn-sm" style="flex-shrink:0;">View</a>
+            {% endif %}
+          </div>
+        </div>
+      {% empty %}
+        <div class="card" style="text-align:center; padding:60px 20px;">
+          <i data-lucide="bell-off" style="width:48px; height:48px; color:var(--text-muted); margin-bottom:12px;"></i>
+          <h3>No Notifications</h3>
+          <p style="color:var(--text-muted);">You're all caught up with your orders and vehicle maintenance reminders.</p>
+        </div>
+      {% endfor %}
+    </div>
+  </div>
+</div>
+{% endblock %}

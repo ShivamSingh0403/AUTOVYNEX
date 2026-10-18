@@ -1,0 +1,62 @@
+{% extends 'base.html' %}
+
+{% block title %}Inventory & Stock Audit — Admin Center | AUTOVYNEX{% endblock %}
+
+{% block content %}
+<div class="container" style="padding-top:24px;">
+  <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:16px; margin-bottom:28px;">
+    <div>
+      <div style="font-size:0.85rem; color:var(--text-muted); margin-bottom:4px;">
+        <a href="{% url 'custom_admin:dashboard_overview' %}">Admin Center</a> / <span>Inventory</span>
+      </div>
+      <h1 style="font-size:1.85rem; margin:0;">Inventory & Stock Management Audit</h1>
+      <p style="color:var(--text-muted); font-size:0.9rem; margin-top:4px;">Quickly audit and replenish warehouse inventory quantities.</p>
+    </div>
+
+    <a href="/admin/inventory/product/add/" target="_blank" class="btn btn-primary btn-sm">
+      <i data-lucide="plus"></i> Add New Product SKU
+    </a>
+  </div>
+
+  <div class="card" style="padding:0; overflow-x:auto;">
+    <table style="width:100%; border-collapse:collapse; min-width:850px; font-size:0.9rem;">
+      <thead>
+        <tr style="background:var(--bg-surface-subtle); border-bottom:1px solid var(--border-subtle); color:var(--text-muted);">
+          <th style="padding:14px 20px; text-align:left;">Product SKU</th>
+          <th style="padding:14px 20px; text-align:left;">Part Name</th>
+          <th style="padding:14px 20px; text-align:left;">Category</th>
+          <th style="padding:14px 20px; text-align:right;">Price (₹)</th>
+          <th style="padding:14px 20px; text-align:center;">Current Stock</th>
+          <th style="padding:14px 20px; text-align:center;">Quick Adjust Stock</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for prod in products %}
+          <tr style="border-bottom:1px solid var(--border-subtle);">
+            <td style="padding:14px 20px; font-weight:700; color:var(--color-primary);">{{ prod.sku }}</td>
+            <td style="padding:14px 20px;">
+              <a href="{% url 'inventory:product_detail' prod.slug %}" target="_blank" style="color:var(--text-main); font-weight:600;">{{ prod.name }}</a>
+              <div style="font-size:0.75rem; color:var(--text-muted);">Brand: {{ prod.brand.name }}</div>
+            </td>
+            <td style="padding:14px 20px;">{{ prod.category.name }}</td>
+            <td style="padding:14px 20px; text-align:right; font-weight:700;">₹{{ prod.final_price|floatformat:0 }}</td>
+            <td style="padding:14px 20px; text-align:center;">
+              <span class="badge {% if prod.stock_quantity > 10 %}badge-verified{% elif prod.stock_quantity > 0 %}badge-unconfirmed{% else %}badge-incompatible{% endif %}">
+                {{ prod.stock_quantity }} Units
+              </span>
+            </td>
+            <td style="padding:14px 20px; text-align:center;">
+              <form method="POST" action="{% url 'custom_admin:admin_inventory' %}" style="display:inline-flex; gap:6px; align-items:center; margin:0;">
+                {% csrf_token %}
+                <input type="hidden" name="product_id" value="{{ prod.id }}">
+                <input type="number" name="new_stock" value="{{ prod.stock_quantity }}" min="0" max="999" style="width:65px; padding:4px 6px; font-size:0.85rem; border:1px solid var(--border-medium); border-radius:4px; text-align:center;">
+                <button type="submit" class="btn btn-secondary btn-sm" style="padding:4px 8px; font-size:0.75rem;">Save</button>
+              </form>
+            </td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

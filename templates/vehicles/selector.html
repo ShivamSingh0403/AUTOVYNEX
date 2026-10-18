@@ -1,0 +1,177 @@
+{% extends 'base.html' %}
+
+{% block title %}Vehicle Selector — Guaranteed Spare Parts Compatibility | AUTOVYNEX{% endblock %}
+
+{% block content %}
+<div class="container" style="padding-top:24px;">
+  <div style="max-width:860px; margin:0 auto;">
+    <div style="text-align:center; margin-bottom:36px;">
+      <div class="demo-academic-badge" style="margin-bottom:12px;">
+        <i data-lucide="shield-check"></i>
+        <span>Precision Engineering Fitment Engine</span>
+      </div>
+      <h1>Select Your Vehicle</h1>
+      <p style="color:var(--text-muted); font-size:1.05rem; max-width:620px; margin:8px auto 0;">
+        Filter through 300+ spare parts specifically verified for your exact year, fuel type, transmission, and engine configuration.
+      </p>
+    </div>
+
+    <!-- Active Vehicle Card if set -->
+    {% if selected_variant %}
+    <div class="card" style="margin-bottom:32px; background:linear-gradient(135deg, rgba(16, 185, 129, 0.08), rgba(2, 132, 199, 0.08)); border-color:#10b981;">
+      <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:16px;">
+        <div>
+          <span class="badge badge-verified" style="margin-bottom:6px;">Currently Active Vehicle</span>
+          <h3 style="margin:4px 0;">{{ selected_variant.display_name }}</h3>
+          <div style="font-size:0.85rem; color:var(--text-muted);">
+            Engine: {{ selected_variant.engine_cc }} CC • Power: {{ selected_variant.power_hp }} BHP • Years: {{ selected_variant.year_from }}-{{ selected_variant.year_to }}
+          </div>
+        </div>
+        <div style="display:flex; gap:10px;">
+          <a href="{% url 'inventory:shop' %}" class="btn btn-primary btn-sm">
+            <i data-lucide="package"></i> Shop Compatible Parts
+          </a>
+          <a href="{% url 'vehicles:clear_vehicle_session' %}" class="btn btn-secondary btn-sm" style="color:var(--color-danger);">
+            <i data-lucide="trash-2"></i> Clear
+          </a>
+        </div>
+      </div>
+    </div>
+    {% endif %}
+
+    <!-- Selector Form -->
+    <div class="card" style="margin-bottom:32px;">
+      <form method="POST" action="{% url 'vehicles:select_vehicle_session' %}">
+        {% csrf_token %}
+        <div class="form-group">
+          <label class="form-label" style="font-size:0.95rem;">Step 1: Choose Manufacturer / Make *</label>
+          <select id="page-select-make" class="form-select" required>
+            <option value="">Select Manufacturer (e.g. Maruti Suzuki, Hyundai, Tata, Mahindra)...</option>
+            {% for make in makes %}
+              <option value="{{ make.id }}">{{ make.name }} ({{ make.country }})</option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" style="font-size:0.95rem;">Step 2: Choose Model & Body Style *</label>
+          <select id="page-select-model" class="form-select" disabled required>
+            <option value="">Select Model...</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" style="font-size:0.95rem;">Step 3: Choose Variant, Fuel Type & Transmission *</label>
+          <select id="page-select-variant" name="variant_id" class="form-select" disabled required>
+            <option value="">Select Variant...</option>
+          </select>
+          <small style="font-size:0.78rem; color:var(--text-muted); display:block; margin-top:4px;">
+            Includes verified details: Petrol/Diesel/CNG/EV, MT/AT/DCT, Engine CC, and Production Years.
+          </small>
+        </div>
+
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-top:24px; padding-top:16px; border-top:1px solid var(--border-subtle); flex-wrap:wrap; gap:12px;">
+          <div style="font-size:0.85rem; color:var(--text-muted);">
+            <i data-lucide="info" style="width:16px; vertical-align:middle; color:var(--color-primary);"></i>
+            Saved to your active browsing session and verified against relational database fitment tables.
+          </div>
+          <button type="submit" id="page-submit-vehicle" class="btn btn-primary btn-lg" disabled>
+            <i data-lucide="check-circle"></i> Activate Vehicle Filter
+          </button>
+        </div>
+      </form>
+    </div>
+
+    <!-- Quick Garage Integration Option for Logged-In Users -->
+    {% if user.is_authenticated and user.garage_vehicles.exists %}
+    <div class="card" style="background:var(--bg-surface-elevated);">
+      <h3 style="font-size:1.15rem; margin-bottom:14px; color:var(--color-primary);">
+        <i data-lucide="warehouse" style="vertical-align:middle;"></i> Choose From Your Saved Vehicles in My Garage
+      </h3>
+      <div style="display:flex; flex-direction:column; gap:10px;">
+        {% for gcar in user.garage_vehicles.all %}
+          <div style="display:flex; justify-content:space-between; align-items:center; padding:12px 16px; background:var(--bg-surface-subtle); border-radius:var(--radius-md); border:1px solid var(--border-subtle);">
+            <div>
+              <div style="font-weight:700; font-size:0.95rem;">{{ gcar.display_title }}</div>
+              <div style="font-size:0.8rem; color:var(--text-muted);">Reg: {{ gcar.registration_number }} • {{ gcar.current_mileage|floatformat:0 }} KM</div>
+            </div>
+            <form method="POST" action="{% url 'vehicles:select_vehicle_session' %}">
+              {% csrf_token %}
+              <input type="hidden" name="variant_id" value="{{ gcar.variant.id }}">
+              <button type="submit" class="btn btn-primary btn-sm">Select This Car</button>
+            </form>
+          </div>
+        {% endfor %}
+      </div>
+    </div>
+    {% endif %}
+  </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  const pMake = document.getElementById('page-select-make');
+  const pModel = document.getElementById('page-select-model');
+  const pVariant = document.getElementById('page-select-variant');
+  const pSubmit = document.getElementById('page-submit-vehicle');
+
+  if (pMake && pModel && pVariant) {
+    pMake.addEventListener('change', async () => {
+      const makeId = pMake.value;
+      pModel.innerHTML = '<option value="">Loading Models...</option>';
+      pModel.disabled = true;
+      pVariant.innerHTML = '<option value="">Select Variant...</option>';
+      pVariant.disabled = true;
+      pSubmit.disabled = true;
+
+      if (!makeId) {
+        pModel.innerHTML = '<option value="">Select Model...</option>';
+        return;
+      }
+
+      try {
+        const res = await fetch(`/vehicles/api/models/?make_id=${makeId}`);
+        const data = await res.json();
+        let opts = '<option value="">Select Model...</option>';
+        data.models.forEach(m => {
+          opts += `<option value="${m.id}">${m.name} (${m.body_type})</option>`;
+        });
+        pModel.innerHTML = opts;
+        pModel.disabled = false;
+      } catch (err) {
+        pModel.innerHTML = '<option value="">Error loading models</option>';
+      }
+    });
+
+    pModel.addEventListener('change', async () => {
+      const modelId = pModel.value;
+      pVariant.innerHTML = '<option value="">Loading Variants...</option>';
+      pVariant.disabled = true;
+      pSubmit.disabled = true;
+
+      if (!modelId) {
+        pVariant.innerHTML = '<option value="">Select Variant...</option>';
+        return;
+      }
+
+      try {
+        const res = await fetch(`/vehicles/api/variants/?model_id=${modelId}`);
+        const data = await res.json();
+        let opts = '<option value="">Select Variant...</option>';
+        data.variants.forEach(v => {
+          opts += `<option value="${v.id}">${v.name} • ${v.fuel_type} • ${v.transmission} • ${v.engine_cc}cc (${v.year_from}-${v.year_to})</option>`;
+        });
+        pVariant.innerHTML = opts;
+        pVariant.disabled = false;
+      } catch (err) {
+        pVariant.innerHTML = '<option value="">Error loading variants</option>';
+      }
+    });
+
+    pVariant.addEventListener('change', () => {
+      pSubmit.disabled = !pVariant.value;
+    });
+  }
+});
+</script>
+{% endblock %}

@@ -1,0 +1,103 @@
+<footer class="site-footer">
+  <div class="container">
+    <div style="display:grid; grid-template-columns: 2fr 1fr 1fr 1fr 1.5fr; gap:32px;" class="grid-footer">
+      <!-- Col 1: Brand Info & Newsletter -->
+      <div>
+        <a href="{% url 'core:home' %}" class="brand-wrapper" style="margin-bottom:16px;">
+          <svg class="autovynex-road-a" style="width:40px; height:40px;" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <rect width="48" height="48" rx="10" fill="#162230" />
+            <path d="M11 41 L21.5 11" stroke="#087EFF" stroke-width="3.6" stroke-linecap="round" />
+            <path d="M37 41 L26.5 11" stroke="#087EFF" stroke-width="3.6" stroke-linecap="round" />
+            <line x1="24" y1="39" x2="24" y2="31" stroke="#FFFFFF" stroke-width="2.6" stroke-linecap="round" />
+            <path d="M15.5 28 H32.5" stroke="#00D2FF" stroke-width="3.2" stroke-linecap="round" />
+            <circle cx="24" cy="9.5" r="2.8" fill="#00D2FF" />
+          </svg>
+          <div class="brand-text-group">
+            <span class="brand-title" style="color:#ffffff;">AUTO<span style="color:#00D2FF;">VYNEX</span></span>
+            <span class="brand-tagline" style="color:#94a3b8;">The Future of Every Drive</span>
+          </div>
+        </a>
+        <p style="font-size:0.88rem; line-height:1.6; margin-bottom:20px; color:#94a3b8;">
+          India's intelligent automotive technology platform: verified spare parts with 100% fitment check, certified workshop servicing, digital garage maintenance, and AI vehicle assistance.
+        </p>
+        <div class="demo-academic-badge" style="margin-bottom:20px;">
+          <i data-lucide="shield-check" style="width:14px; height:14px; color:#00D2FF;"></i>
+          <span>Verified Platform:</span> 300+ OEM Parts & Nationwide Logistics
+        </div>
+        <form method="POST" action="{% url 'core:newsletter_subscribe' %}" style="display:flex; gap:8px;" id="footer-newsletter-form">
+          {% csrf_token %}
+          <input type="email" name="email" required placeholder="Enter email for maintenance updates" class="form-control" style="background:#162230; border-color:#2b3e55; color:#fff; font-size:0.85rem; padding:8px 12px;" aria-label="Email for newsletter">
+          <button type="submit" class="btn btn-primary btn-sm" style="flex-shrink:0;">Subscribe</button>
+        </form>
+      </div>
+
+      <!-- Col 2: Spare Parts -->
+      <div>
+        <h5>Spare Parts</h5>
+        <ul>
+          <li><a href="{% url 'inventory:shop' %}?category=engine-oil-fluids">Engine Oil & Fluids</a></li>
+          <li><a href="{% url 'inventory:shop' %}?category=batteries-power">Batteries & Power</a></li>
+          <li><a href="{% url 'inventory:shop' %}?category=brake-pads-rotors">Brake Pads & Rotors</a></li>
+          <li><a href="{% url 'inventory:shop' %}?category=headlights-lighting">Headlights & Lighting</a></li>
+          <li><a href="{% url 'inventory:shop' %}?category=tyres-wheels">Tyres & Wheels</a></li>
+          <li><a href="{% url 'inventory:shop' %}">Browse All 300+ Parts</a></li>
+        </ul>
+      </div>
+
+      <!-- Col 3: Services & Garage -->
+      <div>
+        <h5>Services & Garage</h5>
+        <ul>
+          <li><a href="{% url 'services:book' %}">Book Periodic Service</a></li>
+          <li><a href="{% url 'services:directory' %}">Verified Workshops</a></li>
+          <li><a href="{% url 'garage:index' %}">Digital Garage</a></li>
+          <li><a href="{% url 'assistance:request_view' %}">Roadside Assistance</a></li>
+          <li><a href="{% url 'enquiries:missing_part_request' %}">Find Missing Part</a></li>
+          <li><a href="{% url 'core:offers' %}">Current Offers & Deals</a></li>
+        </ul>
+      </div>
+
+      <!-- Col 4: Tools & AI Help -->
+      <div>
+        <h5>Automotive Tools</h5>
+        <ul>
+          <li><a href="{% url 'core:ai_car_help' %}">AI Car Help Assistant</a></li>
+          <li><a href="{% url 'core:car_valuation' %}">Car Valuation Calculator</a></li>
+          <li><a href="{% url 'core:fuel_calculator' %}">Fuel Cost Calculator</a></li>
+          <li><a href="{% url 'core:ownership_calculator' %}">5-Yr Ownership Cost</a></li>
+          <li><a href="{% url 'used_cars:marketplace' %}">Used Car Marketplace</a></li>
+          <li><a href="{% url 'used_cars:compare_view' %}">Car Comparison Matrix</a></li>
+        </ul>
+      </div>
+
+      <!-- Col 5: Company & Legal -->
+      <div>
+        <h5>Company & Support</h5>
+        <ul>
+          <li><a href="{% url 'core:about' %}">About AUTOVYNEX</a></li>
+          <li><a href="{% url 'core:contact' %}">Contact Engineering Team</a></li>
+          <li><a href="{% url 'core:privacy_policy' %}">Privacy Policy</a></li>
+          <li><a href="{% url 'core:terms_conditions' %}">Terms & Conditions</a></li>
+          <li><a href="{% url 'vehicles:selector_page' %}">Vehicle Selector Tool</a></li>
+        </ul>
+        <div style="margin-top:20px; font-size:0.8rem; color:#64748b;">
+          <div><strong>Support Desk:</strong> support@autovynex.com</div>
+          <div><strong>Helpline:</strong> +91 80 4920 1800</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Footer Bottom -->
+    <div class="footer-bottom">
+      <div>
+        © 2026 AUTOVYNEX Platform. Engineered with Python, Django 5.2 LTS, MySQL 8.4, HTML5, CSS3, Vanilla JS. “The Future of Every Drive.”
+      </div>
+      <div style="display:flex; gap:16px;">
+        <a href="{% url 'core:privacy_policy' %}">Privacy</a>
+        <a href="{% url 'core:terms_conditions' %}">Terms</a>
+        <a href="{% url 'core:contact' %}">Support</a>
+        <a href="/admin/">Staff Portal</a>
+      </div>
+    </div>
+  </div>
+</footer>

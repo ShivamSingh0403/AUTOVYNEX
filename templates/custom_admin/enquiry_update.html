@@ -1,0 +1,48 @@
+{% extends 'base.html' %}
+
+{% block title %}Manage Sourcing Enquiry #{{ enquiry.reference_code }} — Admin Center{% endblock %}
+
+{% block content %}
+<div class="container" style="padding-top:24px;">
+  <div style="max-width:680px; margin:0 auto;">
+    <div style="margin-bottom:24px;">
+      <a href="{% url 'custom_admin:admin_enquiries' %}" style="font-size:0.85rem; color:var(--text-muted);">← Back to Enquiries</a>
+      <h1 style="font-size:1.85rem; margin-top:8px;">Manage Enquiry #{{ enquiry.reference_code }}</h1>
+      <div style="color:var(--text-muted); font-size:0.9rem;">Part: <strong>{{ enquiry.part_name }}</strong> for {{ enquiry.vehicle_details }}</div>
+    </div>
+
+    <div class="card">
+      <form method="POST" action="{% url 'custom_admin:admin_enquiry_update' enquiry.id %}">
+        {% csrf_token %}
+
+        <div class="form-group">
+          <label class="form-label">Sourcing Progress Status *</label>
+          <select name="status" class="form-select">
+            <option value="submitted" {% if enquiry.status == 'submitted' %}selected{% endif %}>Submitted</option>
+            <option value="under_review" {% if enquiry.status == 'under_review' %}selected{% endif %}>Under Review</option>
+            <option value="searching" {% if enquiry.status == 'searching' %}selected{% endif %}>Searching for Part Across Logistics</option>
+            <option value="quote_available" {% if enquiry.status == 'quote_available' %}selected{% endif %}>Quote Available</option>
+            <option value="completed" {% if enquiry.status == 'completed' %}selected{% endif %}>Completed / Sourced</option>
+            <option value="unavailable" {% if enquiry.status == 'unavailable' %}selected{% endif %}>Part Currently Unavailable</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Estimated Quote Amount (₹)</label>
+          <input type="number" name="quote_amount" step="0.5" class="form-control" value="{{ enquiry.quote_amount|default:'' }}" placeholder="e.g. 4800">
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Logistics Notes / Customer Progress Message</label>
+          <textarea name="admin_notes" class="form-control" style="min-height:90px;" placeholder="Update driver on shipment timeline or origin warehouse...">{{ enquiry.admin_notes }}</textarea>
+        </div>
+
+        <div style="display:flex; justify-content:flex-end; gap:12px; margin-top:24px;">
+          <a href="{% url 'custom_admin:admin_enquiries' %}" class="btn btn-secondary">Cancel</a>
+          <button type="submit" class="btn btn-primary">Save Sourcing Update</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}

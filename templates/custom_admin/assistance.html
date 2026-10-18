@@ -1,0 +1,69 @@
+{% extends 'base.html' %}
+
+{% block title %}Admin Roadside Dispatch Desk — AUTOVYNEX{% endblock %}
+
+{% block content %}
+<div class="container" style="padding-top:24px;">
+  <div style="margin-bottom:28px;">
+    <div style="font-size:0.85rem; color:var(--text-muted); margin-bottom:4px;">
+      <a href="{% url 'custom_admin:dashboard_overview' %}">Admin Center</a> / <span>Roadside Assistance</span>
+    </div>
+    <h1 style="font-size:1.85rem; margin:0;">Roadside Assistance Dispatch Desk</h1>
+    <p style="color:var(--text-muted); font-size:0.9rem; margin-top:4px;">Manage emergency driver tickets, patrol assignments, and incident resolution.</p>
+  </div>
+
+  <div class="card" style="padding:0; overflow-x:auto;">
+    <table style="width:100%; border-collapse:collapse; min-width:850px; font-size:0.9rem;">
+      <thead>
+        <tr style="background:var(--bg-surface-subtle); border-bottom:1px solid var(--border-subtle); color:var(--text-muted);">
+          <th style="padding:14px 20px; text-align:left;">Ticket #</th>
+          <th style="padding:14px 20px; text-align:left;">Emergency Type</th>
+          <th style="padding:14px 20px; text-align:left;">Location</th>
+          <th style="padding:14px 20px; text-align:left;">Driver Contact</th>
+          <th style="padding:14px 20px; text-align:center;">Status</th>
+          <th style="padding:14px 20px; text-align:center;">Patrol Action</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for req in requests_list %}
+          <tr style="border-bottom:1px solid var(--border-subtle);">
+            <td style="padding:14px 20px; font-weight:700;">{{ req.ticket_number }}</td>
+            <td style="padding:14px 20px;">
+              <strong>{{ req.get_request_type_display }}</strong><br>
+              <span class="badge badge-incompatible" style="font-size:0.68rem;">{{ req.get_urgency_display }}</span>
+            </td>
+            <td style="padding:14px 20px;">
+              {{ req.location_address }}<br>
+              <span style="font-size:0.75rem; color:var(--text-muted);">City: {{ req.city }}</span>
+            </td>
+            <td style="padding:14px 20px;">
+              <strong>{{ req.contact_name }}</strong><br>
+              <span style="font-size:0.75rem; color:var(--text-muted);">Ph: {{ req.contact_phone }}</span>
+            </td>
+            <td style="padding:14px 20px; text-align:center;">
+              <span class="badge {% if req.status == 'resolved' %}badge-verified{% elif req.status == 'dispatched' %}badge-universal{% else %}badge-unconfirmed{% endif %}">
+                {{ req.get_status_display }}
+              </span>
+            </td>
+            <td style="padding:14px 20px; text-align:center;">
+              <form method="POST" action="{% url 'custom_admin:admin_assistance' %}" style="display:inline-flex; flex-direction:column; gap:4px; align-items:center;">
+                {% csrf_token %}
+                <input type="hidden" name="request_id" value="{{ req.id }}">
+                <div style="display:flex; gap:4px;">
+                  <select name="status" class="form-select" style="padding:4px 6px; font-size:0.78rem; width:auto;">
+                    <option value="received" {% if req.status == 'received' %}selected{% endif %}>Received</option>
+                    <option value="assigned" {% if req.status == 'assigned' %}selected{% endif %}>Assigned</option>
+                    <option value="dispatched" {% if req.status == 'dispatched' %}selected{% endif %}>Dispatched</option>
+                    <option value="resolved" {% if req.status == 'resolved' %}selected{% endif %}>Resolved</option>
+                  </select>
+                  <button type="submit" class="btn btn-secondary btn-sm" style="padding:4px 8px; font-size:0.72rem;">Set</button>
+                </div>
+              </form>
+            </td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

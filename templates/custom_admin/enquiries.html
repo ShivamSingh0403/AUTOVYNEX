@@ -1,0 +1,62 @@
+{% extends 'base.html' %}
+
+{% block title %}Admin Sourcing Enquiries — AUTOVYNEX{% endblock %}
+
+{% block content %}
+<div class="container" style="padding-top:24px;">
+  <div style="margin-bottom:28px;">
+    <div style="font-size:0.85rem; color:var(--text-muted); margin-bottom:4px;">
+      <a href="{% url 'custom_admin:dashboard_overview' %}">Admin Center</a> / <span>Enquiries</span>
+    </div>
+    <h1 style="font-size:1.85rem; margin:0;">Missing Part Sourcing Moderation Desk</h1>
+    <p style="color:var(--text-muted); font-size:0.9rem; margin-top:4px;">Review driver inquiries, assign quotes, and update logistical sourcing statuses.</p>
+  </div>
+
+  <div class="card" style="padding:0; overflow-x:auto;">
+    <table style="width:100%; border-collapse:collapse; min-width:850px; font-size:0.9rem;">
+      <thead>
+        <tr style="background:var(--bg-surface-subtle); border-bottom:1px solid var(--border-subtle); color:var(--text-muted);">
+          <th style="padding:14px 20px; text-align:left;">Reference #</th>
+          <th style="padding:14px 20px; text-align:left;">Requested Part</th>
+          <th style="padding:14px 20px; text-align:left;">Vehicle & Contact</th>
+          <th style="padding:14px 20px; text-align:center;">Status</th>
+          <th style="padding:14px 20px; text-align:right;">Quote (₹)</th>
+          <th style="padding:14px 20px; text-align:center;">Action</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for enq in enquiries %}
+          <tr style="border-bottom:1px solid var(--border-subtle);">
+            <td style="padding:14px 20px; font-weight:700;">{{ enq.reference_code }}</td>
+            <td style="padding:14px 20px;">
+              <strong>{{ enq.part_name }}</strong><br>
+              <span style="font-size:0.75rem; color:var(--text-muted);">{{ enq.category }}</span>
+            </td>
+            <td style="padding:14px 20px;">
+              {{ enq.vehicle_details }}<br>
+              <span style="font-size:0.75rem; color:var(--text-muted);">{{ enq.contact_name }} ({{ enq.contact_phone }})</span>
+            </td>
+            <td style="padding:14px 20px; text-align:center;">
+              <span class="badge {% if enq.status == 'completed' %}badge-verified{% elif enq.status == 'quote_available' %}badge-universal{% else %}badge-unconfirmed{% endif %}">
+                {{ enq.get_status_display }}
+              </span>
+            </td>
+            <td style="padding:14px 20px; text-align:right; font-weight:700;">
+              {% if enq.quote_amount %}₹{{ enq.quote_amount|floatformat:0 }}{% else %}—{% endif %}
+            </td>
+            <td style="padding:14px 20px; text-align:center;">
+              <a href="{% url 'custom_admin:admin_enquiry_update' enq.id %}" class="btn btn-primary btn-sm" style="padding:4px 10px; font-size:0.75rem;">
+                <i data-lucide="edit"></i> Quote & Manage
+              </a>
+            </td>
+          </tr>
+        {% empty %}
+          <tr>
+            <td colspan="6" style="padding:32px; text-align:center; color:var(--text-muted);">No sourcing inquiries logged.</td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

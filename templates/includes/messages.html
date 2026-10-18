@@ -1,0 +1,10 @@
+{% if messages %}
+<div class="container" style="margin-top: 16px;">
+  {% for message in messages %}
+    <div class="alert-banner alert-{% if message.tags == 'error' %}danger{% elif message.tags %}{{ message.tags }}{% else %}info{% endif %}">
+      <i data-lucide="{% if message.tags == 'success' %}check-circle{% elif message.tags == 'error' %}alert-circle{% elif message.tags == 'warning' %}alert-triangle{% else %}info{% endif %}"></i>
+      <div>{{ message }}</div>
+    </div>
+  {% endfor %}
+</div>
+{% endif %}

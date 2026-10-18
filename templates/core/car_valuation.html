@@ -1,0 +1,118 @@
+{% extends 'base.html' %}
+
+{% block title %}Car Valuation Calculator — AUTOVYNEX Market Estimator{% endblock %}
+
+{% block content %}
+<div class="container" style="padding-top:24px;">
+  <div style="max-width:880px; margin:0 auto;">
+    <div style="text-align:center; margin-bottom:36px;">
+      <div class="demo-academic-badge" style="margin-bottom:12px;">
+        <i data-lucide="calculator"></i>
+        <span>Algorithmic Valuation Model</span>
+      </div>
+      <h1>Used Car Valuation Estimator</h1>
+      <p style="color:var(--text-muted); font-size:1.05rem; max-width:620px; margin:8px auto 0;">
+        Estimate fair market exchange and resale values based on age depreciation curves, mileage usage deviation, owner history, and mechanical condition.
+      </p>
+    </div>
+
+    <!-- Valuation Input Form -->
+    <div class="card" style="margin-bottom:32px;">
+      <form id="car-valuation-form">
+        <div class="grid-2">
+          <div class="form-group">
+            <label class="form-label">Original Ex-Showroom / Invoice Price (₹) *</label>
+            <input type="number" id="val-original-price" class="form-control" value="1250000" min="100000" step="10000" required>
+            <small style="color:var(--text-muted); font-size:0.75rem;">Price when purchased brand new</small>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Registration Year *</label>
+            <select id="val-reg-year" class="form-select" required>
+              <option value="2026">2026 (Under 6 months)</option>
+              <option value="2025">2025 (1 Year Old)</option>
+              <option value="2024">2024 (2 Years Old)</option>
+              <option value="2023">2023 (3 Years Old)</option>
+              <option value="2022" selected>2022 (4 Years Old)</option>
+              <option value="2021">2021 (5 Years Old)</option>
+              <option value="2020">2020 (6 Years Old)</option>
+              <option value="2019">2019 (7 Years Old)</option>
+              <option value="2018">2018 (8 Years Old)</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="grid-3">
+          <div class="form-group">
+            <label class="form-label">Total Odometer (KM) *</label>
+            <input type="number" id="val-odometer" class="form-control" value="38000" min="0" step="1000" required>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Number of Owners *</label>
+            <select id="val-owners" class="form-select">
+              <option value="1" selected>1st Owner (Individual)</option>
+              <option value="2">2nd Owner</option>
+              <option value="3">3rd Owner or Above</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Vehicle Physical Condition *</label>
+            <select id="val-condition" class="form-select">
+              <option value="1.05">Excellent (Zero dents, authorized service record)</option>
+              <option value="0.98" selected>Good (Minor wear, regular maintenance)</option>
+              <option value="0.88">Fair (Noticeable scratches, requires tyres/service)</option>
+              <option value="0.75">Accidental / Structural Damage History</option>
+            </select>
+          </div>
+        </div>
+
+        <button type="submit" class="btn btn-primary btn-lg" style="width:100%;">
+          <i data-lucide="trending-up"></i> Calculate Estimated Market Resale Value
+        </button>
+      </form>
+    </div>
+
+    <!-- Results Box (Hidden until calculated) -->
+    <div id="valuation-results" class="card" style="display:none; background:linear-gradient(135deg, rgba(2, 132, 199, 0.08), rgba(6, 182, 212, 0.08)); border-color:var(--color-primary); margin-bottom:32px;">
+      <div style="text-align:center; margin-bottom:24px;">
+        <span class="badge badge-verified" style="margin-bottom:8px;">Market Valuation Result</span>
+        <div style="font-size:0.9rem; color:var(--text-muted);">Estimated Fair Resale Value:</div>
+        <div id="val-estimate-main" style="font-family:var(--font-heading); font-size:2.6rem; font-weight:800; color:var(--color-primary); margin:8px 0;">
+          ₹0
+        </div>
+        <div style="font-size:0.95rem; color:var(--text-main);">
+          Estimated Dealer & Private Range: <strong id="val-estimate-range">₹0 - ₹0</strong>
+        </div>
+      </div>
+
+      <div class="grid-3" style="border-top:1px solid var(--border-subtle); padding-top:20px; text-align:center;">
+        <div>
+          <div style="font-size:0.8rem; color:var(--text-muted);">Calculated Depreciation</div>
+          <div id="val-deprec-percent" style="font-size:1.3rem; font-weight:700; color:var(--text-main);">0%</div>
+        </div>
+        <div>
+          <div style="font-size:0.8rem; color:var(--text-muted);">Inspection Recommendation</div>
+          <div style="font-size:1rem; font-weight:700; color:#10b981;">Class A Certified</div>
+        </div>
+        <div>
+          <div style="font-size:0.8rem; color:var(--text-muted);">Next Step</div>
+          <a href="{% url 'used_cars:marketplace' %}" class="btn btn-secondary btn-sm" style="margin-top:4px;">Browse Listings</a>
+        </div>
+      </div>
+    </div>
+
+    <!-- Explicit Formula Documentation and Disclaimer as required by prompt -->
+    <div class="card" style="background:var(--bg-surface-subtle);">
+      <h4 style="margin-bottom:10px; color:var(--text-main);"><i data-lucide="book-open" style="width:18px; vertical-align:middle;"></i> Documented Estimation Formula & Academic Disclaimer</h4>
+      <p style="font-size:0.85rem; color:var(--text-muted); line-height:1.6; margin-bottom:10px;">
+        <strong>Formula:</strong> <code>Estimated Value = Original Price × (1 - (Base Depreciation + Mileage Wear Delta + Ownership Factor)) × Physical Condition Factor</code>.
+      </p>
+      <p style="font-size:0.85rem; color:var(--text-muted); line-height:1.6; margin:0;">
+        <strong>Important Notice:</strong> This calculation is an algorithmic engineering demonstration based on standard Indian automotive market depreciation curves (approx. 16% year 1, 26% year 2, 36% year 3, 45% year 4, 53% year 5). It is strictly approximate and does not constitute an official bank appraisal, legal valuation, or purchase guarantee.
+      </p>
+    </div>
+  </div>
+</div>
+{% endblock %}

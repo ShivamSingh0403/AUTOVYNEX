@@ -1,0 +1,68 @@
+{% extends 'base.html' %}
+
+{% block title %}Booking Confirmed — {{ booking.booking_number }} | AUTOVYNEX{% endblock %}
+
+{% block content %}
+<div class="container" style="padding-top:32px;">
+  <div style="max-width:720px; margin:0 auto; text-align:center;">
+    <div style="width:72px; height:72px; border-radius:50%; background:rgba(16, 185, 129, 0.12); color:#10b981; display:flex; align-items:center; justify-content:center; margin:0 auto 20px;">
+      <i data-lucide="check-circle" style="width:40px; height:40px;"></i>
+    </div>
+
+    <div class="demo-academic-badge" style="margin-bottom:12px;">
+      <span>Booking Code:</span> {{ booking.booking_number }}
+    </div>
+
+    <h1 style="margin-bottom:12px;">Service Appointment Scheduled</h1>
+    <p style="color:var(--text-muted); font-size:1.05rem; margin-bottom:32px;">
+      Your service appointment has been registered at <strong>{{ booking.provider.name }}</strong>.
+    </p>
+
+    <!-- Details Card -->
+    <div class="card" style="text-align:left; margin-bottom:32px; padding:28px;">
+      <div class="grid-2" style="gap:20px; margin-bottom:20px;">
+        <div>
+          <div style="font-size:0.8rem; color:var(--text-muted); text-transform:uppercase;">Scheduled Service</div>
+          <div style="font-weight:700; font-size:1.05rem; color:var(--text-main);">{{ booking.service.name }}</div>
+        </div>
+        <div>
+          <div style="font-size:0.8rem; color:var(--text-muted); text-transform:uppercase;">Date & Slot</div>
+          <div style="font-weight:700; font-size:1.05rem; color:var(--color-primary);">{{ booking.booking_date|date:"d M Y" }} ({{ booking.time_slot }})</div>
+        </div>
+      </div>
+
+      <div class="grid-2" style="gap:20px; margin-bottom:20px;">
+        <div>
+          <div style="font-size:0.8rem; color:var(--text-muted); text-transform:uppercase;">Vehicle</div>
+          <div style="font-weight:700; font-size:1rem;">{{ booking.vehicle_info }}</div>
+        </div>
+        <div>
+          <div style="font-size:0.8rem; color:var(--text-muted); text-transform:uppercase;">Estimated Base Cost</div>
+          <div style="font-family:var(--font-heading); font-weight:800; font-size:1.3rem; color:var(--text-main);">₹{{ booking.estimated_cost|floatformat:0 }}</div>
+        </div>
+      </div>
+
+      <div style="border-top:1px solid var(--border-subtle); padding-top:16px;">
+        <div style="font-size:0.8rem; color:var(--text-muted); text-transform:uppercase; margin-bottom:4px;">Service Center Location</div>
+        <div style="font-size:0.9rem; color:var(--text-main);">
+          <strong>{{ booking.provider.name }}</strong><br>
+          {{ booking.provider.address }}<br>
+          Helpline: {{ booking.provider.contact_number }}
+        </div>
+      </div>
+    </div>
+
+    <div style="display:flex; justify-content:center; gap:16px; flex-wrap:wrap;">
+      <a href="{% url 'dashboard:customer_dashboard' %}" class="btn btn-primary">
+        <i data-lucide="layout-dashboard"></i> View in Dashboard
+      </a>
+      <a href="{% url 'garage:index' %}" class="btn btn-secondary">
+        <i data-lucide="warehouse"></i> My Garage
+      </a>
+      <a href="{% url 'services:cancel_booking' booking.booking_number %}" class="btn btn-secondary" style="color:var(--color-danger);" onclick="return confirm('Are you sure you want to cancel this booking?');">
+        Cancel Appointment
+      </a>
+    </div>
+  </div>
+</div>
+{% endblock %}

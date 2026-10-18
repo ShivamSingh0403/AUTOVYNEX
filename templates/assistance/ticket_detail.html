@@ -1,0 +1,110 @@
+{% extends 'base.html' %}
+
+{% block title %}Ticket #{{ ticket.ticket_number }} — Roadside Assistance | AUTOVYNEX{% endblock %}
+
+{% block content %}
+<div class="container" style="padding-top:28px;">
+  <div style="max-width:760px; margin:0 auto;">
+    <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:16px; margin-bottom:28px;">
+      <div>
+        <div style="font-size:0.85rem; color:var(--text-muted); margin-bottom:4px;">
+          <a href="{% url 'assistance:request_view' %}">Assistance</a> / <span>{{ ticket.ticket_number }}</span>
+        </div>
+        <h1 style="font-size:1.85rem; margin:0;">Assistance Ticket #{{ ticket.ticket_number }}</h1>
+        <div style="font-size:0.85rem; color:var(--text-muted); margin-top:4px;">
+          Logged at {{ ticket.created_at|date:"d M Y, h:i A" }}
+        </div>
+      </div>
+      <a href="{% url 'assistance:request_view' %}" class="btn btn-secondary btn-sm">
+        <i data-lucide="plus"></i> New Request
+      </a>
+    </div>
+
+    <!-- Safety Warning Reminder Banner -->
+    <div class="alert-banner alert-warning" style="margin-bottom:24px;">
+      <i data-lucide="info"></i>
+      <div>
+        <strong>Demonstration Notice:</strong> This emergency ticket was logged successfully into the database for admin dispatch review. As a demonstration academic system, no live physical vehicle has been dispatched on the road.
+      </div>
+    </div>
+
+    <!-- Live Status Overview -->
+    <div class="card" style="margin-bottom:28px; background:var(--bg-surface-elevated);">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; flex-wrap:wrap; gap:12px;">
+        <div>
+          <span class="badge {% if ticket.status == 'resolved' %}badge-verified{% elif ticket.status == 'dispatched' %}badge-universal{% else %}badge-unconfirmed{% endif %}" style="font-size:0.82rem; margin-bottom:6px;">
+            Status: {{ ticket.get_status_display }}
+          </span>
+          <div style="font-size:0.88rem; color:var(--text-main); font-weight:700;">
+            Assigned Unit: {{ ticket.assigned_patrol }}
+          </div>
+          <div style="font-size:0.82rem; color:var(--text-muted);">
+            Simulated ETA: <strong>{{ ticket.estimated_arrival_minutes }} Minutes</strong>
+          </div>
+        </div>
+        <div class="badge badge-incompatible" style="font-size:0.75rem;">
+          {{ ticket.get_urgency_display }}
+        </div>
+      </div>
+
+      <!-- Steps -->
+      <div style="display:grid; grid-template-columns: repeat(4, 1fr); gap:12px; text-align:center;">
+        <div style="padding:10px; border-radius:var(--radius-md); background:rgba(16, 185, 129, 0.12); color:#047857;">
+          <i data-lucide="check-circle" style="width:18px; margin-bottom:4px;"></i>
+          <div style="font-size:0.75rem; font-weight:700;">1. Logged</div>
+        </div>
+        <div style="padding:10px; border-radius:var(--radius-md); {% if ticket.status in 'assigned,dispatched,resolved' %}background:rgba(16, 185, 129, 0.12); color:#047857;{% else %}background:var(--bg-surface-subtle); color:var(--text-muted);{% endif %}">
+          <i data-lucide="user-check" style="width:18px; margin-bottom:4px;"></i>
+          <div style="font-size:0.75rem; font-weight:700;">2. Assigned</div>
+        </div>
+        <div style="padding:10px; border-radius:var(--radius-md); {% if ticket.status in 'dispatched,resolved' %}background:rgba(16, 185, 129, 0.12); color:#047857;{% else %}background:var(--bg-surface-subtle); color:var(--text-muted);{% endif %}">
+          <i data-lucide="truck" style="width:18px; margin-bottom:4px;"></i>
+          <div style="font-size:0.75rem; font-weight:700;">3. Dispatched</div>
+        </div>
+        <div style="padding:10px; border-radius:var(--radius-md); {% if ticket.status == 'resolved' %}background:rgba(16, 185, 129, 0.12); color:#047857;{% else %}background:var(--bg-surface-subtle); color:var(--text-muted);{% endif %}">
+          <i data-lucide="check" style="width:18px; margin-bottom:4px;"></i>
+          <div style="font-size:0.75rem; font-weight:700;">4. Resolved</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Ticket Data Details -->
+    <div class="card">
+      <h3 style="font-size:1.15rem; margin-bottom:16px; border-bottom:1px solid var(--border-subtle); padding-bottom:10px;">
+        Incident Information
+      </h3>
+
+      <div class="grid-2" style="gap:16px; margin-bottom:16px; font-size:0.9rem;">
+        <div>
+          <span style="color:var(--text-muted);">Assistance Type:</span><br>
+          <strong>{{ ticket.get_request_type_display }}</strong>
+        </div>
+        <div>
+          <span style="color:var(--text-muted);">Vehicle Details:</span><br>
+          <strong>{{ ticket.vehicle_details }}</strong>
+        </div>
+      </div>
+
+      <div style="font-size:0.9rem; margin-bottom:16px;">
+        <span style="color:var(--text-muted);">Stranded Location:</span><br>
+        <strong>{{ ticket.location_address }}</strong>
+        {% if ticket.landmark %}<br><span style="color:var(--text-muted); font-size:0.82rem;">Landmark: {{ ticket.landmark }}</span>{% endif %}
+      </div>
+
+      {% if ticket.description %}
+      <div style="font-size:0.9rem; margin-bottom:16px;">
+        <span style="color:var(--text-muted);">Reported Symptoms:</span><br>
+        <p style="margin:4px 0 0; line-height:1.5;">{{ ticket.description }}</p>
+      </div>
+      {% endif %}
+
+      <div style="border-top:1px solid var(--border-subtle); padding-top:14px; display:flex; justify-content:space-between; align-items:center; font-size:0.85rem;">
+        <div>
+          Driver Contact: <strong>{{ ticket.contact_name }}</strong> ({{ ticket.contact_phone }})
+        </div>
+        <a href="{% url 'core:home' %}" class="btn btn-secondary btn-sm">Home</a>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

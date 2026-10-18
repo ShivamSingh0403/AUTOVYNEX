@@ -1,0 +1,61 @@
+{% extends 'base.html' %}
+
+{% block title %}Create Account — AUTOVYNEX{% endblock %}
+
+{% block content %}
+<div class="container" style="padding-top:36px; padding-bottom:36px;">
+  <div style="max-width:500px; margin:0 auto;">
+    <div style="text-align:center; margin-bottom:28px;">
+      <div class="brand-logo-emblem" style="margin:0 auto 16px; width:54px; height:54px; font-size:28px;">A</div>
+      <h1 style="font-size:1.85rem; margin-bottom:6px;">Join AUTOVYNEX</h1>
+      <p style="color:var(--text-muted); font-size:0.9rem;">Register your digital garage and enjoy verified spare parts fitment.</p>
+    </div>
+
+    <div class="card">
+      <form method="POST" action="{% url 'accounts:register' %}">
+        {% csrf_token %}
+
+        <div class="form-group">
+          <label class="form-label">Full Name *</label>
+          <input type="text" name="full_name" required class="form-control" placeholder="e.g. Vikram Sharma">
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Email Address *</label>
+          <input type="email" name="email" required class="form-control" placeholder="name@example.com">
+        </div>
+
+        <div class="grid-2" style="gap:16px;">
+          <div class="form-group">
+            <label class="form-label">Phone Number</label>
+            <input type="tel" name="phone" class="form-control" placeholder="+91 98765 43210">
+          </div>
+          <div class="form-group">
+            <label class="form-label">City</label>
+            <input type="text" name="city" class="form-control" value="Bengaluru">
+          </div>
+        </div>
+
+        <div class="grid-2" style="gap:16px;">
+          <div class="form-group">
+            <label class="form-label">Password *</label>
+            <input type="password" name="password" required class="form-control" placeholder="••••••••">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Confirm Password *</label>
+            <input type="password" name="confirm_password" required class="form-control" placeholder="••••••••">
+          </div>
+        </div>
+
+        <button type="submit" class="btn btn-primary btn-lg" style="width:100%; justify-content:center; margin-top:8px;">
+          <i data-lucide="user-plus"></i> Create Account
+        </button>
+      </form>
+
+      <div style="text-align:center; margin-top:24px; padding-top:16px; border-top:1px solid var(--border-subtle); font-size:0.88rem; color:var(--text-muted);">
+        Already registered with AUTOVYNEX? <a href="{% url 'accounts:login' %}" style="font-weight:700; color:var(--color-primary);">Sign In</a>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

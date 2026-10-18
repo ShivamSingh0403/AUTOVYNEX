@@ -1,0 +1,136 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ listing.title }} — AUTOVYNEX Pre-Owned{% endblock %}
+
+{% block content %}
+<div class="container" style="padding-top:24px;">
+  <!-- Breadcrumbs -->
+  <div style="font-size:0.85rem; color:var(--text-muted); margin-bottom:20px;">
+    <a href="{% url 'used_cars:marketplace' %}">Used Cars</a> /
+    <a href="{% url 'used_cars:marketplace' %}?make={{ listing.make_name }}">{{ listing.make_name }}</a> /
+    <strong>{{ listing.title|truncatewords:5 }}</strong>
+  </div>
+
+  <div style="display:grid; grid-template-columns: 1.2fr 0.8fr; gap:40px; margin-bottom:48px;" class="grid-car-detail">
+    <!-- Visual & Inspection Column -->
+    <div>
+      <div class="card" style="height:320px; background:#0f172a; color:#fff; display:flex; flex-direction:column; justify-content:center; align-items:center; position:relative; border-radius:var(--radius-xl); overflow:hidden; margin-bottom:24px;">
+        <i data-lucide="car" style="width:120px; height:120px; color:#38bdf8; stroke-width:1.2;"></i>
+        <span class="badge badge-verified" style="position:absolute; top:20px; right:20px; font-size:0.88rem; padding:6px 14px;">
+          ★ {{ listing.condition_rating }} Inspection Score
+        </span>
+        <div style="position:absolute; bottom:20px; left:24px; font-size:0.9rem; background:rgba(0,0,0,0.65); padding:4px 12px; border-radius:6px;">
+          <i data-lucide="map-pin" style="width:14px; vertical-align:middle;"></i> {{ listing.location_city }}, {{ listing.registration_state }}
+        </div>
+      </div>
+
+      <!-- 100-Point Inspection Highlights -->
+      <div class="card" style="margin-bottom:24px;">
+        <h3 style="font-size:1.15rem; margin-bottom:14px; color:var(--color-primary); display:flex; align-items:center; gap:8px;">
+          <i data-lucide="shield-check"></i> AUTOVYNEX 100-Point Inspection Checklist
+        </h3>
+        <div class="grid-2" style="gap:12px; font-size:0.88rem;">
+          <div style="display:flex; align-items:center; gap:8px; color:#047857;">
+            <i data-lucide="check" style="width:16px;"></i> Engine Compression Tested (Normal)
+          </div>
+          <div style="display:flex; align-items:center; gap:8px; color:#047857;">
+            <i data-lucide="check" style="width:16px;"></i> Non-Accidental Chassis Alignment
+          </div>
+          <div style="display:flex; align-items:center; gap:8px; color:#047857;">
+            <i data-lucide="check" style="width:16px;"></i> Brake Pad Wear: 6.5mm (Good)
+          </div>
+          <div style="display:flex; align-items:center; gap:8px; color:#047857;">
+            <i data-lucide="check" style="width:16px;"></i> AC Temperature: 7.2°C at vent
+          </div>
+          <div style="display:flex; align-items:center; gap:8px; color:#047857;">
+            <i data-lucide="check" style="width:16px;"></i> No Structural Flood/Water Immersion
+          </div>
+          <div style="display:flex; align-items:center; gap:8px; color:#047857;">
+            <i data-lucide="check" style="width:16px;"></i> Electrical OBD Scanner: 0 Trouble Codes
+          </div>
+        </div>
+      </div>
+
+      <!-- Vehicle Description -->
+      <div class="card">
+        <h3 style="font-size:1.15rem; margin-bottom:12px;">Seller's Description & Condition Notes</h3>
+        <p style="color:var(--text-muted); line-height:1.7; font-size:0.95rem; margin:0;">
+          {{ listing.description }}
+        </p>
+      </div>
+    </div>
+
+    <!-- Pricing, Specs & Contact Seller Column -->
+    <div>
+      <div class="card" style="position:sticky; top:calc(var(--nav-height) + 20px);">
+        <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:8px;">
+          <span class="badge badge-universal">{{ listing.year }} Model</span>
+          <a href="{% url 'used_cars:toggle_compare' listing.id %}" class="btn btn-secondary btn-sm" style="padding:4px 10px; font-size:0.75rem;">
+            <i data-lucide="columns-3"></i> {% if is_in_compare %}In Matrix{% else %}+ Compare{% endif %}
+          </a>
+        </div>
+
+        <h1 style="font-size:1.6rem; margin-bottom:12px; line-height:1.3;">{{ listing.title }}</h1>
+
+        <!-- Price -->
+        <div style="margin-bottom:20px; padding-bottom:16px; border-bottom:1px solid var(--border-subtle);">
+          <div style="font-size:0.8rem; color:var(--text-muted);">Expected Asking Price</div>
+          <div style="font-family:var(--font-heading); font-size:2.2rem; font-weight:800; color:var(--color-primary);">
+            ₹{{ listing.expected_price|floatformat:0 }}
+          </div>
+        </div>
+
+        <!-- Specifications Matrix -->
+        <div style="display:flex; flex-direction:column; gap:10px; font-size:0.88rem; margin-bottom:24px;">
+          <div style="display:flex; justify-content:space-between;">
+            <span style="color:var(--text-muted);">Odometer</span>
+            <strong>{{ listing.mileage|floatformat:0 }} KM</strong>
+          </div>
+          <div style="display:flex; justify-content:space-between;">
+            <span style="color:var(--text-muted);">Fuel Type</span>
+            <strong>{{ listing.fuel_type }}</strong>
+          </div>
+          <div style="display:flex; justify-content:space-between;">
+            <span style="color:var(--text-muted);">Transmission</span>
+            <strong>{{ listing.transmission }}</strong>
+          </div>
+          <div style="display:flex; justify-content:space-between;">
+            <span style="color:var(--text-muted);">Previous Owners</span>
+            <strong>{{ listing.owners_count }}</strong>
+          </div>
+          <div style="display:flex; justify-content:space-between;">
+            <span style="color:var(--text-muted);">Registration State</span>
+            <strong>{{ listing.registration_state }}</strong>
+          </div>
+        </div>
+
+        <!-- Contact Seller Lead Form -->
+        <div style="background:var(--bg-surface-subtle); padding:16px; border-radius:var(--radius-md); border:1px solid var(--border-subtle); margin-bottom:16px;">
+          <h4 style="font-size:0.95rem; margin-bottom:10px; color:var(--color-primary);"><i data-lucide="mail"></i> Contact Verified Seller</h4>
+          <form method="POST" action="{% url 'used_cars:listing_detail' listing.slug %}">
+            {% csrf_token %}
+            <div class="form-group" style="margin-bottom:10px;">
+              <input type="text" name="buyer_name" required placeholder="Your Name" class="form-control" style="font-size:0.85rem; padding:8px 12px;" value="{{ user.get_full_name|default:user.username }}">
+            </div>
+            <div class="form-group" style="margin-bottom:10px;">
+              <input type="tel" name="buyer_phone" required placeholder="Your Phone Number" class="form-control" style="font-size:0.85rem; padding:8px 12px;" value="{{ user.profile.phone|default:'+91 98765 43210' }}">
+            </div>
+            <div class="form-group" style="margin-bottom:12px;">
+              <input type="number" name="offer_amount" placeholder="Your Counter Offer in ₹ (Optional)" class="form-control" style="font-size:0.85rem; padding:8px 12px;">
+            </div>
+            <button type="submit" class="btn btn-primary btn-sm" style="width:100%; justify-content:center;">
+              <i data-lucide="send"></i> Request Inspection Callback
+            </button>
+          </form>
+        </div>
+
+        <!-- Demo Notice as required -->
+        <div style="font-size:0.75rem; color:var(--text-muted); text-align:center;">
+          <i data-lucide="info" style="width:12px; vertical-align:middle;"></i>
+          Demonstration Listing: Not an active vehicle for real retail purchase.
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

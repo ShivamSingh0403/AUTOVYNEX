@@ -1,0 +1,241 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ product.name }} — AUTOVYNEX Spare Parts{% endblock %}
+
+{% block content %}
+<div class="container" style="padding-top:20px;">
+  <!-- Breadcrumbs -->
+  <div style="font-size:0.85rem; color:var(--text-muted); margin-bottom:20px;">
+    <a href="{% url 'core:home' %}">Home</a> /
+    <a href="{% url 'inventory:shop' %}">Shop</a> /
+    <a href="{% url 'inventory:shop' %}?category={{ product.category.slug }}">{{ product.category.name }}</a> /
+    <strong>{{ product.name|truncatewords:6 }}</strong>
+  </div>
+
+  <!-- Main Product Detail Layout -->
+  <div style="display:grid; grid-template-columns: 1fr 1.2fr; gap:40px; margin-bottom:48px;" class="grid-product-detail">
+    <!-- Left: Product Visuals -->
+    <div>
+      <div class="card" style="padding:40px; display:flex; align-items:center; justify-content:center; background:var(--bg-surface-elevated); min-height:360px; position:relative; overflow:hidden;">
+        {% if product.discount_percent > 0 %}
+          <span class="product-discount-tag" style="font-size:0.85rem; padding:4px 10px;">{{ product.discount_percent }}% DISCOUNT</span>
+        {% endif %}
+        
+        <div style="color:var(--color-primary); text-align:center;">
+          <i data-lucide="{{ product.category.icon_name|default:'package' }}" style="width:120px; height:120px; stroke-width:1.5;"></i>
+          <div style="font-size:0.8rem; color:var(--text-muted); margin-top:12px; font-weight:600;">
+            OEM SPECIFICATION CERTIFIED
+          </div>
+        </div>
+
+        {% if user.is_authenticated %}
+        <a href="{% url 'inventory:toggle_wishlist' product.id %}" class="product-wishlist-toggle {% if is_in_wishlist %}active{% endif %}" style="top:16px; right:16px; width:40px; height:40px;" title="Wishlist">
+          <i data-lucide="heart" style="width:20px; height:20px; {% if is_in_wishlist %}fill:#ef4444; color:#ef4444;{% endif %}"></i>
+        </a>
+        {% endif %}
+      </div>
+
+      <!-- Quick Trust Highlights -->
+      <div class="grid-3" style="gap:12px; margin-top:16px;">
+        <div class="card" style="padding:12px; text-align:center; font-size:0.8rem;">
+          <i data-lucide="shield-check" style="color:var(--color-primary); margin-bottom:4px;"></i>
+          <div><strong>{{ product.warranty_months }} Months</strong> Warranty</div>
+        </div>
+        <div class="card" style="padding:12px; text-align:center; font-size:0.8rem;">
+          <i data-lucide="truck" style="color:var(--color-primary); margin-bottom:4px;"></i>
+          <div><strong>Express</strong> Shipping</div>
+        </div>
+        <div class="card" style="padding:12px; text-align:center; font-size:0.8rem;">
+          <i data-lucide="rotate-ccw" style="color:var(--color-primary); margin-bottom:4px;"></i>
+          <div><strong>7-Day</strong> Replacement</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Right: Product Information & Purchase Flow -->
+    <div>
+      <div style="display:flex; align-items:center; gap:8px; margin-bottom:8px;">
+        <span class="badge badge-universal">{{ product.brand.name }}</span>
+        <span class="badge" style="background:var(--bg-surface-subtle); color:var(--text-muted);">SKU: {{ product.sku }}</span>
+      </div>
+
+      <h1 style="font-size:1.85rem; margin-bottom:14px; line-height:1.3;">{{ product.name }}</h1>
+
+      <p style="font-size:1rem; color:var(--text-muted); line-height:1.6; margin-bottom:20px;">
+        {{ product.short_description }}
+      </p>
+
+      <!-- Vehicle Compatibility Indicator Box -->
+      <div style="margin-bottom:24px; padding:16px; border-radius:var(--radius-lg); {% if fitment_status == 'compatible' or fitment_status == 'universal' %}background:rgba(16, 185, 129, 0.1); border:1px solid rgba(16, 185, 129, 0.3);{% elif fitment_status == 'incompatible' %}background:rgba(239, 68, 68, 0.08); border:1px solid rgba(239, 68, 68, 0.3);{% else %}background:rgba(245, 158, 11, 0.08); border:1px solid rgba(245, 158, 11, 0.3);{% endif %}">
+        <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:12px;">
+          <div>
+            {% if active_vehicle %}
+              {% if fitment_status == 'compatible' %}
+                <div style="color:#047857; font-weight:700; font-size:0.95rem; display:flex; align-items:center; gap:6px;">
+                  <i data-lucide="check-circle" style="width:18px;"></i> Guaranteed Verified Fit
+                </div>
+                <div style="font-size:0.85rem; color:#047857; margin-top:2px;">
+                  Confirmed compatible with your <strong>{{ active_vehicle.display_name }}</strong>.
+                  {% if fitment_record.notes %}<br><em>Note: {{ fitment_record.notes }}</em>{% endif %}
+                </div>
+              {% elif fitment_status == 'universal' %}
+                <div style="color:#0284c7; font-weight:700; font-size:0.95rem; display:flex; align-items:center; gap:6px;">
+                  <i data-lucide="info" style="width:18px;"></i> Universal Fitment Component
+                </div>
+                <div style="font-size:0.85rem; color:#0284c7; margin-top:2px;">
+                  Fits universally across passenger cars and SUVs.
+                </div>
+              {% else %}
+                <div style="color:#b91c1c; font-weight:700; font-size:0.95rem; display:flex; align-items:center; gap:6px;">
+                  <i data-lucide="alert-octagon" style="width:18px;"></i> Incompatible or Not Confirmed
+                </div>
+                <div style="font-size:0.85rem; color:#b91c1c; margin-top:2px;">
+                  Our engineering database does not verify this component for <strong>{{ active_vehicle.model.make.name }} {{ active_vehicle.model.name }}</strong>.
+                </div>
+              {% endif %}
+            {% else %}
+              <div style="color:#b45309; font-weight:700; font-size:0.95rem; display:flex; align-items:center; gap:6px;">
+                <i data-lucide="help-circle" style="width:18px;"></i> Compatibility Not Confirmed
+              </div>
+              <div style="font-size:0.85rem; color:var(--text-muted); margin-top:2px;">
+                Select your car to verify whether this exact SKU fits your model.
+              </div>
+            {% endif %}
+          </div>
+          <button type="button" class="btn btn-secondary btn-sm open-vehicle-modal-btn" style="flex-shrink:0;">
+            {% if active_vehicle %}Switch Car{% else %}Check My Car{% endif %}
+          </button>
+        </div>
+      </div>
+
+      <!-- Pricing Row -->
+      <div style="display:flex; align-items:baseline; gap:16px; margin-bottom:24px;">
+        <span style="font-family:var(--font-heading); font-size:2.2rem; font-weight:800; color:var(--text-main);">
+          ₹{{ product.final_price|floatformat:0 }}
+        </span>
+        {% if product.discount_price %}
+          <span style="font-size:1.15rem; color:var(--text-subtle); text-decoration:line-through;">
+            ₹{{ product.price|floatformat:0 }}
+          </span>
+          <span class="badge badge-verified" style="font-size:0.8rem;">
+            Save ₹{{ product.price|add:"-"|add:product.discount_price|floatformat:0 }} ({{ product.discount_percent }}%)
+          </span>
+        {% endif %}
+      </div>
+
+      <!-- Stock Status -->
+      <div style="margin-bottom:24px; font-size:0.9rem;">
+        {% if product.in_stock %}
+          <span style="color:#059669; font-weight:700; display:inline-flex; align-items:center; gap:6px;">
+            <i data-lucide="check" style="width:16px;"></i> In Stock ({{ product.stock_quantity }} units ready at regional hub)
+          </span>
+        {% else %}
+          <span style="color:#dc2626; font-weight:700; display:inline-flex; align-items:center; gap:6px;">
+            <i data-lucide="x" style="width:16px;"></i> Out of Stock
+          </span>
+        {% endif %}
+      </div>
+
+      <!-- Add to Cart & Buy+Install Form -->
+      <form method="POST" action="{% url 'orders:add_to_cart' product.id %}">
+        {% csrf_token %}
+
+        <!-- Buy + Install Workflow Option -->
+        {% if product.is_installable %}
+        <div class="card" style="background:linear-gradient(135deg, rgba(2, 132, 199, 0.08), rgba(6, 182, 212, 0.08)); border-color:var(--color-primary-light); margin-bottom:24px; padding:16px;">
+          <label style="display:flex; align-items:flex-start; gap:12px; cursor:pointer;">
+            <input type="checkbox" name="buy_and_install" value="1" style="margin-top:4px; width:18px; height:18px; accent-color:var(--color-primary);">
+            <div>
+              <div style="font-weight:700; font-size:0.95rem; color:var(--text-main);">
+                Add Professional Installation (+₹{{ product.installation_fee|floatformat:0 }})
+              </div>
+              <div style="font-size:0.82rem; color:var(--text-muted); line-height:1.5;">
+                Includes fitment appointment at an AUTOVYNEX certified regional workshop, torque calibration, and old part disposal.
+              </div>
+            </div>
+          </label>
+        </div>
+        {% endif %}
+
+        <div style="display:flex; gap:16px; align-items:center; margin-bottom:28px;">
+          <div style="display:flex; align-items:center; border:1px solid var(--border-medium); border-radius:var(--radius-md); background:var(--bg-surface); overflow:hidden;">
+            <label style="padding:0 12px; font-size:0.85rem; color:var(--text-muted);">Qty:</label>
+            <input type="number" name="quantity" value="1" min="1" max="{{ product.stock_quantity|default:10 }}" style="width:60px; padding:10px 8px; border:none; text-align:center; font-weight:700; font-size:1rem; outline:none; background:transparent;">
+          </div>
+
+          <button type="submit" class="btn btn-primary btn-lg" style="flex:1;" {% if not product.in_stock %}disabled{% endif %}>
+            <i data-lucide="shopping-cart"></i> Add to Shopping Cart
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Technical Specifications & Details Tabs -->
+  <div class="card" style="margin-bottom:48px;">
+    <h3 style="font-size:1.3rem; margin-bottom:16px; border-bottom:1px solid var(--border-subtle); padding-bottom:12px;">
+      Engineering Specifications & Description
+    </h3>
+    <p style="color:var(--text-muted); line-height:1.7; margin-bottom:24px;">
+      {{ product.full_description }}
+    </p>
+
+    {% if product.specifications %}
+    <h4 style="font-size:1.05rem; margin-bottom:14px; color:var(--color-primary);">Technical Data Matrix</h4>
+    <div style="display:grid; grid-template-columns: repeat(2, 1fr); gap:12px; background:var(--bg-surface-subtle); padding:16px; border-radius:var(--radius-md); border:1px solid var(--border-subtle);">
+      {% for k, v in product.specifications.items %}
+        <div style="display:flex; justify-content:space-between; padding:8px 12px; background:var(--bg-surface); border-radius:6px; font-size:0.88rem;">
+          <span style="color:var(--text-muted); font-weight:600;">{{ k }}</span>
+          <span style="font-weight:700; color:var(--text-main);">{{ v }}</span>
+        </div>
+      {% endfor %}
+    </div>
+    {% endif %}
+  </div>
+
+  <!-- Verified Compatible Vehicles List -->
+  {% if compatible_fits %}
+  <div class="card" style="margin-bottom:48px;">
+    <h3 style="font-size:1.25rem; margin-bottom:14px;">
+      <i data-lucide="check-circle" style="color:#059669; vertical-align:middle;"></i> Sample Verified Compatible Vehicle Models
+    </h3>
+    <p style="font-size:0.85rem; color:var(--text-muted); margin-bottom:16px;">
+      Tested and verified fitments recorded in relational database for this product SKU:
+    </p>
+    <div style="display:flex; flex-wrap:wrap; gap:8px;">
+      {% for fit in compatible_fits %}
+        <span class="badge badge-verified" style="font-size:0.8rem; padding:6px 12px;">
+          {{ fit.variant.model.make.name }} {{ fit.variant.model.name }} {{ fit.variant.name }} ({{ fit.variant.year_from }}-{{ fit.variant.year_to }})
+        </span>
+      {% endfor %}
+    </div>
+  </div>
+  {% endif %}
+
+  <!-- Related Products in Category -->
+  {% if related_products %}
+  <div style="margin-bottom:48px;">
+    <h3 style="font-size:1.35rem; margin-bottom:20px;">Related Parts in {{ product.category.name }}</h3>
+    <div class="grid-4">
+      {% for rel in related_products %}
+        <div class="product-card">
+          <div class="product-image-container">
+            <div style="color:#0284c7;">
+              <i data-lucide="{{ rel.category.icon_name|default:'package' }}" style="width:48px; height:48px;"></i>
+            </div>
+          </div>
+          <div class="product-card-body">
+            <div class="product-category-brand">{{ rel.brand.name }}</div>
+            <a href="{% url 'inventory:product_detail' rel.slug %}" class="product-title">{{ rel.name }}</a>
+            <div class="product-price-row">
+              <span class="product-final-price">₹{{ rel.final_price|floatformat:0 }}</span>
+            </div>
+            <a href="{% url 'inventory:product_detail' rel.slug %}" class="btn btn-secondary btn-sm" style="width:100%;">View Part</a>
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

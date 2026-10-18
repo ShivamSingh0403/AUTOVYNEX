@@ -1,0 +1,98 @@
+{% extends 'base.html' %}
+
+{% block title %}Service Provider Directory — Verified Workshops | AUTOVYNEX{% endblock %}
+
+{% block content %}
+<div class="container" style="padding-top:24px;">
+  <!-- Title & City Filter -->
+  <div style="display:flex; justify-content:space-between; align-items:flex-end; flex-wrap:wrap; gap:16px; margin-bottom:32px;">
+    <div>
+      <div class="demo-academic-badge" style="margin-bottom:8px;">
+        <i data-lucide="shield-check"></i>
+        <span>Verified Workshop Network</span>
+      </div>
+      <h1 style="font-size:1.85rem; margin:0;">Certified Service Providers & Workshops</h1>
+      <p style="color:var(--text-muted); font-size:1rem; margin-top:6px;">
+        Technicians certified with computerized OBD diagnostics, genuine OEM parts fitment, and standardized labor pricing.
+      </p>
+    </div>
+
+    <div style="display:flex; align-items:center; gap:8px;">
+      <label style="font-size:0.85rem; color:var(--text-muted);">Filter by City:</label>
+      <form method="GET" action="{% url 'services:directory' %}" style="margin:0;">
+        <select name="city" class="form-select" style="padding:6px 12px; font-size:0.85rem;" onchange="this.form.submit()">
+          <option value="">All Indian Hubs</option>
+          {% for c in cities %}
+            <option value="{{ c }}" {% if selected_city == c %}selected{% endif %}>{{ c }}</option>
+          {% endfor %}
+        </select>
+      </form>
+    </div>
+  </div>
+
+  <!-- Workshop Grid -->
+  <div class="grid-3" style="margin-bottom:48px;">
+    {% for prov in providers %}
+      <div class="card card-interactive" style="display:flex; flex-direction:column; padding:24px;">
+        <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:12px;">
+          <div style="width:50px; height:50px; border-radius:var(--radius-md); background:linear-gradient(135deg, rgba(2, 132, 199, 0.12), rgba(6, 182, 212, 0.12)); color:var(--color-primary); display:flex; align-items:center; justify-content:center;">
+            <i data-lucide="wrench" style="width:26px; height:26px;"></i>
+          </div>
+          <span class="badge badge-verified">
+            ★ {{ prov.rating }} ({{ prov.total_reviews }} reviews)
+          </span>
+        </div>
+
+        <h3 style="font-size:1.15rem; margin-bottom:8px; color:var(--text-main);">{{ prov.name }}</h3>
+        
+        <div style="font-size:0.85rem; color:var(--text-muted); line-height:1.6; margin-bottom:16px; flex-grow:1;">
+          <div style="display:flex; gap:6px; align-items:flex-start; margin-bottom:6px;">
+            <i data-lucide="map-pin" style="width:16px; color:var(--color-primary); flex-shrink:0;"></i>
+            <span>{{ prov.address }}</span>
+          </div>
+          <div style="display:flex; gap:6px; align-items:center; margin-bottom:6px;">
+            <i data-lucide="clock" style="width:16px; color:var(--color-primary); flex-shrink:0;"></i>
+            <span>{{ prov.operating_hours }}</span>
+          </div>
+          <div style="display:flex; gap:6px; align-items:center;">
+            <i data-lucide="phone" style="width:16px; color:var(--color-primary); flex-shrink:0;"></i>
+            <span>{{ prov.contact_number }}</span>
+          </div>
+        </div>
+
+        <div style="border-top:1px solid var(--border-subtle); padding-top:16px;">
+          <a href="{% url 'services:book' %}" class="btn btn-primary btn-sm" style="width:100%; justify-content:center;">
+            <i data-lucide="calendar"></i> Book Appointment
+          </a>
+        </div>
+      </div>
+    {% endfor %}
+  </div>
+
+  <!-- Available Services Matrix -->
+  <div style="margin-bottom:48px;">
+    <h2 style="font-size:1.5rem; margin-bottom:20px;">Standardized Service Catalog</h2>
+    <div class="grid-4">
+      {% for s in services %}
+        <div class="card">
+          <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:10px;">
+            <i data-lucide="{{ s.icon_name|default:'wrench' }}" style="color:var(--color-primary); width:28px; height:28px;"></i>
+            <span class="badge badge-universal" style="font-size:0.7rem;">{{ s.estimated_duration }}</span>
+          </div>
+          <h4 style="font-size:1.05rem; margin-bottom:6px;">{{ s.name }}</h4>
+          <p style="font-size:0.85rem; color:var(--text-muted); margin-bottom:16px; min-height:48px;">
+            {{ s.description|truncatewords:14 }}
+          </p>
+          <div style="display:flex; justify-content:space-between; align-items:center; border-top:1px solid var(--border-subtle); padding-top:12px;">
+            <div>
+              <div style="font-size:0.75rem; color:var(--text-muted);">From</div>
+              <strong style="color:var(--text-main);">₹{{ s.starting_price|floatformat:0 }}</strong>
+            </div>
+            <a href="{% url 'services:book' %}?service_id={{ s.id }}" class="btn btn-primary btn-sm">Book</a>
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+  </div>
+</div>
+{% endblock %}

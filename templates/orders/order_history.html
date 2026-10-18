@@ -1,0 +1,80 @@
+{% extends 'base.html' %}
+
+{% block title %}Order History — AUTOVYNEX{% endblock %}
+
+{% block content %}
+<div class="container" style="padding-top:24px;">
+  <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:28px;">
+    <div>
+      <div style="font-size:0.85rem; color:var(--text-muted); margin-bottom:4px;">
+        <a href="{% url 'dashboard:customer_dashboard' %}">Dashboard</a> / <span>Orders</span>
+      </div>
+      <h1 style="font-size:1.85rem; margin:0;">My Order History</h1>
+    </div>
+    <a href="{% url 'inventory:shop' %}" class="btn btn-secondary btn-sm">
+      <i data-lucide="shopping-bag"></i> Continue Shopping
+    </a>
+  </div>
+
+  {% if orders %}
+  <div style="display:flex; flex-direction:column; gap:20px;">
+    {% for ord in orders %}
+      <div class="card" style="padding:24px;">
+        <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px; margin-bottom:16px; border-bottom:1px solid var(--border-subtle); padding-bottom:14px;">
+          <div>
+            <div style="font-family:var(--font-heading); font-size:1.15rem; font-weight:700;">
+              Order #{{ ord.order_number }}
+            </div>
+            <div style="font-size:0.8rem; color:var(--text-muted);">
+              Placed on {{ ord.created_at|date:"d M Y, h:i A" }} • {{ ord.items.count }} item(s)
+            </div>
+          </div>
+          <div style="display:flex; align-items:center; gap:12px;">
+            <span class="badge {% if ord.status == 'delivered' %}badge-verified{% elif ord.status == 'shipped' %}badge-universal{% else %}badge-unconfirmed{% endif %}">
+              {{ ord.get_status_display }}
+            </span>
+            <a href="{% url 'orders:order_detail' ord.order_number %}" class="btn btn-primary btn-sm">
+              <i data-lucide="eye"></i> Track Details
+            </a>
+          </div>
+        </div>
+
+        <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:16px;">
+          <div style="display:flex; flex-direction:column; gap:6px; flex:1;">
+            {% for itm in ord.items.all|slice:":3" %}
+              <div style="font-size:0.88rem; color:var(--text-main);">
+                <strong>{{ itm.quantity }}x</strong> {{ itm.product_name }}
+                {% if itm.buy_and_install %}<span class="badge badge-verified" style="font-size:0.65rem;">+Install</span>{% endif %}
+              </div>
+            {% endfor %}
+            {% if ord.items.count > 3 %}
+              <div style="font-size:0.78rem; color:var(--text-muted);">+ {{ ord.items.count|add:"-3" }} more item(s)...</div>
+            {% endif %}
+          </div>
+
+          <div style="text-align:right;">
+            <div style="font-size:0.8rem; color:var(--text-muted);">Total Amount</div>
+            <div style="font-family:var(--font-heading); font-size:1.35rem; font-weight:800; color:var(--text-main);">
+              ₹{{ ord.total_amount|floatformat:2 }}
+            </div>
+          </div>
+        </div>
+      </div>
+    {% endfor %}
+  </div>
+  {% else %}
+  <div class="card" style="text-align:center; padding:64px 20px;">
+    <div style="width:64px; height:64px; border-radius:50%; background:rgba(2, 132, 199, 0.1); color:var(--color-primary); display:flex; align-items:center; justify-content:center; margin:0 auto 16px;">
+      <i data-lucide="package-x" style="width:32px; height:32px;"></i>
+    </div>
+    <h3>No Orders Placed Yet</h3>
+    <p style="color:var(--text-muted); max-width:440px; margin:8px auto 24px;">
+      Explore 300+ spare parts verified for Indian vehicles and place your first order.
+    </p>
+    <a href="{% url 'inventory:shop' %}" class="btn btn-primary">
+      <i data-lucide="shopping-bag"></i> Browse Parts
+    </a>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

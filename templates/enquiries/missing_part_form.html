@@ -1,0 +1,128 @@
+{% extends 'base.html' %}
+
+{% block title %}Can't Find Your Part? — AUTOVYNEX Missing Part Sourcing{% endblock %}
+
+{% block content %}
+<div class="container" style="padding-top:24px;">
+  <div style="max-width:880px; margin:0 auto;">
+    <div style="text-align:center; margin-bottom:36px;">
+      <div class="demo-academic-badge" style="margin-bottom:12px;">
+        <i data-lucide="search"></i>
+        <span>Rare & Out-of-Stock Sourcing Desk</span>
+      </div>
+      <h1>Can't Find Your Spare Part?</h1>
+      <p style="color:var(--text-muted); font-size:1.05rem; max-width:620px; margin:8px auto 0;">
+        Whether it's an imported ECU, rare mechanical linkage, or vintage body panel, our automotive logistics network hunts it down across OEM distributors.
+      </p>
+    </div>
+
+    <!-- Enquiry Form -->
+    <div class="card" style="margin-bottom:32px;">
+      <form method="POST" action="{% url 'enquiries:missing_part_request' %}" enctype="multipart/form-data">
+        {% csrf_token %}
+
+        <h3 style="font-size:1.15rem; margin-bottom:16px; color:var(--color-primary); display:flex; align-items:center; gap:8px;">
+          <i data-lucide="car"></i> 1. Vehicle & Component Specifications
+        </h3>
+
+        <div class="grid-2" style="gap:20px; margin-bottom:20px;">
+          <div class="form-group">
+            <label class="form-label">Vehicle Details *</label>
+            <input type="text" name="vehicle_details" required class="form-control" placeholder="e.g. 2022 Hyundai Creta 1.5L CRDi Diesel AT" {% if selected_vehicle %}value="{{ selected_vehicle.display_name }}"{% endif %}>
+            {% if customer_vehicles %}
+              <div style="font-size:0.75rem; color:var(--text-muted); margin-top:4px;">
+                Pick from garage:
+                {% for cv in customer_vehicles %}
+                  <a href="javascript:void(0)" onclick="document.getElementsByName('vehicle_details')[0].value='{{ cv.display_title }}';">{{ cv.display_title }}</a>{% if not forloop.last %}, {% endif %}
+                {% endfor %}
+              </div>
+            {% endif %}
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Part Name or Assembly *</label>
+            <input type="text" name="part_name" required class="form-control" placeholder="e.g. Variable Valve Solenoid, Steering Rack Assembly">
+          </div>
+        </div>
+
+        <div class="grid-3" style="gap:16px; margin-bottom:20px;">
+          <div class="form-group">
+            <label class="form-label">Category</label>
+            <select name="category" class="form-select">
+              <option value="Mechanical / Engine">Mechanical / Engine</option>
+              <option value="Transmission & Clutch">Transmission & Clutch</option>
+              <option value="Suspension & Steering">Suspension & Steering</option>
+              <option value="Braking System">Braking System</option>
+              <option value="Electrical & Sensors">Electrical & Sensors</option>
+              <option value="Body & Trim Panels">Body & Trim Panels</option>
+              <option value="Cooling & HVAC">Cooling & HVAC</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">OEM Part Number (If Known)</label>
+            <input type="text" name="part_number" class="form-control" placeholder="e.g. 24355-2A000">
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">17-Digit VIN / Chassis (Private)</label>
+            <input type="text" name="vin_chassis" class="form-control" placeholder="Optional for exact part matching">
+          </div>
+        </div>
+
+        <div class="form-group" style="margin-bottom:20px;">
+          <label class="form-label">Detailed Description of Defect or Part *</label>
+          <textarea name="description" required class="form-control" style="min-height:90px;" placeholder="Describe part condition, whether left or right side, any stamped markings..."></textarea>
+        </div>
+
+        <div class="form-group" style="margin-bottom:24px;">
+          <label class="form-label">Upload Photo of Damaged Part or Assembly Tag</label>
+          <input type="file" name="damaged_part_image" class="form-control" accept="image/*">
+          <small style="font-size:0.75rem; color:var(--text-muted);">A clear photo of the broken part or stamped part label accelerates sourcing by 70%.</small>
+        </div>
+
+        <!-- Step 2: Contact Details -->
+        <h3 style="font-size:1.15rem; margin-bottom:16px; color:var(--color-primary); display:flex; align-items:center; gap:8px;">
+          <i data-lucide="phone"></i> 2. Contact & Quote Notification
+        </h3>
+
+        <div class="grid-3" style="gap:16px; margin-bottom:24px;">
+          <div class="form-group">
+            <label class="form-label">Your Name *</label>
+            <input type="text" name="contact_name" required class="form-control" value="{{ user.get_full_name|default:user.username }}">
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Email Address *</label>
+            <input type="email" name="contact_email" required class="form-control" value="{{ user.email }}">
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">WhatsApp Mobile Number *</label>
+            <input type="tel" name="contact_phone" required class="form-control" value="{{ user.profile.phone|default:'+91 98765 43210' }}">
+          </div>
+        </div>
+
+        <div class="form-group" style="margin-bottom:24px;">
+          <label class="form-label">Preferred Response Channel</label>
+          <div style="display:flex; gap:20px;">
+            <label style="display:flex; align-items:center; gap:8px; font-size:0.9rem; cursor:pointer;">
+              <input type="radio" name="contact_preference" value="whatsapp" checked style="accent-color:var(--color-primary);"> WhatsApp Alert
+            </label>
+            <label style="display:flex; align-items:center; gap:8px; font-size:0.9rem; cursor:pointer;">
+              <input type="radio" name="contact_preference" value="phone" style="accent-color:var(--color-primary);"> Phone Call
+            </label>
+            <label style="display:flex; align-items:center; gap:8px; font-size:0.9rem; cursor:pointer;">
+              <input type="radio" name="contact_preference" value="email" style="accent-color:var(--color-primary);"> Email
+            </label>
+          </div>
+        </div>
+
+        <button type="submit" class="btn btn-primary btn-lg" style="width:100%; justify-content:center;">
+          <i data-lucide="send"></i> Dispatch Sourcing Enquiry
+        </button>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}

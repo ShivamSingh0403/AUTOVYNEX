@@ -1,0 +1,135 @@
+{% extends 'base.html' %}
+
+{% block title %}Book Automotive Service — AUTOVYNEX{% endblock %}
+
+{% block content %}
+<div class="container" style="padding-top:24px;">
+  <div style="max-width:880px; margin:0 auto;">
+    <div style="text-align:center; margin-bottom:36px;">
+      <div class="demo-academic-badge" style="margin-bottom:12px;">
+        <i data-lucide="calendar"></i>
+        <span>Certified Workshop Booking System</span>
+      </div>
+      <h1>Book an Automotive Service Appointment</h1>
+      <p style="color:var(--text-muted); font-size:1.05rem; max-width:600px; margin:8px auto 0;">
+        Select your vehicle, certified workshop, preferred date & time slot with instant slot availability check.
+      </p>
+    </div>
+
+    <!-- Booking Form Card -->
+    <div class="card" style="margin-bottom:32px;">
+      <form method="POST" action="{% url 'services:book' %}">
+        {% csrf_token %}
+
+        <!-- Step 1: Vehicle & Service -->
+        <h3 style="font-size:1.15rem; margin-bottom:16px; color:var(--color-primary); display:flex; align-items:center; gap:8px;">
+          <i data-lucide="car"></i> 1. Choose Vehicle & Service
+        </h3>
+
+        <div class="grid-2" style="gap:20px; margin-bottom:24px;">
+          <div class="form-group">
+            <label class="form-label">Vehicle for Service *</label>
+            <select name="vehicle_info" class="form-select" required>
+              {% for gv in customer_vehicles %}
+                <option value="{{ gv.display_title }} [{{ gv.registration_number }}]">{{ gv.display_title }} ({{ gv.registration_number }})</option>
+              {% empty %}
+                <option value="Customer Vehicle (To be confirmed at workshop)">My Vehicle (Specify in notes or add to Garage)</option>
+              {% endfor %}
+            </select>
+            <small style="font-size:0.75rem; color:var(--text-muted);"><a href="{% url 'garage:index' %}">+ Add another vehicle in My Garage</a></small>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Service Type *</label>
+            <select name="service_id" class="form-select" required>
+              {% for s in services %}
+                <option value="{{ s.id }}" {% if selected_service and selected_service.id == s.id %}selected{% endif %}>
+                  {{ s.name }} (Starting ₹{{ s.starting_price|floatformat:0 }} • {{ s.estimated_duration }})
+                </option>
+              {% endfor %}
+            </select>
+          </div>
+        </div>
+
+        <!-- Step 2: Workshop & Time Slot -->
+        <h3 style="font-size:1.15rem; margin-bottom:16px; color:var(--color-primary); display:flex; align-items:center; gap:8px;">
+          <i data-lucide="clock"></i> 2. Select Workshop Center & Time Slot
+        </h3>
+
+        <div class="grid-3" style="gap:16px; margin-bottom:24px;">
+          <div class="form-group">
+            <label class="form-label">Preferred Service Center *</label>
+            <select name="provider_id" class="form-select" required>
+              {% for prov in providers %}
+                <option value="{{ prov.id }}">{{ prov.name }} ({{ prov.city }})</option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Preferred Date *</label>
+            <input type="date" name="booking_date" class="form-control" required id="booking-date-input">
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Available Time Slot *</label>
+            <select name="time_slot" class="form-select" required>
+              {% for code, label in time_slots %}
+                <option value="{{ code }}">{{ label }}</option>
+              {% endfor %}
+            </select>
+          </div>
+        </div>
+
+        <!-- Step 3: Location & Symptoms -->
+        <h3 style="font-size:1.15rem; margin-bottom:16px; color:var(--color-primary); display:flex; align-items:center; gap:8px;">
+          <i data-lucide="map-pin"></i> 3. Address & Problem Description
+        </h3>
+
+        <div class="grid-2" style="gap:20px; margin-bottom:20px;">
+          <div class="form-group">
+            <label class="form-label">Pickup Address / Customer City Address *</label>
+            <textarea name="customer_address" required class="form-control" style="min-height:80px;" placeholder="Full street address for pickup/drop assistance...">{{ user.profile.address|default:'Flat 402, Skyline Residency, Indiranagar, Bengaluru' }}</textarea>
+          </div>
+
+          <div>
+            <div class="form-group">
+              <label class="form-label">Contact Mobile Number *</label>
+              <input type="tel" name="customer_phone" required class="form-control" value="{{ user.profile.phone|default:'+91 98765 43210' }}">
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Specific Symptoms or Concerns</label>
+              <input type="text" name="problem_description" class="form-control" placeholder="e.g. Grinding sound during braking, AC cooling weak...">
+            </div>
+          </div>
+        </div>
+
+        <div class="alert-banner alert-info" style="margin-bottom:20px;">
+          <i data-lucide="info"></i>
+          <div>
+            <strong>Notice:</strong> Appointment slots are locked dynamically. Duplicate appointments for the same workshop bay & time slot are automatically rejected by the server.
+          </div>
+        </div>
+
+        <button type="submit" class="btn btn-primary btn-lg" style="width:100%; justify-content:center;">
+          <i data-lucide="calendar-check"></i> Confirm Service Appointment (Demonstration)
+        </button>
+      </form>
+    </div>
+  </div>
+</div>
+
+<script>
+  // Set default min date to tomorrow
+  document.addEventListener('DOMContentLoaded', () => {
+    const dInput = document.getElementById('booking-date-input');
+    if (dInput) {
+      const tomorrow = new Date();
+      tomorrow.setDate(tomorrow.getDate() + 1);
+      dInput.min = tomorrow.toISOString().split('T')[0];
+      dInput.value = tomorrow.toISOString().split('T')[0];
+    }
+  });
+</script>
+{% endblock %}

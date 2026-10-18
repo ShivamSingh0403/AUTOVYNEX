@@ -1,0 +1,332 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ vehicle.display_title }} — Digital Garage | AUTOVYNEX{% endblock %}
+
+{% block content %}
+<div class="container" style="padding-top:24px;">
+  <!-- Breadcrumbs & Header -->
+  <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:16px; margin-bottom:28px;">
+    <div>
+      <div style="font-size:0.85rem; color:var(--text-muted); margin-bottom:4px;">
+        <a href="{% url 'garage:index' %}">My Garage</a> / <span>{{ vehicle.display_title }}</span>
+      </div>
+      <h1 style="font-size:1.85rem; margin:0;">{{ vehicle.display_title }}</h1>
+      <div style="font-size:0.88rem; color:var(--text-muted); margin-top:4px;">
+        Registration: <strong>{{ vehicle.registration_number }}</strong> • Odometer: <strong>{{ vehicle.current_mileage|floatformat:0 }} KM</strong>
+        {% if vehicle.is_default %} • <span class="badge badge-verified" style="font-size:0.7rem;">Primary</span>{% endif %}
+      </div>
+    </div>
+
+    <div style="display:flex; gap:10px;">
+      <form method="POST" action="{% url 'vehicles:select_vehicle_session' %}" style="margin:0;">
+        {% csrf_token %}
+        <input type="hidden" name="variant_id" value="{{ vehicle.variant.id }}">
+        <button type="submit" class="btn btn-primary btn-sm">
+          <i data-lucide="package"></i> Shop Compatible Parts
+        </button>
+      </form>
+      <a href="{% url 'services:book' %}" class="btn btn-secondary btn-sm">
+        <i data-lucide="calendar"></i> Book Service
+      </a>
+    </div>
+  </div>
+
+  <!-- Vehicle Overview Specs Card -->
+  <div class="card" style="margin-bottom:32px; background:linear-gradient(135deg, rgba(2, 132, 199, 0.05), rgba(6, 182, 212, 0.05));">
+    <div class="grid-4" style="gap:20px;">
+      <div>
+        <div style="font-size:0.78rem; color:var(--text-muted); text-transform:uppercase;">Engine Displacement</div>
+        <div style="font-weight:700; font-size:1.1rem; color:var(--text-main);">{{ vehicle.variant.engine_cc }} CC</div>
+      </div>
+      <div>
+        <div style="font-size:0.78rem; color:var(--text-muted); text-transform:uppercase;">Fuel & Transmission</div>
+        <div style="font-weight:700; font-size:1.1rem; color:var(--text-main);">{{ vehicle.variant.fuel_type }} • {{ vehicle.variant.transmission }}</div>
+      </div>
+      <div>
+        <div style="font-size:0.78rem; color:var(--text-muted); text-transform:uppercase;">Total Logged Maintenance</div>
+        <div style="font-family:var(--font-heading); font-weight:800; font-size:1.25rem; color:var(--color-primary);">₹{{ vehicle_spent|floatformat:0 }}</div>
+      </div>
+      <div>
+        <div style="font-size:0.78rem; color:var(--text-muted); text-transform:uppercase;">Chassis / VIN (Private)</div>
+        <div style="font-weight:700; font-size:0.95rem; color:var(--text-main);">{{ vehicle.vin_number|default:'Not Registered' }}</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Dual Column Layout: Service Records & Reminders / Docs -->
+  <div style="display:grid; grid-template-columns: 1.2fr 0.8fr; gap:36px; margin-bottom:48px;" class="grid-garage-detail">
+    <!-- Left Column: Service & Expense History -->
+    <div>
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
+        <h3 style="font-size:1.25rem; margin:0;"><i data-lucide="wrench" style="color:var(--color-primary); vertical-align:middle;"></i> Maintenance & Service History</h3>
+        <button type="button" class="btn btn-secondary btn-sm" onclick="document.getElementById('add-record-box').style.display='block';">
+          <i data-lucide="plus"></i> Add Service Record
+        </button>
+      </div>
+
+      <!-- Add Record Form Drawer -->
+      <div id="add-record-box" class="card" style="display:none; margin-bottom:24px; background:var(--bg-surface-elevated); border-color:var(--color-primary);">
+        <h4 style="margin-bottom:14px; color:var(--color-primary);">Record New Maintenance Entry</h4>
+        <form method="POST" action="{% url 'garage:add_record' vehicle.id %}" enctype="multipart/form-data">
+          {% csrf_token %}
+          <div class="grid-2" style="gap:14px;">
+            <div class="form-group">
+              <label class="form-label">Service Date *</label>
+              <input type="date" name="service_date" required class="form-control">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Odometer at Service (KM) *</label>
+              <input type="number" name="mileage" value="{{ vehicle.current_mileage }}" class="form-control" required>
+            </div>
+          </div>
+
+          <div class="grid-2" style="gap:14px;">
+            <div class="form-group">
+              <label class="form-label">Service Category *</label>
+              <select name="service_type" class="form-select">
+                <option value="Scheduled Service">Scheduled Periodic Maintenance</option>
+                <option value="Oil & Filter Change">Oil & Filter Change</option>
+                <option value="Brake Service">Brake Service</option>
+                <option value="Tyre Service">Tyres, Alignment & Balancing</option>
+                <option value="Battery Replacement">Battery Replacement</option>
+                <option value="Air Conditioning">Air Conditioning Service</option>
+                <option value="Accident Repair">Bodywork / Denting / Paint</option>
+                <option value="Mechanical Repair">Mechanical Repair</option>
+                <option value="Detailing">Detailing & Ceramic Coating</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Total Cost Incurred (₹) *</label>
+              <input type="number" name="cost" step="0.5" required class="form-control" placeholder="e.g. 4500">
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Workshop / Service Center Name *</label>
+            <input type="text" name="workshop_name" required class="form-control" placeholder="e.g. AUTOVYNEX TechCenter Indiranagar">
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Work Done & Parts Replaced</label>
+            <textarea name="notes" class="form-control" style="min-height:70px;" placeholder="Details of oils changed, brake pads replaced, or inspections..."></textarea>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Attach Workshop Invoice (PDF or Image)</label>
+            <input type="file" name="invoice_file" class="form-control">
+          </div>
+
+          <div style="display:flex; justify-content:flex-end; gap:10px;">
+            <button type="button" class="btn btn-secondary btn-sm" onclick="document.getElementById('add-record-box').style.display='none';">Cancel</button>
+            <button type="submit" class="btn btn-primary btn-sm"><i data-lucide="check"></i> Save Record</button>
+          </div>
+        </form>
+      </div>
+
+      <!-- Maintenance Records List -->
+      {% if maintenance_records %}
+      <div style="display:flex; flex-direction:column; gap:16px;">
+        {% for rec in maintenance_records %}
+          <div class="card" style="padding:18px;">
+            <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:8px;">
+              <div>
+                <span class="badge badge-universal" style="font-size:0.75rem; margin-bottom:4px;">{{ rec.service_type }}</span>
+                <div style="font-weight:700; font-size:1.05rem; color:var(--text-main);">{{ rec.workshop_name }}</div>
+                <div style="font-size:0.8rem; color:var(--text-muted);">
+                  {{ rec.service_date|date:"d M Y" }} • Odometer: {{ rec.mileage|floatformat:0 }} KM
+                </div>
+              </div>
+              <div style="font-family:var(--font-heading); font-size:1.25rem; font-weight:800; color:var(--color-primary);">
+                ₹{{ rec.cost|floatformat:2 }}
+              </div>
+            </div>
+
+            {% if rec.notes %}
+              <p style="font-size:0.88rem; color:var(--text-muted); line-height:1.5; margin:8px 0 0;">
+                {{ rec.notes }}
+              </p>
+            {% endif %}
+
+            {% if rec.invoice_file %}
+              <div style="margin-top:10px;">
+                <a href="{{ rec.invoice_file.url }}" target="_blank" class="btn btn-secondary btn-sm" style="font-size:0.75rem; padding:3px 8px;">
+                  <i data-lucide="file"></i> View Attached Invoice
+                </a>
+              </div>
+            {% endif %}
+          </div>
+        {% endfor %}
+      </div>
+      {% else %}
+      <div class="card" style="text-align:center; padding:40px 16px;">
+        <i data-lucide="clipboard-list" style="width:36px; height:36px; color:var(--text-muted); margin-bottom:10px;"></i>
+        <h4>No Maintenance Records Yet</h4>
+        <p style="font-size:0.85rem; color:var(--text-muted);">Log your oil changes, brake pads, and servicing to maintain clear vehicle resale valuation.</p>
+      </div>
+      {% endif %}
+    </div>
+
+    <!-- Right Column: Reminders & Documents Vault -->
+    <div style="display:flex; flex-direction:column; gap:32px;">
+      <!-- Maintenance Reminders -->
+      <div>
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px;">
+          <h3 style="font-size:1.15rem; margin:0;"><i data-lucide="bell" style="color:#d97706; vertical-align:middle;"></i> Service Reminders</h3>
+          <button type="button" class="btn btn-secondary btn-sm" onclick="document.getElementById('add-reminder-box').style.display='block';">
+            <i data-lucide="plus"></i> Add
+          </button>
+        </div>
+
+        <div id="add-reminder-box" class="card" style="display:none; margin-bottom:16px; background:var(--bg-surface-elevated);">
+          <form method="POST" action="{% url 'garage:add_reminder' vehicle.id %}">
+            {% csrf_token %}
+            <div class="form-group" style="margin-bottom:10px;">
+              <label class="form-label" style="font-size:0.8rem;">Reminder Title *</label>
+              <input type="text" name="title" required class="form-control" placeholder="e.g. Annual Insurance Renewal">
+            </div>
+            <div class="grid-2" style="gap:10px; margin-bottom:10px;">
+              <div>
+                <label class="form-label" style="font-size:0.8rem;">Due Date</label>
+                <input type="date" name="due_date" class="form-control">
+              </div>
+              <div>
+                <label class="form-label" style="font-size:0.8rem;">Due KM</label>
+                <input type="number" name="due_mileage" class="form-control" placeholder="40000">
+              </div>
+            </div>
+            <div style="display:flex; justify-content:flex-end; gap:8px;">
+              <button type="button" class="btn btn-secondary btn-sm" onclick="document.getElementById('add-reminder-box').style.display='none';">Cancel</button>
+              <button type="submit" class="btn btn-primary btn-sm">Save Reminder</button>
+            </div>
+          </form>
+        </div>
+
+        <div style="display:flex; flex-direction:column; gap:10px;">
+          {% for rem in reminders %}
+            <div style="padding:12px 14px; background:var(--bg-surface); border:1px solid var(--border-subtle); border-radius:var(--radius-md); display:flex; justify-content:space-between; align-items:center;">
+              <div style="display:flex; align-items:center; gap:10px;">
+                <form method="POST" action="{% url 'garage:toggle_reminder' rem.id %}" style="margin:0;">
+                  {% csrf_token %}
+                  <input type="checkbox" onchange="this.form.submit()" {% if rem.is_completed %}checked{% endif %} style="width:16px; height:16px; accent-color:#10b981; cursor:pointer;">
+                </form>
+                <div>
+                  <div style="font-size:0.88rem; font-weight:600; {% if rem.is_completed %}text-decoration:line-through; color:var(--text-subtle);{% else %}color:var(--text-main);{% endif %}">
+                    {{ rem.title }}
+                  </div>
+                  <div style="font-size:0.75rem; color:var(--text-muted);">
+                    {% if rem.due_date %}Due: {{ rem.due_date|date:"d M Y" }}{% endif %}
+                    {% if rem.due_mileage %}• at {{ rem.due_mileage|floatformat:0 }} KM{% endif %}
+                  </div>
+                </div>
+              </div>
+              <span class="badge {% if rem.is_completed %}badge-verified{% else %}badge-unconfirmed{% endif %}" style="font-size:0.68rem;">
+                {% if rem.is_completed %}Done{% else %}Pending{% endif %}
+              </span>
+            </div>
+          {% empty %}
+            <div style="font-size:0.85rem; color:var(--text-muted); text-align:center; padding:16px;">No upcoming service reminders.</div>
+          {% endfor %}
+        </div>
+      </div>
+
+      <!-- Vehicle Documents Vault -->
+      <div>
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px;">
+          <h3 style="font-size:1.15rem; margin:0;"><i data-lucide="shield" style="color:var(--color-primary); vertical-align:middle;"></i> Secure Document Vault</h3>
+          <button type="button" class="btn btn-secondary btn-sm" onclick="document.getElementById('upload-doc-box').style.display='block';">
+            <i data-lucide="upload"></i> Upload
+          </button>
+        </div>
+
+        <div id="upload-doc-box" class="card" style="display:none; margin-bottom:16px; background:var(--bg-surface-elevated);">
+          <form method="POST" action="{% url 'garage:upload_document' vehicle.id %}" enctype="multipart/form-data">
+            {% csrf_token %}
+            <div class="form-group" style="margin-bottom:10px;">
+              <label class="form-label" style="font-size:0.8rem;">Document Title *</label>
+              <input type="text" name="title" required class="form-control" placeholder="e.g. 2026 Comprehensive Insurance Policy">
+            </div>
+            <div class="grid-2" style="gap:10px; margin-bottom:10px;">
+              <div>
+                <label class="form-label" style="font-size:0.8rem;">Document Type *</label>
+                <select name="doc_type" class="form-select">
+                  <option value="rc">Registration Certificate (RC)</option>
+                  <option value="insurance">Insurance Policy</option>
+                  <option value="puc">PUC Certificate</option>
+                  <option value="warranty">Extended Warranty</option>
+                  <option value="other">Other Document</option>
+                </select>
+              </div>
+              <div>
+                <label class="form-label" style="font-size:0.8rem;">Expiry Date</label>
+                <input type="date" name="expiry_date" class="form-control">
+              </div>
+            </div>
+            <div class="form-group" style="margin-bottom:10px;">
+              <label class="form-label" style="font-size:0.8rem;">File (PDF/Image) *</label>
+              <input type="file" name="document_file" required class="form-control">
+            </div>
+            <div style="display:flex; justify-content:flex-end; gap:8px;">
+              <button type="button" class="btn btn-secondary btn-sm" onclick="document.getElementById('upload-doc-box').style.display='none';">Cancel</button>
+              <button type="submit" class="btn btn-primary btn-sm">Upload File</button>
+            </div>
+          </form>
+        </div>
+
+        <div style="display:flex; flex-direction:column; gap:10px;">
+          {% for doc in documents %}
+            <div style="padding:12px 14px; background:var(--bg-surface); border:1px solid var(--border-subtle); border-radius:var(--radius-md); display:flex; justify-content:space-between; align-items:center;">
+              <div>
+                <div style="font-size:0.88rem; font-weight:700; color:var(--text-main);">{{ doc.title }}</div>
+                <div style="font-size:0.75rem; color:var(--text-muted);">
+                  {{ doc.get_doc_type_display }} {% if doc.expiry_date %}• Expires: {{ doc.expiry_date|date:"d M Y" }}{% endif %}
+                </div>
+              </div>
+              <a href="{{ doc.document_file.url }}" target="_blank" class="btn btn-secondary btn-sm" style="font-size:0.75rem; padding:4px 10px;">
+                <i data-lucide="eye"></i> View
+              </a>
+            </div>
+          {% empty %}
+            <div style="font-size:0.85rem; color:var(--text-muted); text-align:center; padding:16px;">
+              No documents stored yet. Keep your digital RC and insurance policy safe here.
+            </div>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Compatible Spare Parts Recommendations Section for this Car -->
+  {% if compatible_parts %}
+  <div style="margin-bottom:48px;">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+      <div>
+        <h3 style="font-size:1.35rem; margin:0;">Recommended Spare Parts for Your {{ vehicle.variant.model.name }}</h3>
+        <p style="font-size:0.85rem; color:var(--text-muted); margin:4px 0 0;">Pre-filtered by vehicle fitment database</p>
+      </div>
+      <a href="{% url 'inventory:shop' %}" class="btn btn-secondary btn-sm">View All Compatible Parts</a>
+    </div>
+
+    <div class="grid-4">
+      {% for cp in compatible_parts %}
+        <div class="product-card">
+          <div class="product-image-container">
+            <span class="product-discount-tag">Exact Fit</span>
+            <div style="color:#0284c7;">
+              <i data-lucide="{{ cp.category.icon_name|default:'package' }}" style="width:48px; height:48px;"></i>
+            </div>
+          </div>
+          <div class="product-card-body">
+            <div class="product-category-brand">{{ cp.brand.name }}</div>
+            <a href="{% url 'inventory:product_detail' cp.slug %}" class="product-title">{{ cp.name }}</a>
+            <div class="product-price-row">
+              <span class="product-final-price">₹{{ cp.final_price|floatformat:0 }}</span>
+            </div>
+            <a href="{% url 'inventory:product_detail' cp.slug %}" class="btn btn-secondary btn-sm" style="width:100%;">View Details</a>
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

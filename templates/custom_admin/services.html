@@ -1,0 +1,66 @@
+{% extends 'base.html' %}
+
+{% block title %}Admin Service Bookings — AUTOVYNEX{% endblock %}
+
+{% block content %}
+<div class="container" style="padding-top:24px;">
+  <div style="margin-bottom:28px;">
+    <div style="font-size:0.85rem; color:var(--text-muted); margin-bottom:4px;">
+      <a href="{% url 'custom_admin:dashboard_overview' %}">Admin Center</a> / <span>Service Bookings</span>
+    </div>
+    <h1 style="font-size:1.85rem; margin:0;">Workshop Appointment Schedules</h1>
+  </div>
+
+  <div class="card" style="padding:0; overflow-x:auto;">
+    <table style="width:100%; border-collapse:collapse; min-width:850px; font-size:0.9rem;">
+      <thead>
+        <tr style="background:var(--bg-surface-subtle); border-bottom:1px solid var(--border-subtle); color:var(--text-muted);">
+          <th style="padding:14px 20px; text-align:left;">Booking #</th>
+          <th style="padding:14px 20px; text-align:left;">Service & Workshop</th>
+          <th style="padding:14px 20px; text-align:left;">Vehicle & Driver</th>
+          <th style="padding:14px 20px; text-align:left;">Date & Slot</th>
+          <th style="padding:14px 20px; text-align:center;">Status</th>
+          <th style="padding:14px 20px; text-align:center;">Update Status</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for bk in bookings %}
+          <tr style="border-bottom:1px solid var(--border-subtle);">
+            <td style="padding:14px 20px; font-weight:700;">{{ bk.booking_number }}</td>
+            <td style="padding:14px 20px;">
+              <strong>{{ bk.service.name }}</strong><br>
+              <span style="font-size:0.75rem; color:var(--text-muted);">{{ bk.provider.name }}</span>
+            </td>
+            <td style="padding:14px 20px;">
+              {{ bk.vehicle_info }}<br>
+              <span style="font-size:0.75rem; color:var(--text-muted);">Ph: {{ bk.customer_phone }}</span>
+            </td>
+            <td style="padding:14px 20px;">
+              <strong>{{ bk.booking_date|date:"d M Y" }}</strong><br>
+              <span style="font-size:0.75rem; color:var(--text-muted);">{{ bk.time_slot }}</span>
+            </td>
+            <td style="padding:14px 20px; text-align:center;">
+              <span class="badge {% if bk.status == 'completed' %}badge-verified{% elif bk.status == 'confirmed' %}badge-universal{% else %}badge-unconfirmed{% endif %}">
+                {{ bk.get_status_display }}
+              </span>
+            </td>
+            <td style="padding:14px 20px; text-align:center;">
+              <form method="POST" action="{% url 'custom_admin:admin_services' %}" style="display:inline-flex; gap:6px;">
+                {% csrf_token %}
+                <input type="hidden" name="booking_id" value="{{ bk.id }}">
+                <select name="status" class="form-select" style="padding:4px 8px; font-size:0.8rem; width:auto;">
+                  <option value="confirmed" {% if bk.status == 'confirmed' %}selected{% endif %}>Confirmed</option>
+                  <option value="in_progress" {% if bk.status == 'in_progress' %}selected{% endif %}>In Service</option>
+                  <option value="completed" {% if bk.status == 'completed' %}selected{% endif %}>Completed</option>
+                  <option value="cancelled" {% if bk.status == 'cancelled' %}selected{% endif %}>Cancelled</option>
+                </select>
+                <button type="submit" class="btn btn-secondary btn-sm" style="padding:4px 8px; font-size:0.75rem;">Set</button>
+              </form>
+            </td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

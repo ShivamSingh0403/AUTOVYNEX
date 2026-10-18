@@ -1,0 +1,165 @@
+{% extends 'base.html' %}
+
+{% block title %}AUTOVYNEX Administrator Center — Platform Operations{% endblock %}
+
+{% block content %}
+<div class="container" style="padding-top:24px;">
+  <!-- Admin Center Header -->
+  <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:16px; margin-bottom:28px;">
+    <div>
+      <div class="demo-academic-badge" style="margin-bottom:6px; background:#1e293b;">
+        <i data-lucide="shield" style="color:#38bdf8;"></i>
+        <span>AUTOVYNEX Operations Control Center</span>
+      </div>
+      <h1 style="font-size:1.85rem; margin:0;">Platform Administration Dashboard</h1>
+      <p style="color:var(--text-muted); font-size:0.95rem; margin-top:4px;">
+        Real-time telemetry, simulated orders, inventory audits, service scheduling, and enquiry moderation.
+      </p>
+    </div>
+
+    <div style="display:flex; gap:10px;">
+      <a href="/admin/" target="_blank" class="btn btn-secondary btn-sm">
+        <i data-lucide="database"></i> Native Django Admin
+      </a>
+      <a href="{% url 'custom_admin:admin_inventory' %}" class="btn btn-primary btn-sm">
+        <i data-lucide="boxes"></i> Inventory Audit
+      </a>
+    </div>
+  </div>
+
+  <!-- Primary Operations Statistics Grid -->
+  <div class="grid-4" style="margin-bottom:32px;">
+    <div class="card" style="border-left:4px solid var(--color-primary);">
+      <div style="font-size:0.8rem; color:var(--text-muted); text-transform:uppercase;">Gross Order Revenue</div>
+      <div style="font-family:var(--font-heading); font-size:1.8rem; font-weight:800; color:var(--color-primary); margin:4px 0;">
+        ₹{{ total_revenue|floatformat:0 }}
+      </div>
+      <div style="font-size:0.75rem; color:var(--text-muted);">From {{ total_orders }} simulated customer orders</div>
+    </div>
+
+    <div class="card" style="border-left:4px solid #10b981;">
+      <div style="font-size:0.8rem; color:var(--text-muted); text-transform:uppercase;">Active Spare Parts</div>
+      <div style="font-family:var(--font-heading); font-size:1.8rem; font-weight:800; color:#10b981; margin:4px 0;">
+        {{ total_products }}
+      </div>
+      <div style="font-size:0.75rem; color:var(--text-muted);">Across 16 catalog categories</div>
+    </div>
+
+    <div class="card" style="border-left:4px solid #f59e0b;">
+      <div style="font-size:0.8rem; color:var(--text-muted); text-transform:uppercase;">Pending Part Enquiries</div>
+      <div style="font-family:var(--font-heading); font-size:1.8rem; font-weight:800; color:#f59e0b; margin:4px 0;">
+        {{ pending_enquiries }}
+      </div>
+      <div style="font-size:0.75rem; color:var(--text-muted);"><a href="{% url 'custom_admin:admin_enquiries' %}">Review & quote parts</a></div>
+    </div>
+
+    <div class="card" style="border-left:4px solid #ef4444;">
+      <div style="font-size:0.8rem; color:var(--text-muted); text-transform:uppercase;">Roadside Emergency Tickets</div>
+      <div style="font-family:var(--font-heading); font-size:1.8rem; font-weight:800; color:#ef4444; margin:4px 0;">
+        {{ active_assistance }}
+      </div>
+      <div style="font-size:0.75rem; color:var(--text-muted);"><a href="{% url 'custom_admin:admin_assistance' %}">Dispatch desk</a></div>
+    </div>
+  </div>
+
+  <!-- Quick Admin Domain Navigation Bar -->
+  <div style="display:flex; gap:12px; margin-bottom:32px; overflow-x:auto; padding-bottom:6px;">
+    <a href="{% url 'custom_admin:admin_orders' %}" class="btn btn-secondary btn-sm"><i data-lucide="truck"></i> Orders Management ({{ total_orders }})</a>
+    <a href="{% url 'custom_admin:admin_inventory' %}" class="btn btn-secondary btn-sm"><i data-lucide="boxes"></i> Inventory & Stock</a>
+    <a href="{% url 'custom_admin:admin_enquiries' %}" class="btn btn-secondary btn-sm"><i data-lucide="search"></i> Part Enquiries ({{ pending_enquiries }})</a>
+    <a href="{% url 'custom_admin:admin_services' %}" class="btn btn-secondary btn-sm"><i data-lucide="calendar"></i> Service Bookings ({{ total_bookings }})</a>
+    <a href="{% url 'custom_admin:admin_assistance' %}" class="btn btn-secondary btn-sm"><i data-lucide="life-buoy"></i> Roadside Assistance</a>
+  </div>
+
+  <!-- Dual Dashboard Grids -->
+  <div style="display:grid; grid-template-columns: 1.2fr 0.8fr; gap:36px; margin-bottom:48px;" class="grid-admin-panels">
+    <!-- Left: Recent Orders & Enquiries -->
+    <div style="display:flex; flex-direction:column; gap:32px;">
+      <!-- Orders Table -->
+      <div class="card" style="padding:0; overflow:hidden;">
+        <div style="padding:16px 20px; background:var(--bg-surface-subtle); border-bottom:1px solid var(--border-subtle); display:flex; justify-content:space-between; align-items:center;">
+          <h3 style="font-size:1.1rem; margin:0;"><i data-lucide="truck" style="width:18px; vertical-align:middle; color:var(--color-primary);"></i> Recent Orders</h3>
+          <a href="{% url 'custom_admin:admin_orders' %}" style="font-size:0.8rem; font-weight:600; color:var(--color-primary);">Manage All</a>
+        </div>
+
+        <div style="display:flex; flex-direction:column;">
+          {% for o in recent_orders %}
+            <div style="padding:14px 20px; border-bottom:1px solid var(--border-subtle); display:flex; justify-content:space-between; align-items:center; font-size:0.88rem;">
+              <div>
+                <strong>#{{ o.order_number }}</strong> — {{ o.full_name }} ({{ o.city }})
+                <div style="font-size:0.75rem; color:var(--text-muted);">{{ o.created_at|date:"d M, h:i A" }} • {{ o.items.count }} items</div>
+              </div>
+              <div style="display:flex; align-items:center; gap:12px;">
+                <span class="badge {% if o.status == 'delivered' %}badge-verified{% else %}badge-universal{% endif %}">{{ o.get_status_display }}</span>
+                <a href="{% url 'custom_admin:admin_order_update' o.id %}" class="btn btn-secondary btn-sm" style="padding:3px 8px; font-size:0.75rem;">Edit</a>
+              </div>
+            </div>
+          {% endfor %}
+        </div>
+      </div>
+
+      <!-- Missing Part Enquiries -->
+      <div class="card" style="padding:0; overflow:hidden;">
+        <div style="padding:16px 20px; background:var(--bg-surface-subtle); border-bottom:1px solid var(--border-subtle); display:flex; justify-content:space-between; align-items:center;">
+          <h3 style="font-size:1.1rem; margin:0;"><i data-lucide="search" style="width:18px; vertical-align:middle; color:#f59e0b;"></i> Sourcing Enquiries Awaiting Quotes</h3>
+          <a href="{% url 'custom_admin:admin_enquiries' %}" style="font-size:0.8rem; font-weight:600; color:var(--color-primary);">View All</a>
+        </div>
+
+        <div style="display:flex; flex-direction:column;">
+          {% for eq in recent_enquiries %}
+            <div style="padding:14px 20px; border-bottom:1px solid var(--border-subtle); display:flex; justify-content:space-between; align-items:center; font-size:0.88rem;">
+              <div>
+                <strong>{{ eq.part_name }}</strong>
+                <div style="font-size:0.75rem; color:var(--text-muted);">{{ eq.vehicle_details }} • {{ eq.contact_name }} ({{ eq.contact_phone }})</div>
+              </div>
+              <div style="display:flex; align-items:center; gap:10px;">
+                <span class="badge badge-unconfirmed">{{ eq.get_status_display }}</span>
+                <a href="{% url 'custom_admin:admin_enquiry_update' eq.id %}" class="btn btn-primary btn-sm" style="padding:3px 8px; font-size:0.75rem;">Quote</a>
+              </div>
+            </div>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+
+    <!-- Right: Operational Breakdown & Category Volumes -->
+    <div style="display:flex; flex-direction:column; gap:32px;">
+      <!-- Category Volumes Card -->
+      <div class="card">
+        <h3 style="font-size:1.15rem; margin-bottom:16px; border-bottom:1px solid var(--border-subtle); padding-bottom:10px;">
+          Catalogue Category Volumes
+        </h3>
+        <div style="display:flex; flex-direction:column; gap:12px;">
+          {% for c in categories %}
+            <div>
+              <div style="display:flex; justify-content:space-between; font-size:0.85rem; margin-bottom:4px;">
+                <span style="font-weight:600;">{{ c.name }}</span>
+                <span style="color:var(--text-muted);">{{ c.prod_count }} SKUs</span>
+              </div>
+              <div style="height:6px; background:var(--bg-surface-subtle); border-radius:3px; overflow:hidden;">
+                <div style="height:100%; width:{% widthratio c.prod_count 30 100 %}%; background:linear-gradient(90deg, #0284c7, #06b6d4);"></div>
+              </div>
+            </div>
+          {% endfor %}
+        </div>
+      </div>
+
+      <!-- Quick Platform Actions -->
+      <div class="card" style="background:var(--bg-surface-subtle);">
+        <h3 style="font-size:1.15rem; margin-bottom:12px;">Platform Quick Controls</h3>
+        <div style="display:flex; flex-direction:column; gap:8px;">
+          <a href="/admin/inventory/product/add/" target="_blank" class="btn btn-secondary btn-sm" style="justify-content:flex-start;">
+            <i data-lucide="plus"></i> Add New Product SKU
+          </a>
+          <a href="/admin/vehicles/vehiclevariant/add/" target="_blank" class="btn btn-secondary btn-sm" style="justify-content:flex-start;">
+            <i data-lucide="plus"></i> Add Vehicle Make/Model/Variant
+          </a>
+          <a href="/admin/services/serviceprovider/add/" target="_blank" class="btn btn-secondary btn-sm" style="justify-content:flex-start;">
+            <i data-lucide="plus"></i> Onboard Workshop Partner
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

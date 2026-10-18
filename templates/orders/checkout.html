@@ -1,0 +1,193 @@
+{% extends 'base.html' %}
+
+{% block title %}Checkout — AUTOVYNEX Simulated Order Finalization{% endblock %}
+
+{% block content %}
+<div class="container" style="padding-top:24px;">
+  <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:28px;">
+    <div>
+      <div style="font-size:0.85rem; color:var(--text-muted); margin-bottom:4px;">
+        <a href="{% url 'orders:cart_detail' %}">Cart</a> / <span>Checkout</span>
+      </div>
+      <h1 style="font-size:1.85rem; margin:0;">Finalize Order & Delivery</h1>
+    </div>
+  </div>
+
+  <!-- Mandatory Simulation Notice per requirements -->
+  <div class="alert-banner alert-warning" style="margin-bottom:28px;">
+    <i data-lucide="alert-triangle"></i>
+    <div>
+      <strong>Demonstration Notice:</strong> This checkout process is simulated for academic presentation. No actual financial transactions or bank debits will occur. Please do not enter real sensitive financial passwords or PINs.
+    </div>
+  </div>
+
+  <form method="POST" action="{% url 'orders:checkout' %}">
+    {% csrf_token %}
+    <div style="display:grid; grid-template-columns: 1.2fr 0.8fr; gap:36px;" class="grid-checkout-layout">
+      <!-- Left Column: Shipping & Payment -->
+      <div>
+        <!-- Shipping Address Card -->
+        <div class="card" style="margin-bottom:28px;">
+          <h3 style="font-size:1.2rem; margin-bottom:20px; display:flex; align-items:center; gap:8px;">
+            <i data-lucide="map-pin" style="color:var(--color-primary); width:20px;"></i> Shipping Address
+          </h3>
+
+          <div class="grid-2" style="gap:16px;">
+            <div class="form-group">
+              <label class="form-label">Full Name *</label>
+              <input type="text" name="full_name" required class="form-control" value="{{ user.get_full_name|default:user.username }}">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Email Address *</label>
+              <input type="email" name="email" required class="form-control" value="{{ user.email }}">
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Contact Phone Number *</label>
+            <input type="tel" name="phone" required class="form-control" value="{{ profile.phone|default:'+91 98765 43210' }}">
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Flat / House No. / Street Address *</label>
+            <textarea name="shipping_address" required class="form-control" style="min-height:80px;">{{ profile.address|default:'Flat 402, Skyline Residency, 12th Main Road' }}</textarea>
+          </div>
+
+          <div class="grid-3" style="gap:16px;">
+            <div class="form-group">
+              <label class="form-label">City *</label>
+              <input type="text" name="city" required class="form-control" value="{{ profile.city|default:'Bengaluru' }}">
+            </div>
+            <div class="form-group">
+              <label class="form-label">State *</label>
+              <input type="text" name="state" required class="form-control" value="{{ profile.state|default:'Karnataka' }}">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Pincode *</label>
+              <input type="text" name="pincode" required class="form-control" value="{{ profile.pincode|default:'560038' }}">
+            </div>
+          </div>
+        </div>
+
+        <!-- Buy + Install Vehicle Details if applicable -->
+        {% if has_installation %}
+        <div class="card" style="margin-bottom:28px; border-color:var(--color-primary-light);">
+          <h3 style="font-size:1.2rem; margin-bottom:12px; display:flex; align-items:center; gap:8px; color:var(--color-primary);">
+            <i data-lucide="wrench"></i> Installation Vehicle Appointment
+          </h3>
+          <p style="font-size:0.85rem; color:var(--text-muted); margin-bottom:16px;">
+            One or more items in your cart include professional installation. Please select or confirm the vehicle details:
+          </p>
+
+          <div class="form-group">
+            <label class="form-label">Vehicle to Receive Installation *</label>
+            <select name="install_vehicle" class="form-select">
+              {% for gv in customer_vehicles %}
+                <option value="{{ gv.display_title }} [{{ gv.registration_number }}]">{{ gv.display_title }} ({{ gv.registration_number }})</option>
+              {% empty %}
+                <option value="Customer Vehicle to be confirmed">My Vehicle (To be confirmed with workshop agent)</option>
+              {% endfor %}
+            </select>
+          </div>
+        </div>
+        {% endif %}
+
+        <!-- Simulated Payment Method Selection -->
+        <div class="card">
+          <h3 style="font-size:1.2rem; margin-bottom:16px; display:flex; align-items:center; gap:8px;">
+            <i data-lucide="credit-card" style="color:var(--color-primary); width:20px;"></i> Select Payment Method (Simulation)
+          </h3>
+
+          <div style="display:flex; flex-direction:column; gap:12px;">
+            <label class="card" style="padding:14px; cursor:pointer; display:flex; align-items:center; gap:12px; border-color:var(--color-primary-light); background:var(--bg-surface-elevated);">
+              <input type="radio" name="payment_method" value="simulated_upi" checked style="accent-color:var(--color-primary); width:18px; height:18px;">
+              <div style="flex:1;">
+                <div style="font-weight:700; font-size:0.95rem;">Instant UPI / QR Code (Simulated)</div>
+                <div style="font-size:0.78rem; color:var(--text-muted);">GPay, PhonePe, Paytm, BHIM instant simulated confirmation</div>
+              </div>
+              <span class="badge badge-verified">Recommended</span>
+            </label>
+
+            <label class="card" style="padding:14px; cursor:pointer; display:flex; align-items:center; gap:12px;">
+              <input type="radio" name="payment_method" value="simulated_card" style="accent-color:var(--color-primary); width:18px; height:18px;">
+              <div>
+                <div style="font-weight:700; font-size:0.95rem;">Credit / Debit Card (Simulated Sandbox)</div>
+                <div style="font-size:0.78rem; color:var(--text-muted);">Visa, MasterCard, RuPay (No real credentials stored)</div>
+              </div>
+            </label>
+
+            <label class="card" style="padding:14px; cursor:pointer; display:flex; align-items:center; gap:12px;">
+              <input type="radio" name="payment_method" value="cod" style="accent-color:var(--color-primary); width:18px; height:18px;">
+              <div>
+                <div style="font-weight:700; font-size:0.95rem;">Cash on Delivery (Verified Demo)</div>
+                <div style="font-size:0.78rem; color:var(--text-muted);">Pay upon physical courier parcel arrival</div>
+              </div>
+            </label>
+          </div>
+        </div>
+      </div>
+
+      <!-- Right Column: Final Order Summary -->
+      <div>
+        <div class="card" style="position:sticky; top:calc(var(--nav-height) + 20px);">
+          <h3 style="font-size:1.2rem; margin-bottom:16px; border-bottom:1px solid var(--border-subtle); padding-bottom:12px;">
+            Items in Order ({{ cart_items.count }})
+          </h3>
+
+          <div style="max-height:240px; overflow-y:auto; display:flex; flex-direction:column; gap:12px; margin-bottom:20px; padding-right:6px;">
+            {% for item in cart_items %}
+              <div style="display:flex; justify-content:space-between; align-items:center; font-size:0.88rem;">
+                <div>
+                  <div style="font-weight:600; color:var(--text-main);">{{ item.quantity }}x {{ item.product.name|truncatewords:4 }}</div>
+                  <div style="font-size:0.75rem; color:var(--text-muted);">SKU: {{ item.product.sku }}</div>
+                  {% if item.buy_and_install %}
+                    <span class="badge badge-verified" style="font-size:0.65rem;">+Install Included</span>
+                  {% endif %}
+                </div>
+                <strong>₹{{ item.item_subtotal|floatformat:0 }}</strong>
+              </div>
+            {% endfor %}
+          </div>
+
+          <div style="border-top:1px solid var(--border-subtle); padding-top:16px; display:flex; flex-direction:column; gap:10px; font-size:0.9rem; margin-bottom:20px;">
+            <div style="display:flex; justify-content:space-between;">
+              <span style="color:var(--text-muted);">Subtotal</span>
+              <strong>₹{{ subtotal|floatformat:2 }}</strong>
+            </div>
+
+            {% if discount > 0 %}
+            <div style="display:flex; justify-content:space-between; color:#059669;">
+              <span>Festive Discount</span>
+              <strong>-₹{{ discount|floatformat:2 }}</strong>
+            </div>
+            {% endif %}
+
+            <div style="display:flex; justify-content:space-between;">
+              <span style="color:var(--text-muted);">Express Logistics</span>
+              <strong>{% if shipping_fee == 0 %}<span style="color:#059669;">FREE</span>{% else %}₹{{ shipping_fee|floatformat:2 }}{% endif %}</strong>
+            </div>
+
+            <div style="display:flex; justify-content:space-between;">
+              <span style="color:var(--text-muted);">GST (18%)</span>
+              <strong>₹{{ tax|floatformat:2 }}</strong>
+            </div>
+
+            <div style="border-top:1px solid var(--border-subtle); padding-top:14px; margin-top:4px; display:flex; justify-content:space-between; align-items:baseline;">
+              <span style="font-weight:700; font-size:1.05rem;">Total Payable</span>
+              <span style="font-family:var(--font-heading); font-size:1.6rem; font-weight:800; color:var(--color-primary);">₹{{ total|floatformat:2 }}</span>
+            </div>
+          </div>
+
+          <button type="submit" class="btn btn-primary btn-lg" style="width:100%; justify-content:center;">
+            <i data-lucide="check-circle"></i> Place Order (Demonstration)
+          </button>
+
+          <div style="margin-top:14px; font-size:0.75rem; color:var(--text-muted); text-align:center;">
+            By placing this order you acknowledge the academic demonstration nature of the transaction.
+          </div>
+        </div>
+      </div>
+    </div>
+  </form>
+</div>
+{% endblock %}

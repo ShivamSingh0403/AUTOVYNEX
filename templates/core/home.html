@@ -1,0 +1,796 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}AUTOVYNEX — Everything Your Car Needs. One Intelligent Platform.{% endblock %}
+
+{% block content %}
+<!-- 1. Hero Section -->
+<section class="hero-wrapper">
+  <div class="container">
+    <div class="hero-grid">
+      <!-- Hero Left: Messaging & Actions -->
+      <div>
+        <div class="hero-badge-pill">
+          <i data-lucide="shield-check" style="width:15px; height:15px;"></i>
+          <span>AUTOVYNEX Mobility OS</span> • Intelligent Automotive Platform
+        </div>
+        <h1 style="margin-bottom:20px; font-size:clamp(2.1rem, 3.8vw, 3.4rem); line-height:1.18;">
+          Everything Your Car Needs. <br>
+          <span class="hero-headline-gradient">One Intelligent Platform.</span>
+        </h1>
+        <p style="font-size:1.1rem; line-height:1.7; color:var(--text-muted); margin-bottom:32px; max-width:580px;">
+          Discover compatible spare parts, book maintenance services, manage your vehicles, and explore smarter automotive solutions—all in one place.
+        </p>
+
+        <div style="display:flex; gap:16px; flex-wrap:wrap; margin-bottom:36px;">
+          <a href="{% url 'inventory:shop' %}" class="btn btn-primary btn-lg" id="hero-explore-parts-btn">
+            <i data-lucide="package"></i> Explore Spare Parts
+          </a>
+          <a href="{% url 'services:book' %}" class="btn btn-secondary btn-lg" id="hero-book-service-btn">
+            <i data-lucide="calendar"></i> Book a Service
+          </a>
+        </div>
+
+        <!-- Trust Stats Bar -->
+        <div style="display:flex; gap:28px; flex-wrap:wrap; padding-top:20px; border-top:1px solid var(--border-subtle);">
+          <div>
+            <div style="font-family:var(--font-heading); font-size:1.65rem; font-weight:800; color:var(--text-main);">300+</div>
+            <div style="font-size:0.8rem; color:var(--text-muted);">Verified OEM Parts</div>
+          </div>
+          <div>
+            <div style="font-family:var(--font-heading); font-size:1.65rem; font-weight:800; color:var(--color-primary);">100%</div>
+            <div style="font-size:0.8rem; color:var(--text-muted);">Fitment Check</div>
+          </div>
+          <div>
+            <div style="font-family:var(--font-heading); font-size:1.65rem; font-weight:800; color:var(--text-main);">6+ Cities</div>
+            <div style="font-size:0.8rem; color:var(--text-muted);">Service Centers</div>
+          </div>
+          <div>
+            <div style="font-family:var(--font-heading); font-size:1.65rem; font-weight:800; color:var(--color-cyan);">24/7</div>
+            <div style="font-size:0.8rem; color:var(--text-muted);">Roadside Help</div>
+          </div>
+        </div>
+
+        <!-- High-Quality Automotive Studio Car Showcase -->
+        <div class="hero-car-preview-card">
+          <img src="{% static 'images/hero-car.jpg' %}" alt="AUTOVYNEX High Performance Aerodynamic Vehicle" class="hero-car-img" loading="eager">
+          <div class="hero-car-overlay-badge">
+            <i data-lucide="zap" style="width:14px; height:14px; color:#00D2FF;"></i>
+            <span>Precision Engineering • Zero-Error Compatibility</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Hero Right: Interactive 5-Stage Vehicle Selector Card -->
+      <div>
+        <div class="vehicle-selector-interactive-card">
+          <div style="display:flex; align-items:center; gap:12px; margin-bottom:18px;">
+            <div style="width:42px; height:42px; border-radius:var(--radius-md); background:rgba(8, 126, 255, 0.12); color:var(--color-primary); display:flex; align-items:center; justify-content:center;">
+              <i data-lucide="filter" style="width:22px; height:22px;"></i>
+            </div>
+            <div>
+              <h3 style="font-size:1.25rem; margin:0; font-weight:700;">Select Your Vehicle</h3>
+              <p style="font-size:0.8rem; color:var(--text-muted); margin:0;">Zero guesswork compatibility algorithm</p>
+            </div>
+          </div>
+
+          <form method="POST" action="{% url 'vehicles:select_vehicle_session' %}" id="home-vehicle-selector-form">
+            {% csrf_token %}
+
+            <!-- 1. Car Manufacturer -->
+            <div class="form-group" style="margin-bottom:12px;">
+              <label class="form-label" style="font-size:0.82rem;" for="home-make-select">
+                <span class="selector-field-badge">1</span> Car Manufacturer
+              </label>
+              <select class="form-select" id="home-make-select" required>
+                <option value="">Choose Make (e.g. Maruti Suzuki, Hyundai, Tata)</option>
+                {% for make in all_makes %}
+                  <option value="{{ make.id }}">{{ make.name }} ({{ make.country }})</option>
+                {% endfor %}
+              </select>
+            </div>
+
+            <!-- 2. Model -->
+            <div class="form-group" style="margin-bottom:12px;">
+              <label class="form-label" style="font-size:0.82rem;" for="home-model-select">
+                <span class="selector-field-badge">2</span> Model
+              </label>
+              <select class="form-select" id="home-model-select" disabled required>
+                <option value="">Select Model...</option>
+              </select>
+            </div>
+
+            <!-- 3 & 4. Year & Fuel (Side by Side) -->
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:12px;">
+              <div class="form-group" style="margin-bottom:0;">
+                <label class="form-label" style="font-size:0.82rem;" for="home-year-select">
+                  <span class="selector-field-badge">3</span> Year
+                </label>
+                <select class="form-select" id="home-year-select" disabled>
+                  <option value="">Select Year...</option>
+                </select>
+              </div>
+
+              <div class="form-group" style="margin-bottom:0;">
+                <label class="form-label" style="font-size:0.82rem;" for="home-fuel-select">
+                  <span class="selector-field-badge">4</span> Fuel Type
+                </label>
+                <select class="form-select" id="home-fuel-select" disabled>
+                  <option value="">Fuel...</option>
+                </select>
+              </div>
+            </div>
+
+            <!-- 5. Variant -->
+            <div class="form-group" style="margin-bottom:18px;">
+              <label class="form-label" style="font-size:0.82rem;" for="home-variant-select">
+                <span class="selector-field-badge">5</span> Trim / Variant
+              </label>
+              <select class="form-select" id="home-variant-select" name="variant_id" disabled required>
+                <option value="">Select Specific Variant...</option>
+              </select>
+            </div>
+
+            <!-- Live Selection Summary Preview -->
+            <div id="home-vehicle-preview" style="display:none; padding:12px 14px; background:rgba(8,126,255,0.08); border-radius:var(--radius-md); border:1px solid rgba(8,126,255,0.25); margin-bottom:14px; align-items:center; gap:10px;">
+              <i data-lucide="check-circle" style="color:var(--color-primary); width:20px; height:20px; flex-shrink:0;"></i>
+              <div style="flex:1;">
+                <div id="home-preview-car-name" style="font-weight:700; font-size:0.88rem; color:var(--text-main);"></div>
+                <div id="home-preview-car-meta" style="font-size:0.75rem; color:var(--text-muted);"></div>
+              </div>
+            </div>
+
+            <button type="submit" id="home-submit-btn" class="btn btn-primary" style="width:100%;" disabled>
+              <i data-lucide="check"></i> Confirm Compatible Parts
+            </button>
+          </form>
+
+          <!-- Currently Active Vehicle Display -->
+          {% if selected_vehicle %}
+          <div class="active-vehicle-card">
+            <div>
+              <div style="font-size:0.75rem; color:var(--color-primary); font-weight:700; text-transform:uppercase;">Active Car Profile</div>
+              <div style="font-size:0.92rem; font-weight:700; color:var(--text-main);">{{ selected_vehicle.display_name }}</div>
+              <div style="font-size:0.75rem; color:var(--text-muted);">{{ selected_vehicle.fuel_type }} • {{ selected_vehicle.transmission }}</div>
+            </div>
+            <div style="display:flex; gap:8px;">
+              <button type="button" class="btn btn-secondary btn-sm open-vehicle-modal-btn" style="padding:4px 10px; font-size:0.75rem;">Switch</button>
+              <a href="{% url 'vehicles:clear_vehicle_session' %}" class="btn btn-sm btn-secondary" style="padding:4px 10px; font-size:0.75rem; color:var(--color-danger);" title="Clear selection">Clear</a>
+            </div>
+          </div>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 2. Product Categories Section -->
+<section style="padding: 56px 0;">
+  <div class="container">
+    <div style="display:flex; justify-content:space-between; align-items:flex-end; margin-bottom:32px; flex-wrap:wrap; gap:12px;">
+      <div>
+        <div style="font-size:0.85rem; font-weight:700; color:var(--color-primary); text-transform:uppercase; letter-spacing:0.06em; margin-bottom:4px;">Catalogue Breakdown</div>
+        <h2>Explore Genuine Spare Part Categories</h2>
+      </div>
+      <a href="{% url 'inventory:shop' %}" class="btn btn-secondary btn-sm">
+        View All 16 Categories <i data-lucide="arrow-right"></i>
+      </a>
+    </div>
+
+    <!-- 8 Primary Automotive Categories Cards -->
+    <div class="grid-4">
+      <!-- 1. Engine Oil & Filters -->
+      <a href="{% url 'inventory:shop' %}?category=engine-oil-fluids" class="category-card">
+        <div class="category-card-icon">
+          <i data-lucide="droplets" style="width:26px; height:26px;"></i>
+        </div>
+        <div>
+          <h4 style="font-size:1.02rem; margin:0 0 4px; color:var(--text-main);">Engine Oil & Filters</h4>
+          <div class="category-card-count">Synthetic Oils & Filtration</div>
+        </div>
+      </a>
+
+      <!-- 2. Brakes -->
+      <a href="{% url 'inventory:shop' %}?category=brake-pads-rotors" class="category-card">
+        <div class="category-card-icon">
+          <i data-lucide="disc" style="width:26px; height:26px;"></i>
+        </div>
+        <div>
+          <h4 style="font-size:1.02rem; margin:0 0 4px; color:var(--text-main);">Brakes</h4>
+          <div class="category-card-count">Ceramic Pads & Disc Rotors</div>
+        </div>
+      </a>
+
+      <!-- 3. Batteries -->
+      <a href="{% url 'inventory:shop' %}?category=batteries-power" class="category-card">
+        <div class="category-card-icon">
+          <i data-lucide="battery-charging" style="width:26px; height:26px;"></i>
+        </div>
+        <div>
+          <h4 style="font-size:1.02rem; margin:0 0 4px; color:var(--text-main);">Batteries</h4>
+          <div class="category-card-count">Exide, Amaron & Heavy Duty</div>
+        </div>
+      </a>
+
+      <!-- 4. Lights -->
+      <a href="{% url 'inventory:shop' %}?category=headlights-lighting" class="category-card">
+        <div class="category-card-icon">
+          <i data-lucide="zap" style="width:26px; height:26px;"></i>
+        </div>
+        <div>
+          <h4 style="font-size:1.02rem; margin:0 0 4px; color:var(--text-main);">Lights</h4>
+          <div class="category-card-count">LED Projectors & Headlamps</div>
+        </div>
+      </a>
+
+      <!-- 5. Suspension -->
+      <a href="{% url 'inventory:shop' %}?category=suspension-steering" class="category-card">
+        <div class="category-card-icon">
+          <i data-lucide="git-commit" style="width:26px; height:26px;"></i>
+        </div>
+        <div>
+          <h4 style="font-size:1.02rem; margin:0 0 4px; color:var(--text-main);">Suspension</h4>
+          <div class="category-card-count">Struts, Dampers & Bushings</div>
+        </div>
+      </a>
+
+      <!-- 6. Tyres & Wheels -->
+      <a href="{% url 'inventory:shop' %}?category=tyres-wheels" class="category-card">
+        <div class="category-card-icon">
+          <i data-lucide="circle" style="width:26px; height:26px;"></i>
+        </div>
+        <div>
+          <h4 style="font-size:1.02rem; margin:0 0 4px; color:var(--text-main);">Tyres & Wheels</h4>
+          <div class="category-card-count">Radial Tyres & Alloy Rims</div>
+        </div>
+      </a>
+
+      <!-- 7. Interior Accessories -->
+      <a href="{% url 'inventory:shop' %}?category=interior-accessories" class="category-card">
+        <div class="category-card-icon">
+          <i data-lucide="smartphone" style="width:26px; height:26px;"></i>
+        </div>
+        <div>
+          <h4 style="font-size:1.02rem; margin:0 0 4px; color:var(--text-main);">Interior Accessories</h4>
+          <div class="category-card-count">Dashcams, Mats & Infotainment</div>
+        </div>
+      </a>
+
+      <!-- 8. Exterior Accessories -->
+      <a href="{% url 'inventory:shop' %}?category=exterior-styling" class="category-card">
+        <div class="category-card-icon">
+          <i data-lucide="maximize-2" style="width:26px; height:26px;"></i>
+        </div>
+        <div>
+          <h4 style="font-size:1.02rem; margin:0 0 4px; color:var(--text-main);">Exterior Accessories</h4>
+          <div class="category-card-count">Spoilers, Body Kits & Guards</div>
+        </div>
+      </a>
+    </div>
+  </div>
+</section>
+
+<!-- 3. Compatible Products For Selected Vehicle (If Active) OR Zero-Error Guarantee Banner -->
+{% if selected_vehicle and compatible_products %}
+<section style="padding: 52px 0; background:rgba(8, 126, 255, 0.04); border-top:1px solid var(--border-subtle); border-bottom:1px solid var(--border-subtle);">
+  <div class="container">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:28px; flex-wrap:wrap; gap:12px;">
+      <div>
+        <span class="badge badge-verified" style="margin-bottom:6px;"><i data-lucide="shield-check"></i> 100% Fitment Match</span>
+        <h2>Compatible with Your {{ selected_vehicle.model.make.name }} {{ selected_vehicle.model.name }}</h2>
+        <p style="color:var(--text-muted); font-size:0.9rem; margin-top:4px;">Showing parts specifically verified for {{ selected_vehicle.display_name }} ({{ selected_vehicle.fuel_type }}).</p>
+      </div>
+      <a href="{% url 'inventory:shop' %}" class="btn btn-primary btn-sm">
+        View All Fits ({{ compatible_products.count }}) <i data-lucide="arrow-right"></i>
+      </a>
+    </div>
+
+    <div class="grid-3">
+      {% for prod in compatible_products %}
+        <div class="product-card">
+          <div class="product-image-container">
+            <span class="product-discount-tag" style="background:#059669;">Verified Fit</span>
+            <button type="button" class="product-wishlist-toggle {% if prod.id in user_wishlist_ids %}active{% endif %}" data-product-id="{{ prod.id }}" aria-label="Toggle wishlist">
+              <i data-lucide="heart" style="width:18px; height:18px; {% if prod.id in user_wishlist_ids %}fill:#ef4444; color:#ef4444;{% endif %}"></i>
+            </button>
+            <div style="color:var(--color-primary); font-size:3.5rem;">
+              <i data-lucide="{{ prod.category.icon_name|default:'package' }}" style="width:58px; height:58px;"></i>
+            </div>
+          </div>
+          <div class="product-card-body">
+            <div class="product-category-brand">{{ prod.brand.name }} • {{ prod.category.name }}</div>
+            <a href="{% url 'inventory:product_detail' prod.slug %}" class="product-title">{{ prod.name }}</a>
+            <div style="margin-bottom:10px;">
+              <span class="badge badge-verified" style="font-size:0.72rem;"><i data-lucide="check"></i> Fits {{ selected_vehicle.model.name }}</span>
+            </div>
+            <div class="product-price-row">
+              <span class="product-final-price">₹{{ prod.final_price|floatformat:0 }}</span>
+              {% if prod.discount_price %}
+                <span class="product-original-price">₹{{ prod.price|floatformat:0 }}</span>
+              {% endif %}
+            </div>
+            <div style="display:flex; gap:8px;">
+              <a href="{% url 'inventory:product_detail' prod.slug %}" class="btn btn-secondary btn-sm" style="flex:1;">Details</a>
+              <form method="POST" action="{% url 'orders:add_to_cart' prod.id %}" class="ajax-add-to-cart-form">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-primary btn-sm" title="Add to Cart"><i data-lucide="shopping-cart"></i></button>
+              </form>
+            </div>
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+{% else %}
+<!-- Zero-Error Fitment Guarantee Showcase -->
+<section style="padding: 44px 0; background:rgba(8, 126, 255, 0.03); border-top:1px solid var(--border-subtle); border-bottom:1px solid var(--border-subtle);">
+  <div class="container">
+    <div style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:24px;">
+      <div style="display:flex; align-items:center; gap:20px;">
+        <div style="width:58px; height:58px; border-radius:50%; background:rgba(8, 126, 255, 0.12); color:var(--color-primary); display:flex; align-items:center; justify-content:center; flex-shrink:0;">
+          <i data-lucide="shield-check" style="width:30px; height:30px;"></i>
+        </div>
+        <div>
+          <h3 style="margin-bottom:4px; font-size:1.3rem;">Zero-Guesswork Spare Part Compatibility</h3>
+          <p style="color:var(--text-muted); font-size:0.92rem; margin:0; max-width:650px;">
+            Every spare part in our catalog is mapped to OEM chassis codes and variants. Select your car above or click below to lock in guaranteed 100% fitment.
+          </p>
+        </div>
+      </div>
+      <button type="button" class="btn btn-primary btn-sm open-vehicle-modal-btn">
+        <i data-lucide="plus"></i> Select Your Car Now
+      </button>
+    </div>
+  </div>
+</section>
+{% endif %}
+
+<!-- 4. Featured Products with Interactive Category Filter Tabs -->
+<section style="padding: 56px 0;">
+  <div class="container">
+    <div style="display:flex; justify-content:space-between; align-items:flex-end; margin-bottom:24px; flex-wrap:wrap; gap:12px;">
+      <div>
+        <div style="font-size:0.85rem; font-weight:700; color:var(--color-primary); text-transform:uppercase; letter-spacing:0.06em; margin-bottom:4px;">Hand-Picked Quality</div>
+        <h2>Featured Spare Parts & Upgrades</h2>
+      </div>
+      <a href="{% url 'inventory:shop' %}" class="btn btn-secondary btn-sm">
+        Explore Full Catalogue <i data-lucide="arrow-right"></i>
+      </a>
+    </div>
+
+    <!-- Category Filter Tabs -->
+    <div class="category-filter-nav">
+      <button type="button" class="filter-tab-pill active" data-category="all">All Products</button>
+      <button type="button" class="filter-tab-pill" data-category="engine-oil-fluids">Engine Oil</button>
+      <button type="button" class="filter-tab-pill" data-category="brake-pads-rotors">Brakes</button>
+      <button type="button" class="filter-tab-pill" data-category="batteries-power">Batteries</button>
+      <button type="button" class="filter-tab-pill" data-category="headlights-lighting">Lights</button>
+      <button type="button" class="filter-tab-pill" data-category="suspension-steering">Suspension</button>
+      <button type="button" class="filter-tab-pill" data-category="tyres-wheels">Tyres</button>
+      <button type="button" class="filter-tab-pill" data-category="interior-accessories">Interior</button>
+    </div>
+
+    <!-- Product Grid -->
+    <div class="grid-4" id="featured-products-grid">
+      {% for prod in featured_products %}
+        <div class="product-card product-filterable-item" data-category="{{ prod.category.slug }}">
+          <div class="product-image-container">
+            {% if prod.discount_percent > 0 %}
+              <span class="product-discount-tag">{{ prod.discount_percent }}% OFF</span>
+            {% endif %}
+            <button type="button" class="product-wishlist-toggle {% if prod.id in user_wishlist_ids %}active{% endif %}" data-product-id="{{ prod.id }}" aria-label="Add to wishlist">
+              <i data-lucide="heart" style="width:18px; height:18px; {% if prod.id in user_wishlist_ids %}fill:#ef4444; color:#ef4444;{% endif %}"></i>
+            </button>
+            <div style="color:var(--color-primary);">
+              <i data-lucide="{{ prod.category.icon_name|default:'package' }}" style="width:54px; height:54px;"></i>
+            </div>
+          </div>
+          <div class="product-card-body">
+            <div class="product-category-brand">{{ prod.brand.name }} • {{ prod.category.name }}</div>
+            <a href="{% url 'inventory:product_detail' prod.slug %}" class="product-title">{{ prod.name }}</a>
+
+            <!-- Availability & Compatibility Status -->
+            <div style="display:flex; align-items:center; gap:6px; flex-wrap:wrap; margin-bottom:12px;">
+              <span class="badge-stock"><i data-lucide="check" style="width:12px; height:12px;"></i> In Stock</span>
+              {% if selected_vehicle %}
+                <span class="badge badge-universal" style="font-size:0.7rem;"><i data-lucide="info" style="width:12px; height:12px;"></i> SKU: {{ prod.sku }}</span>
+              {% else %}
+                <span class="badge badge-unconfirmed" style="font-size:0.7rem;"><i data-lucide="help-circle" style="width:12px; height:12px;"></i> Check Fitment</span>
+              {% endif %}
+            </div>
+
+            <!-- Price Row -->
+            <div class="product-price-row">
+              <span class="product-final-price">₹{{ prod.final_price|floatformat:0 }}</span>
+              {% if prod.discount_price %}
+                <span class="product-original-price">₹{{ prod.price|floatformat:0 }}</span>
+              {% endif %}
+            </div>
+
+            <!-- Action Buttons -->
+            <div style="display:flex; gap:8px;">
+              <a href="{% url 'inventory:product_detail' prod.slug %}" class="btn btn-secondary btn-sm" style="flex:1;">View</a>
+              <form method="POST" action="{% url 'orders:add_to_cart' prod.id %}" class="ajax-add-to-cart-form">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-primary btn-sm" title="Add to Shopping Cart"><i data-lucide="shopping-cart"></i></button>
+              </form>
+            </div>
+
+            <!-- Buy + Install Option (If Service Integration Applicable) -->
+            <a href="{% url 'services:book' %}?part_id={{ prod.id }}" class="btn-buy-install" title="Order spare part + Schedule workshop installation">
+              <i data-lucide="wrench" style="width:13px; height:13px;"></i> Buy + Install at Workshop
+            </a>
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+
+    <!-- Empty Filter Notice -->
+    <div id="category-filter-empty-msg" style="display:none; text-align:center; padding:48px 0; color:var(--text-muted);">
+      <i data-lucide="inbox" style="width:48px; height:48px; margin:0 auto 12px; display:block; color:var(--text-subtle);"></i>
+      <h3 style="font-size:1.2rem; margin-bottom:6px;">No featured parts in this category</h3>
+      <p style="font-size:0.9rem;">Browse our complete catalogue of over 300+ spare parts for all categories.</p>
+      <a href="{% url 'inventory:shop' %}" class="btn btn-primary btn-sm" style="margin-top:12px;">Browse All Parts</a>
+    </div>
+  </div>
+</section>
+
+<!-- 5. Popular Automotive Maintenance Services -->
+<section style="padding: 60px 0; background:var(--bg-surface); border-top:1px solid var(--border-subtle); border-bottom:1px solid var(--border-subtle);">
+  <div class="container">
+    <div style="display:flex; justify-content:space-between; align-items:flex-end; margin-bottom:32px; flex-wrap:wrap; gap:12px;">
+      <div>
+        <div style="font-size:0.85rem; font-weight:700; color:var(--color-primary); text-transform:uppercase; letter-spacing:0.06em; margin-bottom:4px;">Verified Workshop Network</div>
+        <h2>Popular Periodic Maintenance Services</h2>
+      </div>
+      <a href="{% url 'services:directory' %}" class="btn btn-secondary btn-sm">
+        Explore Workshop Directory <i data-lucide="arrow-right"></i>
+      </a>
+    </div>
+
+    <div class="grid-3">
+      {% for srv in featured_services %}
+        <div class="card card-interactive" style="display:flex; flex-direction:column;">
+          <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:14px;">
+            <div style="width:46px; height:46px; border-radius:var(--radius-md); background:rgba(8, 126, 255, 0.1); color:var(--color-primary); display:flex; align-items:center; justify-content:center;">
+              <i data-lucide="{{ srv.icon_name|default:'wrench' }}" style="width:24px; height:24px;"></i>
+            </div>
+            <span class="badge badge-universal">{{ srv.estimated_duration }}</span>
+          </div>
+          <h4 style="font-size:1.15rem; margin-bottom:8px; color:var(--text-main);">{{ srv.name }}</h4>
+          <p style="font-size:0.88rem; color:var(--text-muted); line-height:1.55; margin-bottom:20px; flex-grow:1;">
+            {{ srv.description|truncatewords:20 }}
+          </p>
+          <div style="display:flex; justify-content:space-between; align-items:center; padding-top:16px; border-top:1px solid var(--border-subtle);">
+            <div>
+              <div style="font-size:0.75rem; color:var(--text-muted);">Starts From</div>
+              <div style="font-family:var(--font-heading); font-size:1.25rem; font-weight:800; color:var(--text-main);">₹{{ srv.starting_price|floatformat:0 }}</div>
+            </div>
+            <a href="{% url 'services:book' %}?service_id={{ srv.id }}" class="btn btn-primary btn-sm">
+              <i data-lucide="calendar"></i> Book Slot
+            </a>
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+
+<!-- 6. Can't Find Your Part? Missing-Part Sourcing Feature -->
+<section style="padding: 48px 0;">
+  <div class="container">
+    <div class="card grid-missing-banner" style="background: linear-gradient(135deg, #101820 0%, #1a2736 100%); color:#fff; border-color:#2b3e55; padding:40px; display:grid; grid-template-columns: 1.4fr 1fr; gap:36px; align-items:center;">
+      <div>
+        <div class="demo-academic-badge" style="margin-bottom:14px; background:#1e293b; border-color:#334155;">
+          <i data-lucide="crosshair" style="width:14px; height:14px; color:#00D2FF;"></i>
+          <span>Rare Part Sourcing Desk</span>
+        </div>
+        <h2 style="color:#ffffff; margin-bottom:12px; font-size:1.9rem;">Can't Find Your Exact Spare Part?</h2>
+        <p style="color:#94a3b8; font-size:0.96rem; line-height:1.65; margin-bottom:24px;">
+          Submit your vehicle details, OEM part number, or upload a photo of the damaged component. Our automotive sourcing engineers cross-reference OEM logistics and respond with a competitive verified quote within 24 hours.
+        </p>
+        <a href="{% url 'enquiries:missing_part_request' %}" class="btn btn-primary btn-lg">
+          <i data-lucide="file-plus"></i> Submit Missing Part Enquiry
+        </a>
+      </div>
+      <div style="display:flex; flex-direction:column; gap:14px;">
+        <div style="background:rgba(255,255,255,0.05); padding:16px 20px; border-radius:var(--radius-md); border:1px solid rgba(255,255,255,0.1); display:flex; align-items:center; gap:14px;">
+          <i data-lucide="clock" style="color:#00D2FF; width:22px; height:22px; flex-shrink:0;"></i>
+          <span style="font-size:0.9rem; color:#e2e8f0;">24-hour turnaround on verified parts availability & quotes</span>
+        </div>
+        <div style="background:rgba(255,255,255,0.05); padding:16px 20px; border-radius:var(--radius-md); border:1px solid rgba(255,255,255,0.1); display:flex; align-items:center; gap:14px;">
+          <i data-lucide="camera" style="color:#00D2FF; width:22px; height:22px; flex-shrink:0;"></i>
+          <span style="font-size:0.9rem; color:#e2e8f0;">Upload broken component photo for instant visual matching</span>
+        </div>
+        <div style="background:rgba(255,255,255,0.05); padding:16px 20px; border-radius:var(--radius-md); border:1px solid rgba(255,255,255,0.1); display:flex; align-items:center; gap:14px;">
+          <i data-lucide="shield-check" style="color:#00D2FF; width:22px; height:22px; flex-shrink:0;"></i>
+          <span style="font-size:0.9rem; color:#e2e8f0;">100% genuine OEM guarantee with manufacturer warranty</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 7. My Garage Introduction Section -->
+<section style="padding: 56px 0; background:var(--bg-surface); border-top:1px solid var(--border-subtle); border-bottom:1px solid var(--border-subtle);">
+  <div class="container">
+    <div style="display:grid; grid-template-columns:1fr 1fr; gap:40px; align-items:center;" class="hero-grid">
+      <div>
+        <div style="font-size:0.85rem; font-weight:700; color:var(--color-primary); text-transform:uppercase; letter-spacing:0.06em; margin-bottom:6px;">Connected Ownership</div>
+        <h2>My Garage: Your Car's Digital Passport</h2>
+        <p style="color:var(--text-muted); font-size:1rem; line-height:1.7; margin:16px 0 24px;">
+          Manage your entire fleet or family cars in one intelligent dashboard. Keep track of complete service histories, store digital invoices, monitor insurance and PUC expiries, and receive automated maintenance alerts before costly breakdowns occur.
+        </p>
+        <div style="display:flex; flex-direction:column; gap:12px; margin-bottom:28px;">
+          <div style="display:flex; align-items:center; gap:10px; font-size:0.92rem; color:var(--text-main);">
+            <i data-lucide="check-circle" style="color:var(--color-success); width:18px;"></i>
+            <span>Encrypted cloud storage for RC copies, Insurance & Pollution papers</span>
+          </div>
+          <div style="display:flex; align-items:center; gap:10px; font-size:0.92rem; color:var(--text-main);">
+            <i data-lucide="check-circle" style="color:var(--color-success); width:18px;"></i>
+            <span>Verified service logbook that boosts car resale value by up to 18%</span>
+          </div>
+          <div style="display:flex; align-items:center; gap:10px; font-size:0.92rem; color:var(--text-main);">
+            <i data-lucide="check-circle" style="color:var(--color-success); width:18px;"></i>
+            <span>Smart reminder notifications for oil changes and annual inspections</span>
+          </div>
+        </div>
+        <a href="{% url 'garage:index' %}" class="btn btn-primary btn-lg">
+          <i data-lucide="warehouse"></i> Open My Garage
+        </a>
+      </div>
+
+      <!-- Garage Digital Preview Card -->
+      <div class="card" style="background:var(--bg-surface-elevated); border-color:rgba(8, 126, 255, 0.25); box-shadow:var(--shadow-lg); padding:28px;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; padding-bottom:14px; border-bottom:1px solid var(--border-subtle);">
+          <div style="display:flex; align-items:center; gap:12px;">
+            <div style="width:40px; height:40px; border-radius:50%; background:rgba(8, 126, 255, 0.12); color:var(--color-primary); display:flex; align-items:center; justify-content:center;">
+              <i data-lucide="car"></i>
+            </div>
+            <div>
+              <div style="font-weight:700; font-size:1.05rem;">Volkswagen Virtus GT Plus</div>
+              <div style="font-size:0.78rem; color:var(--text-muted);">KA 01 MG 8942 • 1.5L TSI DSG</div>
+            </div>
+          </div>
+          <span class="badge badge-verified">Healthy</span>
+        </div>
+
+        <!-- Metric Badges -->
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:20px;">
+          <div style="background:var(--bg-surface-subtle); padding:12px; border-radius:var(--radius-md);">
+            <div style="font-size:0.75rem; color:var(--text-muted);">Current Odometer</div>
+            <div style="font-family:var(--font-heading); font-size:1.2rem; font-weight:800; color:var(--text-main);">24,850 KM</div>
+          </div>
+          <div style="background:var(--bg-surface-subtle); padding:12px; border-radius:var(--radius-md);">
+            <div style="font-size:0.75rem; color:var(--text-muted);">Next Service Due</div>
+            <div style="font-family:var(--font-heading); font-size:1.2rem; font-weight:800; color:var(--color-primary);">30,000 KM</div>
+          </div>
+        </div>
+
+        <!-- Recent Activity Timeline Item -->
+        <div style="background:var(--bg-surface-subtle); padding:14px; border-radius:var(--radius-md); border-left:3px solid var(--color-success); font-size:0.85rem;">
+          <div style="display:flex; justify-content:space-between; margin-bottom:4px;">
+            <strong>Periodic Service Completed</strong>
+            <span style="color:var(--text-muted); font-size:0.75rem;">15 days ago</span>
+          </div>
+          <div style="color:var(--text-muted);">Indiranagar AutoTech • Castrol EDGE 5W-30 + OEM Filter</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 8. Maintenance Reminders Preview Section -->
+<section style="padding: 56px 0;">
+  <div class="container">
+    <div style="text-align:center; max-width:650px; margin:0 auto 36px;">
+      <div style="font-size:0.85rem; font-weight:700; color:var(--color-primary); text-transform:uppercase; letter-spacing:0.06em; margin-bottom:6px;">Preventive Maintenance</div>
+      <h2>Recommended Service Intervals Preview</h2>
+      <p style="color:var(--text-muted); font-size:0.95rem; margin-top:8px;">
+        Click an odometer milestone to inspect factory-recommended inspection checkpoints, replacement parts, and realistic cost benchmarks.
+      </p>
+    </div>
+
+    <!-- Milestone Tabs -->
+    <div class="milestone-tabs" style="justify-content:center;">
+      <button type="button" class="milestone-tab-btn" data-km="5000">5,000 KM Check</button>
+      <button type="button" class="milestone-tab-btn active" data-km="10000">10,000 KM Service</button>
+      <button type="button" class="milestone-tab-btn" data-km="20000">20,000 KM Overhaul</button>
+      <button type="button" class="milestone-tab-btn" data-km="40000">40,000 KM Major</button>
+    </div>
+
+    <!-- Dynamic Milestone Content Card -->
+    <div class="milestone-content-card">
+      <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:18px; flex-wrap:wrap; gap:12px;">
+        <div>
+          <h3 id="milestone-title" style="font-size:1.3rem; margin-bottom:6px;">10,000 KM — Periodic Comprehensive Maintenance</h3>
+          <p id="milestone-desc" style="color:var(--text-muted); font-size:0.9rem; margin:0;">
+            Crucial milestone to refresh lubricant fluids, engine air filtration, and wheel alignment.
+          </p>
+        </div>
+        <div style="text-align:right;">
+          <div style="font-size:0.75rem; color:var(--text-muted);">Estimated Rupee Budget</div>
+          <div id="milestone-cost" style="font-family:var(--font-heading); font-size:1.35rem; font-weight:800; color:var(--color-primary);">₹3,499 – ₹5,999</div>
+        </div>
+      </div>
+
+      <ul class="milestone-checklist" id="milestone-list">
+        <li><i data-lucide="check-circle"></i><span>Full Synthetic Engine Oil Replacement (0W-20 / 5W-30)</span></li>
+        <li><i data-lucide="check-circle"></i><span>OEM Engine Oil Filter & Sump Washer Change</span></li>
+        <li><i data-lucide="check-circle"></i><span>Engine Air Filter & Cabin AC Filter Replacement</span></li>
+        <li><i data-lucide="check-circle"></i><span>Computerized 3D Wheel Alignment & Balancing</span></li>
+        <li><i data-lucide="check-circle"></i><span>Complete Brake Caliper Cleaning & Greasing</span></li>
+        <li><i data-lucide="check-circle"></i><span>OBD-II Diagnostic Error Code Scan</span></li>
+      </ul>
+
+      <div style="margin-top:24px; padding-top:16px; border-top:1px solid var(--border-subtle); display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px;">
+        <span style="font-size:0.85rem; color:var(--text-muted);"><i data-lucide="info" style="width:14px; height:14px; vertical-align:middle; margin-right:4px;"></i> Intervals conform to standard Indian OEM maintenance schedules.</span>
+        <a href="{% url 'services:book' %}" class="btn btn-primary btn-sm">Schedule Periodic Maintenance <i data-lucide="arrow-right"></i></a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 9. AI Car Help Introduction Section -->
+<section style="padding: 56px 0; background:linear-gradient(135deg, rgba(8, 126, 255, 0.05), rgba(0, 210, 255, 0.05)); border-top:1px solid var(--border-subtle); border-bottom:1px solid var(--border-subtle);">
+  <div class="container">
+    <div style="display:grid; grid-template-columns:1.2fr 0.8fr; gap:36px; align-items:center;" class="hero-grid">
+      <div>
+        <div class="demo-academic-badge" style="margin-bottom:14px;">
+          <i data-lucide="bot" style="width:14px; height:14px; color:#00D2FF;"></i>
+          <span>Intelligent Diagnostic Companion</span>
+        </div>
+        <h2 style="margin-bottom:14px;">Instant Automotive Answers with AI Car Help</h2>
+        <p style="color:var(--text-muted); font-size:1rem; line-height:1.7; margin-bottom:24px;">
+          Describe strange noises, decoding flickering dashboard warning lights, or calculate typical repair cost benchmarks. Built specifically for Indian road conditions, humidity, and automotive models.
+        </p>
+        <div style="display:flex; gap:14px; flex-wrap:wrap; margin-bottom:28px;">
+          <a href="{% url 'core:ai_car_help' %}" class="btn btn-primary btn-lg">
+            <i data-lucide="sparkles"></i> Try AI Diagnostic Assistant
+          </a>
+          <a href="{% url 'assistance:request_view' %}" class="btn btn-secondary btn-lg">
+            <i data-lucide="phone"></i> 24/7 Roadside Assistance
+          </a>
+        </div>
+      </div>
+
+      <!-- AI Prompt Simulator Card -->
+      <div class="card" style="background:var(--bg-surface-elevated); border:1px solid rgba(0, 210, 255, 0.3); box-shadow:var(--shadow-lg); padding:24px;">
+        <div style="font-size:0.8rem; font-weight:700; color:var(--color-primary); margin-bottom:12px; text-transform:uppercase;">Sample Diagnostic Queries</div>
+        <div style="display:flex; flex-direction:column; gap:10px;">
+          <a href="{% url 'core:ai_car_help' %}" class="card card-interactive" style="padding:12px 14px; font-size:0.88rem; display:flex; align-items:center; gap:10px; text-decoration:none;">
+            <i data-lucide="help-circle" style="color:var(--color-primary); width:18px;"></i>
+            <span>"High-pitched squeal when braking at low speeds"</span>
+          </a>
+          <a href="{% url 'core:ai_car_help' %}" class="card card-interactive" style="padding:12px 14px; font-size:0.88rem; display:flex; align-items:center; gap:10px; text-decoration:none;">
+            <i data-lucide="alert-triangle" style="color:#f59e0b; width:18px;"></i>
+            <span>"Engine temperature gauge rising in heavy bumper-to-bumper traffic"</span>
+          </a>
+          <a href="{% url 'core:ai_car_help' %}" class="card card-interactive" style="padding:12px 14px; font-size:0.88rem; display:flex; align-items:center; gap:10px; text-decoration:none;">
+            <i data-lucide="battery" style="color:#ef4444; width:18px;"></i>
+            <span>"Battery warning light flared after starting car in the rain"</span>
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 10. Pre-Inspected Used Cars Discovery Section -->
+<section style="padding: 56px 0;">
+  <div class="container">
+    <div style="display:flex; justify-content:space-between; align-items:flex-end; margin-bottom:28px; flex-wrap:wrap; gap:12px;">
+      <div>
+        <div style="font-size:0.85rem; font-weight:700; color:var(--color-primary); text-transform:uppercase; letter-spacing:0.06em; margin-bottom:4px;">Verified Pre-Owned</div>
+        <h2>Pre-Inspected Used Cars with Complete History</h2>
+      </div>
+      <div style="display:flex; gap:10px;">
+        <a href="{% url 'core:car_valuation' %}" class="btn btn-secondary btn-sm"><i data-lucide="calculator"></i> Valuation Tool</a>
+        <a href="{% url 'used_cars:marketplace' %}" class="btn btn-secondary btn-sm">Explore Cars <i data-lucide="arrow-right"></i></a>
+      </div>
+    </div>
+
+    <div class="grid-3">
+      {% for car in used_cars %}
+        <div class="card card-interactive" style="padding:0; overflow:hidden;">
+          <div style="height:190px; background:#101820; color:#fff; display:flex; flex-direction:column; justify-content:center; align-items:center; position:relative;">
+            <i data-lucide="car" style="width:68px; height:68px; color:#00D2FF;"></i>
+            <span class="badge badge-verified" style="position:absolute; top:12px; right:12px;">
+              ★ {{ car.condition_rating }} Inspection Score
+            </span>
+            <div style="position:absolute; bottom:12px; left:16px; font-size:0.8rem; background:rgba(0,0,0,0.65); padding:3px 10px; border-radius:4px;">
+              {{ car.location_city }} • {{ car.registration_state }}
+            </div>
+          </div>
+          <div style="padding:22px;">
+            <h4 style="font-size:1.15rem; margin-bottom:10px;">{{ car.title }}</h4>
+            <div style="display:flex; gap:8px; flex-wrap:wrap; font-size:0.8rem; color:var(--text-muted); margin-bottom:16px;">
+              <span class="badge badge-universal">{{ car.year }}</span>
+              <span class="badge badge-universal">{{ car.mileage|floatformat:0 }} KM</span>
+              <span class="badge badge-universal">{{ car.fuel_type }}</span>
+              <span class="badge badge-universal">{{ car.transmission }}</span>
+            </div>
+            <div style="display:flex; justify-content:space-between; align-items:center; border-top:1px solid var(--border-subtle); padding-top:14px;">
+              <div>
+                <div style="font-size:0.75rem; color:var(--text-muted);">Verified Price</div>
+                <div style="font-family:var(--font-heading); font-size:1.35rem; font-weight:800; color:var(--color-primary);">₹{{ car.expected_price|floatformat:0 }}</div>
+              </div>
+              <a href="{% url 'used_cars:listing_detail' car.slug %}" class="btn btn-primary btn-sm">View Inspection</a>
+            </div>
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+
+<!-- 11. Customer Trust & Demonstration Experiences Section -->
+<section style="padding: 60px 0; background:var(--bg-surface); border-top:1px solid var(--border-subtle);">
+  <div class="container">
+    <div style="text-align:center; max-width:640px; margin:0 auto 40px;">
+      <div class="demo-academic-badge" style="margin-bottom:10px;">
+        <i data-lucide="message-square" style="width:14px; height:14px; color:#00D2FF;"></i>
+        <span>Demonstration Content:</span> Sample Driver Experiences
+      </div>
+      <h2>Engineered for Indian Drivers</h2>
+      <p style="color:var(--text-muted); font-size:0.95rem; margin-top:8px;">
+        Sample customer experiences highlighting verified part fitment, Buy + Install, and digital maintenance records.
+      </p>
+    </div>
+
+    <div class="grid-3">
+      <div class="card">
+        <div style="display:flex; gap:4px; color:#f59e0b; margin-bottom:12px;">
+          <i data-lucide="star" style="width:16px; height:16px; fill:#f59e0b;"></i>
+          <i data-lucide="star" style="width:16px; height:16px; fill:#f59e0b;"></i>
+          <i data-lucide="star" style="width:16px; height:16px; fill:#f59e0b;"></i>
+          <i data-lucide="star" style="width:16px; height:16px; fill:#f59e0b;"></i>
+          <i data-lucide="star" style="width:16px; height:16px; fill:#f59e0b;"></i>
+        </div>
+        <p style="font-size:0.92rem; color:var(--text-muted); line-height:1.65; margin-bottom:16px;">
+          "The vehicle selector filtered down exactly which Brembo ceramic brake pads fit my 2022 Creta. The Buy + Install option at Indiranagar TechCenter was flawless!"
+        </p>
+        <div style="font-weight:700; font-size:0.92rem;">Anand Kulkarni</div>
+        <div style="font-size:0.78rem; color:var(--text-muted);">Bengaluru • Hyundai Creta Owner (Demo)</div>
+      </div>
+
+      <div class="card">
+        <div style="display:flex; gap:4px; color:#f59e0b; margin-bottom:12px;">
+          <i data-lucide="star" style="width:16px; height:16px; fill:#f59e0b;"></i>
+          <i data-lucide="star" style="width:16px; height:16px; fill:#f59e0b;"></i>
+          <i data-lucide="star" style="width:16px; height:16px; fill:#f59e0b;"></i>
+          <i data-lucide="star" style="width:16px; height:16px; fill:#f59e0b;"></i>
+          <i data-lucide="star" style="width:16px; height:16px; fill:#f59e0b;"></i>
+        </div>
+        <p style="font-size:0.92rem; color:var(--text-muted); line-height:1.65; margin-bottom:16px;">
+          "My Garage keeps all service invoices and upcoming insurance dates organized in one place. Best automotive platform design I have seen for Indian driving."
+        </p>
+        <div style="font-weight:700; font-size:0.92rem;">Pooja Deshmukh</div>
+        <div style="font-size:0.78rem; color:var(--text-muted);">Pune • Volkswagen Virtus GT (Demo)</div>
+      </div>
+
+      <div class="card">
+        <div style="display:flex; gap:4px; color:#f59e0b; margin-bottom:12px;">
+          <i data-lucide="star" style="width:16px; height:16px; fill:#f59e0b;"></i>
+          <i data-lucide="star" style="width:16px; height:16px; fill:#f59e0b;"></i>
+          <i data-lucide="star" style="width:16px; height:16px; fill:#f59e0b;"></i>
+          <i data-lucide="star" style="width:16px; height:16px; fill:#f59e0b;"></i>
+          <i data-lucide="star" style="width:16px; height:16px; fill:#f59e0b;"></i>
+        </div>
+        <p style="font-size:0.92rem; color:var(--text-muted); line-height:1.65; margin-bottom:16px;">
+          "Used the AI Car Help tool when my alternator battery light flared on the highway. Gave me realistic precautions and connected me straight to roadside assistance."
+        </p>
+        <div style="font-weight:700; font-size:0.92rem;">Vikram Malhotra</div>
+        <div style="font-size:0.78rem; color:var(--text-muted);">Gurugram • Mahindra Thar 4x4 (Demo)</div>
+      </div>
+    </div>
+  </div>
+</section>
+{% endblock %}
+
+{% block extra_scripts %}
+<!-- Homepage Dedicated Interactive Script -->
+<script src="{% static 'js/home.js' %}"></script>
+{% endblock %}

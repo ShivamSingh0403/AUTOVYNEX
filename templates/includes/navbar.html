@@ -1,0 +1,214 @@
+<header class="site-header">
+  <div class="container-fluid">
+    <div class="nav-container">
+      <!-- Brand Logo with Custom Road-Inspired 'A' Emblem -->
+      <a href="{% url 'core:home' %}" class="brand-wrapper" title="AUTOVYNEX — The Future of Every Drive">
+        <svg class="autovynex-road-a" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg" aria-label="AUTOVYNEX Logo">
+          <rect width="48" height="48" rx="12" fill="url(#logo-navy-grad)" />
+          <!-- Converging Highway Road Lanes -->
+          <path d="M11 41 L21.5 11" stroke="url(#logo-lane-grad)" stroke-width="3.6" stroke-linecap="round" />
+          <path d="M37 41 L26.5 11" stroke="url(#logo-lane-grad)" stroke-width="3.6" stroke-linecap="round" />
+          <!-- Center Vanishing Road Dividers -->
+          <line x1="24" y1="39" x2="24" y2="31" stroke="#FFFFFF" stroke-width="2.6" stroke-linecap="round" opacity="0.95" />
+          <line x1="24" y1="26" x2="24" y2="19" stroke="#FFFFFF" stroke-width="2.2" stroke-linecap="round" opacity="0.75" />
+          <!-- Aerodynamic Horizontal Crossbar Forming 'A' -->
+          <path d="M15.5 28 H32.5" stroke="url(#logo-crossbar-grad)" stroke-width="3.2" stroke-linecap="round" />
+          <!-- Horizon Apex Light Pulse -->
+          <circle cx="24" cy="9.5" r="2.8" fill="#00D2FF" />
+          <defs>
+            <linearGradient id="logo-navy-grad" x1="0" y1="0" x2="48" y2="48" gradientUnits="userSpaceOnUse">
+              <stop stop-color="#101820" />
+              <stop offset="1" stop-color="#1a2736" />
+            </linearGradient>
+            <linearGradient id="logo-lane-grad" x1="11" y1="41" x2="26.5" y2="11" gradientUnits="userSpaceOnUse">
+              <stop stop-color="#087EFF" />
+              <stop offset="1" stop-color="#00D2FF" />
+            </linearGradient>
+            <linearGradient id="logo-crossbar-grad" x1="15.5" y1="28" x2="32.5" y2="28" gradientUnits="userSpaceOnUse">
+              <stop stop-color="#00D2FF" />
+              <stop offset="1" stop-color="#087EFF" />
+            </linearGradient>
+          </defs>
+        </svg>
+        <div class="brand-text-group">
+          <span class="brand-title">AUTO<span>VYNEX</span></span>
+          <span class="brand-tagline">The Future of Every Drive</span>
+        </div>
+      </a>
+
+      <!-- Vehicle Selector Trigger Pill -->
+      <button type="button" class="vehicle-selector-pill open-vehicle-modal-btn" title="Click to select or switch your car compatibility filter">
+        <span class="pulse-dot"></span>
+        {% if selected_vehicle %}
+          <span>{{ selected_vehicle.model.make.name }} {{ selected_vehicle.model.name }}</span>
+          <i data-lucide="chevron-down" style="width:14px; height:14px;"></i>
+        {% else %}
+          <span>Select Vehicle</span>
+          <i data-lucide="plus" style="width:14px; height:14px;"></i>
+        {% endif %}
+      </button>
+
+      <!-- Autocomplete Search Bar -->
+      <div class="search-bar-wrapper">
+        <i data-lucide="search"></i>
+        <input type="text" id="header-search-input" class="search-input-field" placeholder="Search 300+ spare parts by name, SKU, brand..." autocomplete="off" aria-label="Search spare parts">
+        <button type="button" id="header-search-clear" class="search-clear-btn" aria-label="Clear search">
+          <i data-lucide="x" style="width:14px; height:14px;"></i>
+        </button>
+        <div id="header-search-results" class="search-dropdown-results"></div>
+      </div>
+
+      <!-- Main Navigation Links -->
+      <nav aria-label="Main Navigation">
+        <ul class="nav-links">
+          <li><a href="{% url 'core:home' %}" class="nav-link"><i data-lucide="home"></i> Home</a></li>
+          <li><a href="{% url 'inventory:shop' %}" class="nav-link"><i data-lucide="package"></i> Shop Parts</a></li>
+          <li><a href="{% url 'services:directory' %}" class="nav-link"><i data-lucide="wrench"></i> Services</a></li>
+          <li><a href="{% url 'garage:index' %}" class="nav-link"><i data-lucide="warehouse"></i> My Garage</a></li>
+          <li><a href="{% url 'used_cars:marketplace' %}" class="nav-link"><i data-lucide="car"></i> Used Cars</a></li>
+          <li><a href="{% url 'assistance:request_view' %}" class="nav-link" style="color:var(--color-primary); font-weight:700;"><i data-lucide="life-buoy"></i> Roadside Help</a></li>
+        </ul>
+      </nav>
+
+      <!-- Action Buttons & User Menu -->
+      <div class="nav-actions">
+        <!-- Dark / Light Theme Toggle -->
+        <button type="button" id="theme-toggle-btn" class="icon-btn" title="Toggle Light/Dark Theme" aria-label="Toggle theme">
+          <i data-lucide="moon" id="theme-toggle-icon" style="width:19px; height:19px;"></i>
+        </button>
+
+        <!-- Wishlist -->
+        {% if user.is_authenticated %}
+        <a href="{% url 'inventory:wishlist' %}" class="icon-btn" title="Wishlist" aria-label="Wishlist">
+          <i data-lucide="heart" style="width:19px; height:19px;"></i>
+          <span class="badge-counter" id="nav-wishlist-count" style="{% if wishlist_count == 0 %}display:none;{% endif %}">{{ wishlist_count }}</span>
+        </a>
+        {% endif %}
+
+        <!-- Shopping Cart -->
+        <a href="{% url 'orders:cart_detail' %}" class="icon-btn" title="Shopping Cart" aria-label="Shopping Cart">
+          <i data-lucide="shopping-cart" style="width:19px; height:19px;"></i>
+          <span class="badge-counter" id="nav-cart-count" style="{% if cart_count == 0 %}display:none;{% endif %}">{{ cart_count }}</span>
+        </a>
+
+        <!-- User Profile Dropdown (Desktop) -->
+        {% if user.is_authenticated %}
+          <div style="position:relative;" id="user-menu-dropdown-wrapper">
+            <button type="button" class="btn btn-secondary btn-sm" id="user-menu-btn" style="padding:6px 12px; gap:6px;">
+              <div style="width:24px; height:24px; border-radius:50%; background:var(--color-primary); color:#fff; display:flex; align-items:center; justify-content:center; font-size:0.75rem; font-weight:700;">
+                {{ user.username|slice:":1"|upper }}
+              </div>
+              <span style="font-weight:600; font-size:0.85rem;">{{ user.first_name|default:user.username }}</span>
+              <i data-lucide="chevron-down" style="width:14px; height:14px;"></i>
+            </button>
+            <div id="user-menu-dropdown" style="display:none; position:absolute; right:0; top:calc(100% + 8px); width:230px; background:var(--bg-surface-elevated); border:1px solid var(--border-medium); border-radius:var(--radius-md); box-shadow:var(--shadow-lg); z-index:1100; overflow:hidden;">
+              <div style="padding:12px 16px; border-bottom:1px solid var(--border-subtle); background:var(--bg-surface-subtle);">
+                <div style="font-weight:700; font-size:0.88rem;">{{ user.get_full_name|default:user.username }}</div>
+                <div style="font-size:0.75rem; color:var(--text-muted);">{{ user.email }}</div>
+              </div>
+              <div style="padding:6px 0;">
+                <a href="{% url 'dashboard:customer_dashboard' %}" class="search-result-item" style="padding:8px 16px; font-size:0.85rem;"><i data-lucide="layout-dashboard" style="width:16px;"></i> Dashboard</a>
+                <a href="{% url 'garage:index' %}" class="search-result-item" style="padding:8px 16px; font-size:0.85rem;"><i data-lucide="warehouse" style="width:16px;"></i> My Garage ({{ user.garage_vehicles.count }})</a>
+                <a href="{% url 'orders:order_history' %}" class="search-result-item" style="padding:8px 16px; font-size:0.85rem;"><i data-lucide="truck" style="width:16px;"></i> My Orders</a>
+                <a href="{% url 'accounts:notifications' %}" class="search-result-item" style="padding:8px 16px; font-size:0.85rem;"><i data-lucide="bell" style="width:16px;"></i> Notifications {% if notifications_count > 0 %}<span class="badge badge-verified" style="margin-left:auto;">{{ notifications_count }}</span>{% endif %}</a>
+                <a href="{% url 'accounts:profile_settings' %}" class="search-result-item" style="padding:8px 16px; font-size:0.85rem;"><i data-lucide="settings" style="width:16px;"></i> Settings</a>
+                {% if user.is_staff %}
+                  <div style="border-top:1px solid var(--border-subtle); margin:4px 0;"></div>
+                  <a href="{% url 'custom_admin:dashboard_overview' %}" class="search-result-item" style="padding:8px 16px; font-size:0.85rem; color:var(--color-primary); font-weight:700;"><i data-lucide="shield" style="width:16px;"></i> Admin Center</a>
+                  <a href="/admin/" target="_blank" class="search-result-item" style="padding:8px 16px; font-size:0.85rem; color:var(--text-muted);"><i data-lucide="database" style="width:16px;"></i> Django Admin</a>
+                {% endif %}
+                <div style="border-top:1px solid var(--border-subtle); margin:4px 0;"></div>
+                <form method="POST" action="{% url 'accounts:logout' %}">
+                  {% csrf_token %}
+                  <button type="submit" style="width:100%; border:none; background:none; text-align:left; cursor:pointer;" class="search-result-item">
+                    <i data-lucide="log-out" style="width:16px; color:var(--color-danger);"></i> Sign Out
+                  </button>
+                </form>
+              </div>
+            </div>
+          </div>
+        {% else %}
+          <a href="{% url 'accounts:login' %}" class="btn btn-secondary btn-sm" style="display:inline-flex;">Sign In</a>
+          <a href="{% url 'accounts:register' %}" class="btn btn-primary btn-sm" style="display:inline-flex;">Register</a>
+        {% endif %}
+
+        <!-- Mobile Menu Hamburger Button -->
+        <button type="button" id="mobile-nav-toggle-btn" class="mobile-nav-toggle" aria-label="Open mobile navigation menu">
+          <i data-lucide="menu"></i>
+        </button>
+      </div>
+    </div>
+  </div>
+</header>
+
+<!-- Mobile Navigation Drawer Overlay & Backdrop -->
+<div id="mobile-drawer-backdrop" class="mobile-drawer-backdrop"></div>
+<aside id="mobile-nav-drawer" class="mobile-drawer" aria-label="Mobile Navigation Drawer">
+  <div class="mobile-drawer-header">
+    <div style="display:flex; align-items:center; gap:10px;">
+      <svg class="autovynex-road-a" style="width:36px; height:36px;" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <rect width="48" height="48" rx="10" fill="#101820" />
+        <path d="M11 41 L21.5 11" stroke="#087EFF" stroke-width="3.6" stroke-linecap="round" />
+        <path d="M37 41 L26.5 11" stroke="#087EFF" stroke-width="3.6" stroke-linecap="round" />
+        <line x1="24" y1="39" x2="24" y2="31" stroke="#FFFFFF" stroke-width="2.6" stroke-linecap="round" />
+        <path d="M15.5 28 H32.5" stroke="#00D2FF" stroke-width="3.2" stroke-linecap="round" />
+        <circle cx="24" cy="9.5" r="2.8" fill="#00D2FF" />
+      </svg>
+      <div>
+        <div style="font-family:var(--font-heading); font-weight:800; font-size:1.15rem; color:var(--text-main); line-height:1;">AUTO<span style="color:var(--color-primary);">VYNEX</span></div>
+        <div style="font-size:0.68rem; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.04em;">The Future of Every Drive</div>
+      </div>
+    </div>
+    <button type="button" id="close-mobile-drawer-btn" class="icon-btn" style="width:34px; height:34px;" aria-label="Close menu">
+      <i data-lucide="x" style="width:18px; height:18px;"></i>
+    </button>
+  </div>
+
+  <div class="mobile-drawer-body">
+    <!-- Mobile Active Vehicle / Selector -->
+    <button type="button" class="vehicle-selector-pill open-vehicle-modal-btn" style="width:100%; justify-content:center; padding:10px 14px;">
+      <span class="pulse-dot"></span>
+      {% if selected_vehicle %}
+        <span>{{ selected_vehicle.display_name }}</span>
+      {% else %}
+        <span>Select Your Vehicle</span>
+      {% endif %}
+    </button>
+
+    <!-- Mobile Navigation Links -->
+    <ul class="mobile-nav-links">
+      <li><a href="{% url 'core:home' %}" class="nav-link"><i data-lucide="home"></i> Home</a></li>
+      <li><a href="{% url 'inventory:shop' %}" class="nav-link"><i data-lucide="package"></i> Shop Spare Parts</a></li>
+      <li><a href="{% url 'services:directory' %}" class="nav-link"><i data-lucide="wrench"></i> Services & Workshops</a></li>
+      <li><a href="{% url 'garage:index' %}" class="nav-link"><i data-lucide="warehouse"></i> My Digital Garage</a></li>
+      <li><a href="{% url 'used_cars:marketplace' %}" class="nav-link"><i data-lucide="car"></i> Pre-Inspected Used Cars</a></li>
+      <li><a href="{% url 'assistance:request_view' %}" class="nav-link" style="color:var(--color-primary); font-weight:700;"><i data-lucide="life-buoy"></i> 24/7 Roadside Help</a></li>
+      <li><a href="{% url 'core:ai_car_help' %}" class="nav-link"><i data-lucide="bot"></i> AI Car Help Assistant</a></li>
+    </ul>
+
+    <!-- Mobile Account Action Section -->
+    <div style="border-top:1px solid var(--border-subtle); padding-top:16px; margin-top:auto;">
+      {% if user.is_authenticated %}
+        <div style="margin-bottom:12px;">
+          <div style="font-weight:700; font-size:0.9rem;">{{ user.get_full_name|default:user.username }}</div>
+          <div style="font-size:0.75rem; color:var(--text-muted);">{{ user.email }}</div>
+        </div>
+        <div style="display:flex; flex-direction:column; gap:6px;">
+          <a href="{% url 'dashboard:customer_dashboard' %}" class="btn btn-secondary btn-sm" style="width:100%; justify-content:flex-start;"><i data-lucide="layout-dashboard"></i> Dashboard</a>
+          <a href="{% url 'orders:order_history' %}" class="btn btn-secondary btn-sm" style="width:100%; justify-content:flex-start;"><i data-lucide="truck"></i> My Orders</a>
+          <form method="POST" action="{% url 'accounts:logout' %}">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-secondary btn-sm" style="width:100%; justify-content:flex-start; color:var(--color-danger); margin-top:4px;">
+              <i data-lucide="log-out"></i> Sign Out
+            </button>
+          </form>
+        </div>
+      {% else %}
+        <div style="display:flex; gap:10px;">
+          <a href="{% url 'accounts:login' %}" class="btn btn-secondary btn-sm" style="flex:1;">Sign In</a>
+          <a href="{% url 'accounts:register' %}" class="btn btn-primary btn-sm" style="flex:1;">Register</a>
+        </div>
+      {% endif %}
+    </div>
+  </div>
+</aside>
