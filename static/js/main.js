@@ -129,19 +129,23 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  // Cascading Vehicle Modal Dropdowns
+  // 5-Step Cascading Vehicle Modal Dropdowns (Make -> Model -> Year -> Fuel -> Variant)
   const makeSelect = document.getElementById('modal-select-make');
   const modelSelect = document.getElementById('modal-select-model');
+  const yearSelect = document.getElementById('modal-select-year');
+  const fuelSelect = document.getElementById('modal-select-fuel');
   const variantSelect = document.getElementById('modal-select-variant');
   const selectSubmitBtn = document.getElementById('modal-submit-vehicle');
 
-  if (makeSelect && modelSelect && variantSelect) {
+  if (makeSelect && modelSelect) {
+    // 1. Make Change -> Fetch Models
     makeSelect.addEventListener('change', async () => {
       const makeId = makeSelect.value;
       modelSelect.innerHTML = '<option value="">Loading Models...</option>';
       modelSelect.disabled = true;
-      variantSelect.innerHTML = '<option value="">Select Variant...</option>';
-      variantSelect.disabled = true;
+      if (yearSelect) { yearSelect.innerHTML = '<option value="">Select Year...</option>'; yearSelect.disabled = true; }
+      if (fuelSelect) { fuelSelect.innerHTML = '<option value="">Select Fuel Type...</option>'; fuelSelect.disabled = true; }
+      if (variantSelect) { variantSelect.innerHTML = '<option value="">Select Variant...</option>'; variantSelect.disabled = true; }
       if (selectSubmitBtn) selectSubmitBtn.disabled = true;
 
       if (!makeId) {
@@ -164,37 +168,104 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     });
 
+    // 2. Model Change -> Fetch Years
     modelSelect.addEventListener('change', async () => {
       const modelId = modelSelect.value;
-      variantSelect.innerHTML = '<option value="">Loading Variants...</option>';
-      variantSelect.disabled = true;
+      if (yearSelect) { yearSelect.innerHTML = '<option value="">Loading Years...</option>'; yearSelect.disabled = true; }
+      if (fuelSelect) { fuelSelect.innerHTML = '<option value="">Select Fuel Type...</option>'; fuelSelect.disabled = true; }
+      if (variantSelect) { variantSelect.innerHTML = '<option value="">Select Variant...</option>'; variantSelect.disabled = true; }
       if (selectSubmitBtn) selectSubmitBtn.disabled = true;
 
       if (!modelId) {
-        variantSelect.innerHTML = '<option value="">Select Variant...</option>';
+        if (yearSelect) yearSelect.innerHTML = '<option value="">Select Year...</option>';
         return;
       }
 
       try {
-        const res = await fetch(`/vehicles/api/variants/?model_id=${modelId}`);
+        const res = await fetch(`/vehicles/api/years/?model_id=${modelId}`);
         const data = await res.json();
-        let options = '<option value="">Select Variant...</option>';
-        data.variants.forEach(v => {
-          options += `<option value="${v.id}">${v.name} • ${v.fuel_type} • ${v.transmission} (${v.year_from}-${v.year_to})</option>`;
+        let options = '<option value="">Select Manufacturing Year...</option>';
+        data.years.forEach(y => {
+          options += `<option value="${y}">${y}</option>`;
         });
-        variantSelect.innerHTML = options;
-        variantSelect.disabled = false;
+        if (yearSelect) {
+          yearSelect.innerHTML = options;
+          yearSelect.disabled = false;
+        }
       } catch (err) {
-        console.error('Failed to load variants:', err);
-        variantSelect.innerHTML = '<option value="">Error loading variants</option>';
+        console.error('Failed to load years:', err);
+        if (yearSelect) yearSelect.innerHTML = '<option value="">Error loading years</option>';
       }
     });
 
-    variantSelect.addEventListener('change', () => {
-      if (selectSubmitBtn) {
-        selectSubmitBtn.disabled = !variantSelect.value;
-      }
-    });
+    // 3. Year Change -> Fetch Fuel Types
+    if (yearSelect) {
+      yearSelect.addEventListener('change', async () => {
+        const modelId = modelSelect.value;
+        const year = yearSelect.value;
+        if (fuelSelect) { fuelSelect.innerHTML = '<option value="">Loading Fuel Types...</option>'; fuelSelect.disabled = true; }
+        if (variantSelect) { variantSelect.innerHTML = '<option value="">Select Variant...</option>'; variantSelect.disabled = true; }
+        if (selectSubmitBtn) selectSubmitBtn.disabled = true;
+
+        if (!year) {
+          if (fuelSelect) fuelSelect.innerHTML = '<option value="">Select Fuel Type...</option>';
+          return;
+        }
+
+        try {
+          const res = await fetch(`/vehicles/api/fuels/?model_id=${modelId}&year=${year}`);
+          const data = await res.json();
+          let options = '<option value="">Select Fuel Type...</option>';
+          data.fuels.forEach(f => {
+            options += `<option value="${f}">${f}</option>`;
+          });
+          if (fuelSelect) {
+            fuelSelect.innerHTML = options;
+            fuelSelect.disabled = false;
+          }
+        } catch (err) {
+          console.error('Failed to load fuels:', err);
+          if (fuelSelect) fuelSelect.innerHTML = '<option value="">Error loading fuel types</option>';
+        }
+      });
+    }
+
+    // 4. Fuel Change -> Fetch Exact Variants
+    if (fuelSelect && variantSelect) {
+      fuelSelect.addEventListener('change', async () => {
+        const modelId = modelSelect.value;
+        const year = yearSelect ? yearSelect.value : '';
+        const fuel = fuelSelect.value;
+        variantSelect.innerHTML = '<option value="">Loading Variants...</option>';
+        variantSelect.disabled = true;
+        if (selectSubmitBtn) selectSubmitBtn.disabled = true;
+
+        if (!fuel) {
+          variantSelect.innerHTML = '<option value="">Select Variant...</option>';
+          return;
+        }
+
+        try {
+          const res = await fetch(`/vehicles/api/variants/?model_id=${modelId}&year=${year}&fuel_type=${encodeURIComponent(fuel)}`);
+          const data = await res.json();
+          let options = '<option value="">Select Exact Variant & Transmission...</option>';
+          data.variants.forEach(v => {
+            options += `<option value="${v.id}">${v.name} • ${v.transmission} (${v.engine_cc}cc, ${v.power_hp}hp)</option>`;
+          });
+          variantSelect.innerHTML = options;
+          variantSelect.disabled = false;
+        } catch (err) {
+          console.error('Failed to load variants:', err);
+          variantSelect.innerHTML = '<option value="">Error loading variants</option>';
+        }
+      });
+
+      variantSelect.addEventListener('change', () => {
+        if (selectSubmitBtn) {
+          selectSubmitBtn.disabled = !variantSelect.value;
+        }
+      });
+    }
   }
 
   // 6. Header Autocomplete Quick Search

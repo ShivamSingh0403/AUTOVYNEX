@@ -7,7 +7,7 @@
         </div>
         <div>
           <h3 style="font-size:1.15rem; margin:0;">Select Your Vehicle</h3>
-          <p style="font-size:0.78rem; color:var(--text-muted); margin:0;">Ensures 100% verified compatibility for every spare part</p>
+          <p style="font-size:0.78rem; color:var(--text-muted); margin:0;">5-step verified fitment check across all genuine spare parts</p>
         </div>
       </div>
       <button type="button" class="close-vehicle-modal-btn icon-btn" style="border:none; background:transparent;">
@@ -18,6 +18,18 @@
     <form method="POST" action="{% url 'vehicles:select_vehicle_session' %}">
       {% csrf_token %}
       <div class="modal-body">
+        {% if selected_vehicle %}
+        <div style="margin-bottom:16px; padding:12px; background:rgba(16, 185, 129, 0.08); border-radius:var(--radius-md); border:1px solid rgba(16, 185, 129, 0.25); display:flex; justify-content:space-between; align-items:center;">
+          <div>
+            <div style="font-size:0.75rem; text-transform:uppercase; color:#059669; font-weight:700;">Currently Active Vehicle</div>
+            <div style="font-size:0.92rem; font-weight:700; color:var(--text-main);">{{ selected_vehicle.display_name }}</div>
+          </div>
+          <a href="{% url 'vehicles:clear_vehicle_session' %}" class="btn btn-secondary btn-sm" style="font-size:0.75rem; padding:4px 8px; color:var(--color-danger);">
+            <i data-lucide="x"></i> Remove
+          </a>
+        </div>
+        {% endif %}
+
         {% if user.is_authenticated and user.garage_vehicles.exists %}
         <div style="margin-bottom:20px; padding:12px; background:var(--bg-surface-subtle); border-radius:var(--radius-md); border:1px solid var(--border-subtle);">
           <div style="font-size:0.8rem; font-weight:700; color:var(--color-primary); margin-bottom:8px; text-transform:uppercase;">
@@ -34,12 +46,13 @@
         </div>
         <div style="text-align:center; position:relative; margin:16px 0;">
           <hr style="border:0; border-top:1px solid var(--border-subtle);">
-          <span style="position:absolute; top:50%; left:50%; transform:translate(-50%, -50%); background:var(--bg-surface-elevated); padding:0 12px; font-size:0.75rem; color:var(--text-muted); text-transform:uppercase;">or select any car</span>
+          <span style="position:absolute; top:50%; left:50%; transform:translate(-50%, -50%); background:var(--bg-surface-elevated); padding:0 12px; font-size:0.75rem; color:var(--text-muted); text-transform:uppercase;">or choose by model & year</span>
         </div>
         {% endif %}
 
+        <!-- 1. Make -->
         <div class="form-group">
-          <label class="form-label" for="modal-select-make">Manufacturer / Make</label>
+          <label class="form-label" for="modal-select-make">1. Manufacturer / Make *</label>
           <select id="modal-select-make" class="form-select" required>
             <option value="">Select Manufacturer...</option>
             {% for make in popular_makes %}
@@ -48,15 +61,33 @@
           </select>
         </div>
 
+        <!-- 2. Model -->
         <div class="form-group">
-          <label class="form-label" for="modal-select-model">Model</label>
+          <label class="form-label" for="modal-select-model">2. Model *</label>
           <select id="modal-select-model" class="form-select" disabled required>
             <option value="">Select Model...</option>
           </select>
         </div>
 
+        <!-- 3. Manufacturing Year -->
         <div class="form-group">
-          <label class="form-label" for="modal-select-variant">Variant, Fuel & Transmission</label>
+          <label class="form-label" for="modal-select-year">3. Manufacturing Year *</label>
+          <select id="modal-select-year" class="form-select" disabled required>
+            <option value="">Select Year...</option>
+          </select>
+        </div>
+
+        <!-- 4. Fuel Type -->
+        <div class="form-group">
+          <label class="form-label" for="modal-select-fuel">4. Fuel Type *</label>
+          <select id="modal-select-fuel" class="form-select" disabled required>
+            <option value="">Select Fuel Type...</option>
+          </select>
+        </div>
+
+        <!-- 5. Variant -->
+        <div class="form-group">
+          <label class="form-label" for="modal-select-variant">5. Exact Variant & Transmission *</label>
           <select id="modal-select-variant" name="variant_id" class="form-select" disabled required>
             <option value="">Select Variant...</option>
           </select>
@@ -66,12 +97,12 @@
       <div class="modal-footer">
         {% if selected_vehicle %}
         <a href="{% url 'vehicles:clear_vehicle_session' %}" class="btn btn-secondary btn-sm" style="margin-right:auto; color:var(--color-danger);">
-          <i data-lucide="trash-2"></i> Clear Selection
+          <i data-lucide="trash-2"></i> Clear Filter
         </a>
         {% endif %}
         <button type="button" class="btn btn-secondary btn-sm close-vehicle-modal-btn">Cancel</button>
         <button type="submit" id="modal-submit-vehicle" class="btn btn-primary btn-sm" disabled>
-          <i data-lucide="check"></i> Confirm Vehicle
+          <i data-lucide="check"></i> Confirm Active Vehicle
         </button>
       </div>
     </form>

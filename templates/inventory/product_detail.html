@@ -14,18 +14,22 @@
 
   <!-- Main Product Detail Layout -->
   <div style="display:grid; grid-template-columns: 1fr 1.2fr; gap:40px; margin-bottom:48px;" class="grid-product-detail">
-    <!-- Left: Product Visuals -->
+    <!-- Left: Product Visuals & Gallery -->
     <div>
       <div class="card" style="padding:40px; display:flex; align-items:center; justify-content:center; background:var(--bg-surface-elevated); min-height:360px; position:relative; overflow:hidden;">
-        {% if product.discount_percent > 0 %}
+        {% if product.has_valid_discount %}
           <span class="product-discount-tag" style="font-size:0.85rem; padding:4px 10px;">{{ product.discount_percent }}% DISCOUNT</span>
         {% endif %}
         
         <div style="color:var(--color-primary); text-align:center;">
-          <i data-lucide="{{ product.category.icon_name|default:'package' }}" style="width:120px; height:120px; stroke-width:1.5;"></i>
-          <div style="font-size:0.8rem; color:var(--text-muted); margin-top:12px; font-weight:600;">
-            OEM SPECIFICATION CERTIFIED
-          </div>
+          {% if product.image %}
+            <img id="main-product-img" src="{{ product.image.url }}" alt="{{ product.name }}" style="max-height:280px; max-width:100%; object-fit:contain;">
+          {% else %}
+            <i data-lucide="{{ product.category.icon_name|default:'package' }}" style="width:120px; height:120px; stroke-width:1.5;"></i>
+            <div style="font-size:0.8rem; color:var(--text-muted); margin-top:12px; font-weight:600;">
+              OEM SPECIFICATION CERTIFIED
+            </div>
+          {% endif %}
         </div>
 
         {% if user.is_authenticated %}
@@ -34,6 +38,20 @@
         </a>
         {% endif %}
       </div>
+
+      <!-- Additional Gallery Images -->
+      {% if gallery_images %}
+      <div style="display:flex; gap:10px; margin-top:12px; overflow-x:auto; padding-bottom:6px;">
+        {% if product.image %}
+          <img src="{{ product.image.url }}" alt="{{ product.name }}" style="width:60px; height:60px; object-fit:cover; border-radius:6px; border:2px solid var(--color-primary); cursor:pointer;" onclick="document.getElementById('main-product-img').src=this.src;">
+        {% endif %}
+        {% for g in gallery_images %}
+          {% if g.image %}
+            <img src="{{ g.image.url }}" alt="{{ g.alt_text|default:product.name }}" style="width:60px; height:60px; object-fit:cover; border-radius:6px; border:1px solid var(--border-subtle); cursor:pointer;" onclick="document.getElementById('main-product-img').src=this.src;">
+          {% endif %}
+        {% endfor %}
+      </div>
+      {% endif %}
 
       <!-- Quick Trust Highlights -->
       <div class="grid-3" style="gap:12px; margin-top:16px;">
@@ -54,9 +72,10 @@
 
     <!-- Right: Product Information & Purchase Flow -->
     <div>
-      <div style="display:flex; align-items:center; gap:8px; margin-bottom:8px;">
+      <div style="display:flex; align-items:center; gap:8px; margin-bottom:8px; flex-wrap:wrap;">
         <span class="badge badge-universal">{{ product.brand.name }}</span>
         <span class="badge" style="background:var(--bg-surface-subtle); color:var(--text-muted);">SKU: {{ product.sku }}</span>
+        <span class="badge" style="background:rgba(2, 132, 199, 0.08); color:var(--color-primary);">Condition: {{ product.get_condition_display }}</span>
       </div>
 
       <h1 style="font-size:1.85rem; margin-bottom:14px; line-height:1.3;">{{ product.name }}</h1>
@@ -67,7 +86,7 @@
 
       <!-- Vehicle Compatibility Indicator Box -->
       <div style="margin-bottom:24px; padding:16px; border-radius:var(--radius-lg); {% if fitment_status == 'compatible' or fitment_status == 'universal' %}background:rgba(16, 185, 129, 0.1); border:1px solid rgba(16, 185, 129, 0.3);{% elif fitment_status == 'incompatible' %}background:rgba(239, 68, 68, 0.08); border:1px solid rgba(239, 68, 68, 0.3);{% else %}background:rgba(245, 158, 11, 0.08); border:1px solid rgba(245, 158, 11, 0.3);{% endif %}">
-        <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:12px;">
+        <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:12px; flex-wrap:wrap;">
           <div>
             {% if active_vehicle %}
               {% if fitment_status == 'compatible' %}
@@ -94,18 +113,18 @@
                 </div>
               {% else %}
                 <div style="color:#b91c1c; font-weight:700; font-size:0.95rem; display:flex; align-items:center; gap:6px;">
-                  <i data-lucide="alert-octagon" style="width:18px;"></i> Incompatible or Not Confirmed
+                  <i data-lucide="alert-octagon" style="width:18px;"></i> Not Compatible
                 </div>
                 <div style="font-size:0.85rem; color:#b91c1c; margin-top:2px;">
-                  Our engineering database does not verify this component for <strong>{{ active_vehicle.model.make.name }} {{ active_vehicle.model.name }}</strong>.
+                  Our engineering database confirms this component is not compatible with <strong>{{ active_vehicle.model.make.name }} {{ active_vehicle.model.name }}</strong>.
                 </div>
               {% endif %}
             {% else %}
               <div style="color:#b45309; font-weight:700; font-size:0.95rem; display:flex; align-items:center; gap:6px;">
-                <i data-lucide="help-circle" style="width:18px;"></i> Compatibility Not Confirmed
+                <i data-lucide="help-circle" style="width:18px;"></i> Select Vehicle to Verify Compatibility
               </div>
               <div style="font-size:0.85rem; color:var(--text-muted); margin-top:2px;">
-                Select your car to verify whether this exact SKU fits your model.
+                Confirm whether this exact SKU fits your make, model, year, and variant.
               </div>
             {% endif %}
           </div>
@@ -115,17 +134,17 @@
         </div>
       </div>
 
-      <!-- Pricing Row -->
-      <div style="display:flex; align-items:baseline; gap:16px; margin-bottom:24px;">
+      <!-- Pricing Row (Discounts shown ONLY when valid discount data exists) -->
+      <div style="display:flex; align-items:baseline; gap:16px; margin-bottom:20px;">
         <span style="font-family:var(--font-heading); font-size:2.2rem; font-weight:800; color:var(--text-main);">
           ₹{{ product.final_price|floatformat:0 }}
         </span>
-        {% if product.discount_price %}
-          <span style="font-size:1.15rem; color:var(--text-subtle); text-decoration:line-through;">
+        {% if product.has_valid_discount %}
+          <span style="font-size:1.15rem; color:var(--text-muted); text-decoration:line-through;">
             ₹{{ product.price|floatformat:0 }}
           </span>
           <span class="badge badge-verified" style="font-size:0.8rem;">
-            Save ₹{{ product.price|add:"-"|add:product.discount_price|floatformat:0 }} ({{ product.discount_percent }}%)
+            Save {{ product.discount_percent }}% (₹{{ product.price|floatformat:0 }} list)
           </span>
         {% endif %}
       </div>
@@ -134,16 +153,16 @@
       <div style="margin-bottom:24px; font-size:0.9rem;">
         {% if product.in_stock %}
           <span style="color:#059669; font-weight:700; display:inline-flex; align-items:center; gap:6px;">
-            <i data-lucide="check" style="width:16px;"></i> In Stock ({{ product.stock_quantity }} units ready at regional hub)
+            <i data-lucide="check" style="width:16px;"></i> In Stock ({{ product.stock_quantity }} units available)
           </span>
         {% else %}
           <span style="color:#dc2626; font-weight:700; display:inline-flex; align-items:center; gap:6px;">
-            <i data-lucide="x" style="width:16px;"></i> Out of Stock
+            <i data-lucide="x" style="width:16px;"></i> Currently Out of Stock
           </span>
         {% endif %}
       </div>
 
-      <!-- Add to Cart & Buy+Install Form -->
+      <!-- Add to Cart & Buy Now Form -->
       <form method="POST" action="{% url 'orders:add_to_cart' product.id %}">
         {% csrf_token %}
 
@@ -162,23 +181,35 @@
             </div>
           </label>
         </div>
+        {% else %}
+        <div style="font-size:0.8rem; color:var(--text-muted); margin-bottom:16px;">
+          <i data-lucide="info" style="width:14px; vertical-align:middle;"></i> Standard delivery component. Self-installation or local mechanic fitting recommended.
+        </div>
         {% endif %}
 
-        <div style="display:flex; gap:16px; align-items:center; margin-bottom:28px;">
+        <div style="display:flex; gap:16px; align-items:center; margin-bottom:16px; flex-wrap:wrap;">
           <div style="display:flex; align-items:center; border:1px solid var(--border-medium); border-radius:var(--radius-md); background:var(--bg-surface); overflow:hidden;">
             <label style="padding:0 12px; font-size:0.85rem; color:var(--text-muted);">Qty:</label>
-            <input type="number" name="quantity" value="1" min="1" max="{{ product.stock_quantity|default:10 }}" style="width:60px; padding:10px 8px; border:none; text-align:center; font-weight:700; font-size:1rem; outline:none; background:transparent;">
+            <input type="number" name="quantity" value="1" min="1" max="{{ product.stock_quantity|default:1 }}" style="width:60px; padding:10px 8px; border:none; text-align:center; font-weight:700; font-size:1rem; outline:none; background:transparent;">
           </div>
 
-          <button type="submit" class="btn btn-primary btn-lg" style="flex:1;" {% if not product.in_stock %}disabled{% endif %}>
-            <i data-lucide="shopping-cart"></i> Add to Shopping Cart
+          <button type="submit" class="btn btn-secondary btn-lg" style="flex:1;" {% if not product.in_stock %}disabled{% endif %}>
+            <i data-lucide="shopping-cart"></i> Add to Cart
           </button>
         </div>
+      </form>
+
+      <!-- Buy Now Form (Direct Checkout) -->
+      <form method="POST" action="{% url 'orders:buy_now' product.id %}">
+        {% csrf_token %}
+        <button type="submit" class="btn btn-primary btn-lg" style="width:100%; justify-content:center;" {% if not product.in_stock %}disabled{% endif %}>
+          <i data-lucide="zap"></i> Buy Now (Direct to Checkout)
+        </button>
       </form>
     </div>
   </div>
 
-  <!-- Technical Specifications & Details Tabs -->
+  <!-- Technical Specifications & Description -->
   <div class="card" style="margin-bottom:48px;">
     <h3 style="font-size:1.3rem; margin-bottom:16px; border-bottom:1px solid var(--border-subtle); padding-bottom:12px;">
       Engineering Specifications & Description
@@ -204,10 +235,10 @@
   {% if compatible_fits %}
   <div class="card" style="margin-bottom:48px;">
     <h3 style="font-size:1.25rem; margin-bottom:14px;">
-      <i data-lucide="check-circle" style="color:#059669; vertical-align:middle;"></i> Sample Verified Compatible Vehicle Models
+      <i data-lucide="check-circle" style="color:#059669; vertical-align:middle;"></i> Compatible Vehicle Models (Verified Database)
     </h3>
     <p style="font-size:0.85rem; color:var(--text-muted); margin-bottom:16px;">
-      Tested and verified fitments recorded in relational database for this product SKU:
+      Confirmed compatibility records in our engineering relational database for this product SKU:
     </p>
     <div style="display:flex; flex-wrap:wrap; gap:8px;">
       {% for fit in compatible_fits %}

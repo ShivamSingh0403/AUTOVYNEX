@@ -3,11 +3,26 @@
 {% block title %}Shopping Cart — AUTOVYNEX{% endblock %}
 
 {% block content %}
-<div class="container" style="padding-top:24px;">
-  <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:28px;">
+<div class="container" style="padding-top:28px; padding-bottom:60px;">
+  <!-- Active Vehicle Banner if set -->
+  {% if active_vehicle %}
+  <div style="background:rgba(8, 126, 255, 0.08); border:1px solid rgba(8, 126, 255, 0.25); border-radius:var(--radius-md); padding:10px 16px; margin-bottom:20px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px;">
+    <div style="display:flex; align-items:center; gap:10px;">
+      <i data-lucide="car" style="color:var(--color-primary); width:18px;"></i>
+      <span style="font-size:0.88rem; color:var(--text-main);">
+        Active Vehicle Fitment: <strong>{{ active_vehicle.model.make.name }} {{ active_vehicle.model.name }} {{ active_vehicle.name }}</strong> ({{ active_vehicle.start_year }}-{{ active_vehicle.end_year|default:'Present' }}, {{ active_vehicle.fuel_type|title }})
+      </span>
+    </div>
+    <button type="button" class="btn btn-outline btn-sm" onclick="window.AVXVehicleModal?.open()" style="font-size:0.78rem; padding:4px 10px;">
+      Change Vehicle
+    </button>
+  </div>
+  {% endif %}
+
+  <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:24px; flex-wrap:wrap; gap:16px;">
     <div>
       <div style="font-size:0.85rem; color:var(--text-muted); margin-bottom:4px;">
-        <a href="{% url 'inventory:shop' %}">Shop</a> / <span>Cart</span>
+        <a href="{% url 'inventory:shop' %}">Shop Parts</a> / <span>Cart</span>
       </div>
       <h1 style="font-size:1.85rem; margin:0;">Shopping Cart</h1>
     </div>
@@ -17,58 +32,73 @@
   </div>
 
   {% if cart_items %}
-  <div style="display:grid; grid-template-columns: 1fr 360px; gap:36px;" class="grid-cart-layout">
+  <div style="display:grid; grid-template-columns: 1fr 380px; gap:36px;" class="grid-cart-layout">
     <!-- Items Table Column -->
     <div class="card" style="padding:0; overflow:hidden;">
-      <div style="padding:16px 24px; background:var(--bg-surface-subtle); border-bottom:1px solid var(--border-subtle); font-weight:700; font-size:0.88rem; color:var(--text-muted); display:grid; grid-template-columns: 2fr 1fr 1fr 40px; gap:16px;">
-        <span>Product Details</span>
+      <div style="padding:16px 24px; background:var(--bg-surface-subtle); border-bottom:1px solid var(--border-subtle); font-weight:700; font-size:0.85rem; color:var(--text-muted); display:grid; grid-template-columns: 2fr 130px 100px 40px; gap:16px;">
+        <span>Item Details</span>
         <span style="text-align:center;">Quantity</span>
-        <span style="text-align:right;">Subtotal</span>
+        <span style="text-align:right;">Line Total</span>
         <span></span>
       </div>
 
       <div style="display:flex; flex-direction:column;">
         {% for item in cart_items %}
-          <div style="padding:20px 24px; border-bottom:1px solid var(--border-subtle); display:grid; grid-template-columns: 2fr 1fr 1fr 40px; gap:16px; align-items:center;">
+          <div style="padding:20px 24px; border-bottom:1px solid var(--border-subtle); display:grid; grid-template-columns: 2fr 130px 100px 40px; gap:16px; align-items:center;">
             <!-- Product Info -->
             <div style="display:flex; gap:16px; align-items:center;">
-              <div style="width:54px; height:54px; border-radius:var(--radius-md); background:var(--bg-surface-subtle); display:flex; align-items:center; justify-content:center; color:var(--color-primary); flex-shrink:0;">
-                <i data-lucide="{{ item.product.category.icon_name|default:'package' }}" style="width:28px; height:28px;"></i>
+              <div style="width:58px; height:58px; border-radius:var(--radius-md); background:var(--bg-surface-subtle); display:flex; align-items:center; justify-content:center; color:var(--color-primary); flex-shrink:0; overflow:hidden;">
+                {% if item.product.image %}
+                  <img src="{{ item.product.image.url }}" alt="{{ item.product.name }}" style="width:100%; height:100%; object-fit:cover;">
+                {% else %}
+                  <i data-lucide="{{ item.product.category.icon_name|default:'package' }}" style="width:28px; height:28px;"></i>
+                {% endif %}
               </div>
               <div>
-                <a href="{% url 'inventory:product_detail' item.product.slug %}" style="font-weight:700; font-size:0.95rem; color:var(--text-main); display:block; margin-bottom:4px;">
+                <a href="{% url 'inventory:product_detail' item.product.slug %}" style="font-weight:700; font-size:0.95rem; color:var(--text-main); display:block; margin-bottom:4px; text-decoration:none;">
                   {{ item.product.name }}
                 </a>
                 <div style="font-size:0.78rem; color:var(--text-muted);">
-                  SKU: {{ item.product.sku }} • Unit: ₹{{ item.unit_price|floatformat:0 }}
+                  {{ item.product.brand }} • SKU: {{ item.product.sku }} • ₹{{ item.unit_price|floatformat:2 }} each
                 </div>
                 {% if item.buy_and_install %}
                   <div class="badge badge-verified" style="margin-top:6px; font-size:0.72rem;">
-                    <i data-lucide="wrench"></i> Buy + Professional Install (+₹{{ item.product.installation_fee|floatformat:0 }})
+                    <i data-lucide="wrench"></i> Pro Installation (+₹{{ item.product.installation_fee|floatformat:2 }})
+                  </div>
+                {% endif %}
+                {% if item.product.stock <= 5 and item.product.stock > 0 %}
+                  <div style="color:#d97706; font-size:0.72rem; margin-top:3px; font-weight:600;">
+                    Only {{ item.product.stock }} units remaining in stock!
                   </div>
                 {% endif %}
               </div>
             </div>
 
             <!-- Quantity Controls -->
-            <div style="display:flex; align-items:center; justify-content:center; gap:6px;">
+            <div style="display:flex; align-items:center; justify-content:center; gap:4px;">
               <form method="POST" action="{% url 'orders:update_cart_item' item.id %}" style="margin:0;">
                 {% csrf_token %}
                 <input type="hidden" name="action" value="decrement">
-                <button type="submit" class="btn btn-secondary btn-sm" style="width:30px; height:30px; padding:0;">-</button>
+                <button type="submit" class="btn btn-secondary btn-sm" style="width:30px; height:30px; padding:0; line-height:1;" aria-label="Decrease quantity">-</button>
               </form>
-              <span style="font-weight:700; font-size:0.95rem; min-width:24px; text-align:center;">{{ item.quantity }}</span>
+              
+              <form method="POST" action="{% url 'orders:update_cart_item' item.id %}" style="margin:0;">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="set_quantity">
+                <input type="number" name="quantity" value="{{ item.quantity }}" min="1" max="{{ item.product.stock }}" onchange="this.form.submit()" style="width:48px; height:30px; text-align:center; padding:2px; font-weight:700; font-size:0.9rem; border:1px solid var(--border-subtle); border-radius:var(--radius-sm); background:var(--bg-surface);">
+              </form>
+
               <form method="POST" action="{% url 'orders:update_cart_item' item.id %}" style="margin:0;">
                 {% csrf_token %}
                 <input type="hidden" name="action" value="increment">
-                <button type="submit" class="btn btn-secondary btn-sm" style="width:30px; height:30px; padding:0;">+</button>
+                <button type="submit" class="btn btn-secondary btn-sm" style="width:30px; height:30px; padding:0; line-height:1;" aria-label="Increase quantity">+</button>
               </form>
             </div>
 
             <!-- Subtotal -->
             <div style="text-align:right;">
               <div style="font-family:var(--font-heading); font-size:1.15rem; font-weight:800; color:var(--text-main);">
-                ₹{{ item.item_subtotal|floatformat:0 }}
+                ₹{{ item.item_subtotal|floatformat:2 }}
               </div>
             </div>
 
@@ -77,7 +107,7 @@
               <form method="POST" action="{% url 'orders:update_cart_item' item.id %}" style="margin:0;">
                 {% csrf_token %}
                 <input type="hidden" name="action" value="remove">
-                <button type="submit" class="icon-btn" style="border:none; width:32px; height:32px; color:var(--color-danger);" title="Remove">
+                <button type="submit" class="icon-btn" style="border:none; width:32px; height:32px; color:var(--color-danger); background:transparent; cursor:pointer;" title="Remove from cart" aria-label="Remove item">
                   <i data-lucide="trash-2" style="width:16px;"></i>
                 </button>
               </form>
@@ -90,26 +120,38 @@
     <!-- Order Summary Column -->
     <div>
       <div class="card" style="padding:24px; position:sticky; top:calc(var(--nav-height) + 20px);">
-        <h3 style="font-size:1.2rem; margin-bottom:20px; padding-bottom:12px; border-bottom:1px solid var(--border-subtle);">
+        <h3 style="font-size:1.2rem; margin-bottom:16px; padding-bottom:12px; border-bottom:1px solid var(--border-subtle);">
           Order Summary
         </h3>
 
+        <!-- Shipping & Discount Transparency Box -->
+        <div style="padding:10px 12px; border-radius:var(--radius-md); background:var(--bg-surface-subtle); font-size:0.78rem; line-height:1.45; color:var(--text-muted); margin-bottom:16px;">
+          <div style="margin-bottom:4px;">
+            <i data-lucide="truck" style="width:13px; vertical-align:middle; color:var(--color-primary);"></i>
+            <strong>Shipping Policy:</strong> Free delivery on orders ₹1,499 & above; ₹149 flat below.
+          </div>
+          <div>
+            <i data-lucide="tag" style="width:13px; vertical-align:middle; color:#059669;"></i>
+            <strong>Offers:</strong> ₹200 off auto-applied on orders ₹3,000 & above.
+          </div>
+        </div>
+
         <div style="display:flex; flex-direction:column; gap:12px; font-size:0.92rem; margin-bottom:20px;">
           <div style="display:flex; justify-content:space-between;">
-            <span style="color:var(--text-muted);">Items Subtotal</span>
+            <span style="color:var(--text-muted);">Cart Subtotal</span>
             <strong>₹{{ subtotal|floatformat:2 }}</strong>
           </div>
 
           {% if discount > 0 %}
           <div style="display:flex; justify-content:space-between; color:#059669;">
-            <span>Festive Offer Discount</span>
+            <span>Volume Discount</span>
             <strong>-₹{{ discount|floatformat:2 }}</strong>
           </div>
           {% endif %}
 
           <div style="display:flex; justify-content:space-between;">
-            <span style="color:var(--text-muted);">Express Shipping</span>
-            <strong>{% if shipping_fee == 0 %}<span style="color:#059669;">FREE</span>{% else %}₹{{ shipping_fee|floatformat:2 }}{% endif %}</strong>
+            <span style="color:var(--text-muted);">Delivery Charge</span>
+            <strong>{% if shipping_fee == 0 %}<span style="color:#059669; font-weight:700;">FREE</span>{% else %}₹{{ shipping_fee|floatformat:2 }}{% endif %}</strong>
           </div>
 
           <div style="display:flex; justify-content:space-between;">
@@ -117,8 +159,8 @@
             <strong>₹{{ tax|floatformat:2 }}</strong>
           </div>
 
-          <div style="border-top:1px solid var(--border-subtle); padding-top:14px; margin-top:6px; display:flex; justify-content:space-between; align-items:baseline;">
-            <span style="font-size:1.05rem; font-weight:700;">Final Amount</span>
+          <div style="border-top:1px solid var(--border-subtle); padding-top:14px; margin-top:4px; display:flex; justify-content:space-between; align-items:baseline;">
+            <span style="font-size:1.05rem; font-weight:700;">Estimated Total</span>
             <span style="font-family:var(--font-heading); font-size:1.6rem; font-weight:800; color:var(--color-primary);">₹{{ total|floatformat:2 }}</span>
           </div>
         </div>
@@ -129,19 +171,19 @@
 
         <div style="margin-top:16px; font-size:0.75rem; color:var(--text-muted); text-align:center;">
           <i data-lucide="shield-check" style="width:14px; vertical-align:middle; color:#10b981;"></i>
-          256-Bit SSL Encrypted Simulated Demonstration Checkout
+          256-Bit SSL Encrypted Server-Side Checkout Engine
         </div>
       </div>
     </div>
   </div>
   {% else %}
   <div class="card" style="text-align:center; padding:64px 20px;">
-    <div style="width:64px; height:64px; border-radius:50%; background:rgba(2, 132, 199, 0.1); color:var(--color-primary); display:flex; align-items:center; justify-content:center; margin:0 auto 16px;">
-      <i data-lucide="shopping-cart" style="width:32px; height:32px;"></i>
+    <div style="width:68px; height:68px; border-radius:50%; background:rgba(8, 126, 255, 0.1); color:var(--color-primary); display:flex; align-items:center; justify-content:center; margin:0 auto 16px;">
+      <i data-lucide="shopping-cart" style="width:34px; height:34px;"></i>
     </div>
-    <h3>Your Shopping Cart is Empty</h3>
-    <p style="color:var(--text-muted); max-width:440px; margin:8px auto 24px;">
-      Browse our extensive catalogue of 300+ spare parts verified for Indian roads and add components to start your order.
+    <h3 style="font-size:1.4rem; margin-bottom:8px;">Your Shopping Cart is Empty</h3>
+    <p style="color:var(--text-muted); max-width:440px; margin:0 auto 24px;">
+      Explore our certified spare-parts catalogue with verified vehicle compatibility to find exact replacement parts for your drive.
     </p>
     <a href="{% url 'inventory:shop' %}" class="btn btn-primary">
       <i data-lucide="package"></i> Explore Spare Parts

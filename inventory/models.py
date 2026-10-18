@@ -102,6 +102,10 @@ class Product(models.Model):
     def in_stock(self):
         return self.stock_quantity > 0
 
+    @property
+    def has_valid_discount(self):
+        return bool(self.discount_price and self.discount_price > 0 and self.discount_price < self.price)
+
     def __str__(self):
         return f"{self.name} ({self.sku})"
 

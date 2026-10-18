@@ -3,7 +3,7 @@ from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib import messages
 from django.db.models import Sum, Count
 from django.contrib.auth.models import User
-from orders.models import Order, OrderItem
+from orders.models import Order, OrderItem, CartItem
 from inventory.models import Product, ProductCategory, Brand, InventoryRecord
 from garage.models import CustomerVehicle, MaintenanceRecord, MaintenanceReminder
 from services.models import ServiceBooking, ServiceProvider, Service
@@ -20,15 +20,18 @@ def is_staff_check(user):
 @login_required
 def customer_dashboard(request):
     user = request.user
-    recent_orders = Order.objects.filter(user=user)[:3]
+    recent_orders = Order.objects.filter(user=user).prefetch_related('items').order_by('-created_at')[:4]
     garage_vehicles = CustomerVehicle.objects.filter(user=user)[:4]
     service_bookings = ServiceBooking.objects.filter(user=user)[:3]
     missing_enquiries = MissingPartEnquiry.objects.filter(user=user)[:3]
     assistance_requests = RoadsideAssistanceRequest.objects.filter(user=user)[:2]
     
-    # Financial metrics
+    # Financial & Shopping metrics
     total_spent = Order.objects.filter(user=user).aggregate(s=Sum('total_amount'))['s'] or 0
     total_vehicles = CustomerVehicle.objects.filter(user=user).count()
+    cart_count = CartItem.objects.filter(user=user).count()
+    profile = getattr(user, 'profile', None)
+    saved_vehicle = getattr(profile, 'selected_vehicle', None)
 
     context = {
         'recent_orders': recent_orders,
@@ -38,6 +41,9 @@ def customer_dashboard(request):
         'assistance_requests': assistance_requests,
         'total_spent': total_spent,
         'total_vehicles': total_vehicles,
+        'cart_count': cart_count,
+        'saved_vehicle': saved_vehicle,
+        'profile': profile,
     }
     return render(request, 'dashboard/customer_dashboard.html', context)
 

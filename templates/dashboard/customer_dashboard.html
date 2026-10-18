@@ -3,7 +3,7 @@
 {% block title %}Customer Dashboard — AUTOVYNEX Driver Hub{% endblock %}
 
 {% block content %}
-<div class="container" style="padding-top:24px;">
+<div class="container" style="padding-top:28px; padding-bottom:60px;">
   <!-- Welcome Top Bar -->
   <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:16px; margin-bottom:28px;">
     <div>
@@ -16,7 +16,15 @@
       </p>
     </div>
 
-    <div style="display:flex; gap:10px;">
+    <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
+      <a href="{% url 'orders:cart_detail' %}" class="btn btn-secondary btn-sm" style="position:relative;">
+        <i data-lucide="shopping-cart"></i> Cart
+        {% if cart_count > 0 %}
+          <span style="display:inline-block; background:var(--color-primary); color:#ffffff; font-size:0.7rem; font-weight:700; border-radius:10px; padding:1px 6px; margin-left:4px;">
+            {{ cart_count }}
+          </span>
+        {% endif %}
+      </a>
       <a href="{% url 'inventory:shop' %}" class="btn btn-primary btn-sm">
         <i data-lucide="package"></i> Shop Spare Parts
       </a>
@@ -26,10 +34,42 @@
     </div>
   </div>
 
+  <!-- Saved / Active Vehicle Banner -->
+  <div class="card" style="margin-bottom:32px; background:linear-gradient(135deg, rgba(8, 126, 255, 0.08), rgba(16, 185, 129, 0.05)); border:1px solid rgba(8, 126, 255, 0.25); display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:16px; padding:18px 24px;">
+    <div style="display:flex; align-items:center; gap:14px;">
+      <div style="width:44px; height:44px; border-radius:50%; background:var(--color-primary); color:#ffffff; display:flex; align-items:center; justify-content:center; flex-shrink:0;">
+        <i data-lucide="car" style="width:24px; height:24px;"></i>
+      </div>
+      <div>
+        <div style="font-size:0.78rem; text-transform:uppercase; letter-spacing:0.05em; color:var(--text-muted); font-weight:700;">Active Vehicle Profile</div>
+        {% if saved_vehicle %}
+          <div style="font-weight:700; font-size:1.05rem; color:var(--text-main);">
+            {{ saved_vehicle.model.make.name }} {{ saved_vehicle.model.name }} {{ saved_vehicle.name }}
+            <span style="font-weight:500; font-size:0.85rem; color:var(--text-muted);">({{ saved_vehicle.start_year }}-{{ saved_vehicle.end_year|default:'Present' }}, {{ saved_vehicle.fuel_type|title }})</span>
+          </div>
+        {% elif garage_vehicles.first %}
+          {% with gv=garage_vehicles.first %}
+            <div style="font-weight:700; font-size:1.05rem; color:var(--text-main);">
+              {{ gv.display_title }}
+              <span style="font-weight:500; font-size:0.85rem; color:var(--text-muted);">(Reg: {{ gv.registration_number }})</span>
+            </div>
+          {% endwith %}
+        {% else %}
+          <div style="font-size:0.95rem; color:var(--text-muted);">
+            No active vehicle selected yet. Select a vehicle to filter 100% verified compatible spare parts.
+          </div>
+        {% endif %}
+      </div>
+    </div>
+    <button type="button" class="btn btn-outline btn-sm" onclick="window.AVXVehicleModal?.open()" style="font-size:0.82rem;">
+      <i data-lucide="refresh-cw"></i> {% if saved_vehicle or garage_vehicles.first %}Change Vehicle{% else %}Select Vehicle{% endif %}
+    </button>
+  </div>
+
   <!-- Key Metrics Row -->
   <div class="grid-4" style="margin-bottom:36px;">
     <div class="card" style="display:flex; align-items:center; gap:16px;">
-      <div style="width:48px; height:48px; border-radius:var(--radius-md); background:rgba(2, 132, 199, 0.1); color:var(--color-primary); display:flex; align-items:center; justify-content:center; flex-shrink:0;">
+      <div style="width:48px; height:48px; border-radius:var(--radius-md); background:rgba(8, 126, 255, 0.1); color:var(--color-primary); display:flex; align-items:center; justify-content:center; flex-shrink:0;">
         <i data-lucide="car" style="width:24px; height:24px;"></i>
       </div>
       <div>
@@ -60,11 +100,11 @@
 
     <div class="card" style="display:flex; align-items:center; gap:16px;">
       <div style="width:48px; height:48px; border-radius:var(--radius-md); background:rgba(245, 158, 11, 0.1); color:#d97706; display:flex; align-items:center; justify-content:center; flex-shrink:0;">
-        <i data-lucide="search" style="width:24px; height:24px;"></i>
+        <i data-lucide="wallet" style="width:24px; height:24px;"></i>
       </div>
       <div>
-        <div style="font-size:0.8rem; color:var(--text-muted);">Part Enquiries</div>
-        <div style="font-family:var(--font-heading); font-size:1.45rem; font-weight:800; color:var(--text-main);">{{ missing_enquiries.count }}</div>
+        <div style="font-size:0.8rem; color:var(--text-muted);">Total Spend (INR)</div>
+        <div style="font-family:var(--font-heading); font-size:1.45rem; font-weight:800; color:var(--text-main);">₹{{ total_spent|floatformat:0 }}</div>
       </div>
     </div>
   </div>
@@ -82,24 +122,39 @@
         {% if recent_orders %}
         <div style="display:flex; flex-direction:column; gap:14px;">
           {% for ord in recent_orders %}
-            <div style="padding:14px; background:var(--bg-surface-subtle); border-radius:var(--radius-md); display:flex; justify-content:space-between; align-items:center; gap:12px;">
+            <div style="padding:16px; background:var(--bg-surface-subtle); border-radius:var(--radius-md); display:flex; justify-content:space-between; align-items:center; gap:14px; flex-wrap:wrap;">
               <div>
-                <div style="font-weight:700; font-size:0.95rem; color:var(--text-main);">Order #{{ ord.order_number }}</div>
-                <div style="font-size:0.78rem; color:var(--text-muted);">{{ ord.created_at|date:"d M Y" }} • {{ ord.items.count }} item(s)</div>
+                <div style="font-weight:700; font-size:0.95rem; color:var(--text-main);">
+                  Order #{{ ord.order_number }}
+                </div>
+                <div style="font-size:0.78rem; color:var(--text-muted); margin-top:2px;">
+                  Placed on {{ ord.created_at|date:"d M Y" }} • {{ ord.items.count }} item(s) • ₹{{ ord.total_amount|floatformat:2 }}
+                </div>
+                <div style="font-size:0.75rem; color:var(--text-muted); margin-top:4px;">
+                  Payment: <span style="color:{% if 'Failed' in ord.payment_status %}#dc2626{% else %}#059669{% endif %}; font-weight:600;">{{ ord.payment_status }}</span>
+                </div>
               </div>
-              <div style="display:flex; align-items:center; gap:12px;">
-                <span class="badge {% if ord.status == 'delivered' %}badge-verified{% else %}badge-universal{% endif %}" style="font-size:0.75rem;">
+
+              <div style="display:flex; align-items:center; gap:10px;">
+                <span class="badge {% if ord.status == 'cancelled' %}badge-unconfirmed{% elif ord.status == 'delivered' %}badge-verified{% else %}badge-universal{% endif %}" style="font-size:0.75rem;">
                   {{ ord.get_status_display }}
                 </span>
-                <a href="{% url 'orders:order_detail' ord.order_number %}" class="btn btn-secondary btn-sm" style="padding:4px 10px; font-size:0.75rem;">
-                  Track
+                <a href="{% url 'orders:order_detail' ord.order_number %}" class="btn btn-secondary btn-sm" style="padding:4px 12px; font-size:0.78rem;">
+                  View & Track
                 </a>
               </div>
             </div>
           {% endfor %}
         </div>
         {% else %}
-        <p style="font-size:0.88rem; color:var(--text-muted); margin:0;">No orders placed yet.</p>
+        <div style="text-align:center; padding:32px 16px;">
+          <div style="width:48px; height:48px; border-radius:50%; background:rgba(8, 126, 255, 0.1); color:var(--color-primary); display:flex; align-items:center; justify-content:center; margin:0 auto 12px;">
+            <i data-lucide="package-x" style="width:24px; height:24px;"></i>
+          </div>
+          <h4 style="margin:0 0 6px 0;">No Orders Placed Yet</h4>
+          <p style="font-size:0.85rem; color:var(--text-muted); margin:0 0 16px 0;">You haven't placed any orders yet. Discover high-grade OEM spare parts and upgrades for your car.</p>
+          <a href="{% url 'inventory:shop' %}" class="btn btn-primary btn-sm">Explore Spare Parts</a>
+        </div>
         {% endif %}
       </div>
 
@@ -128,13 +183,43 @@
           {% endfor %}
         </div>
         {% else %}
-        <p style="font-size:0.88rem; color:var(--text-muted); margin:0;">No vehicles in garage. <a href="{% url 'garage:index' %}">Add your car</a>.</p>
+        <div style="text-align:center; padding:24px 16px;">
+          <p style="font-size:0.88rem; color:var(--text-muted); margin:0 0 12px 0;">No vehicles registered in your garage yet.</p>
+          <a href="{% url 'garage:index' %}" class="btn btn-secondary btn-sm">
+            <i data-lucide="plus"></i> Add Vehicle to Garage
+          </a>
+        </div>
         {% endif %}
       </div>
     </div>
 
-    <!-- Right Column: Service Bookings & Sourcing Enquiries -->
+    <!-- Right Column: Saved Address, Services & Enquiries -->
     <div style="display:flex; flex-direction:column; gap:32px;">
+      <!-- Saved Shipping Address -->
+      <div class="card">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px; border-bottom:1px solid var(--border-subtle); padding-bottom:10px;">
+          <h3 style="font-size:1.15rem; margin:0; display:flex; align-items:center; gap:8px;">
+            <i data-lucide="map-pin" style="color:var(--color-primary); width:18px;"></i> Default Shipping Address
+          </h3>
+          <a href="{% url 'accounts:profile' %}" style="font-size:0.78rem; color:var(--color-primary); font-weight:600;">Edit Profile</a>
+        </div>
+
+        {% if profile and profile.address %}
+          <div style="font-size:0.88rem; line-height:1.6; color:var(--text-main);">
+            <strong>{{ user.get_full_name|default:user.username }}</strong><br>
+            {{ profile.address }}<br>
+            {{ profile.city|default:'Bengaluru' }}, {{ profile.state|default:'Karnataka' }} - {{ profile.pincode|default:'560038' }}<br>
+            <div style="margin-top:6px; color:var(--text-muted); font-size:0.8rem;">
+              Phone: {{ profile.phone|default:'Not provided' }}
+            </div>
+          </div>
+        {% else %}
+          <div style="font-size:0.85rem; color:var(--text-muted); line-height:1.5;">
+            No default shipping address set. You can set it during checkout or in your <a href="{% url 'accounts:profile' %}">Account Settings</a>.
+          </div>
+        {% endif %}
+      </div>
+
       <!-- Service Appointments Card -->
       <div class="card">
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px; border-bottom:1px solid var(--border-subtle); padding-bottom:12px;">

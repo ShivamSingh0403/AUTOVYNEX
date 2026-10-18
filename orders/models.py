@@ -33,6 +33,7 @@ class CartItem(models.Model):
 
 class Order(models.Model):
     STATUS_CHOICES = [
+        ('pending', 'Pending Confirmation'),
         ('confirmed', 'Order Confirmed'),
         ('processing', 'Processing & Packing'),
         ('shipped', 'Shipped via Express Logistics'),
@@ -65,6 +66,7 @@ class Order(models.Model):
     subtotal = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
     discount_amount = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
     shipping_fee = models.DecimalField(max_digits=8, decimal_places=2, default=0.00)
+    installation_fee = models.DecimalField(max_digits=8, decimal_places=2, default=0.00)
     tax_amount = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
     total_amount = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
 

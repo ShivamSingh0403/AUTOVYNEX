@@ -1,6 +1,6 @@
 {% extends 'base.html' %}
 
-{% block title %}Shop 300+ Spare Parts & Accessories — AUTOVYNEX{% endblock %}
+{% block title %}Shop Automotive Spare Parts & Accessories — AUTOVYNEX{% endblock %}
 
 {% block content %}
 <div class="container" style="padding-top:20px;">
@@ -20,7 +20,8 @@
       {% if active_vehicle %}
         <div style="background:rgba(16, 185, 129, 0.1); border:1px solid rgba(16, 185, 129, 0.3); padding:8px 16px; border-radius:var(--radius-full); font-size:0.85rem; color:#047857; display:flex; align-items:center; gap:8px;">
           <i data-lucide="shield-check" style="width:16px; height:16px;"></i>
-          <span>Filtering for <strong>{{ active_vehicle.model.make.name }} {{ active_vehicle.model.name }}</strong></span>
+          <span>Active Car: <strong>{{ active_vehicle.model.make.name }} {{ active_vehicle.model.name }}</strong> ({{ active_vehicle.name }})</span>
+          <button type="button" class="open-vehicle-modal-btn" style="background:transparent; border:none; color:#047857; cursor:pointer; font-size:0.78rem; text-decoration:underline; margin-left:4px;">Change</button>
         </div>
       {% else %}
         <button type="button" class="btn btn-secondary btn-sm open-vehicle-modal-btn">
@@ -36,21 +37,44 @@
       <div class="card" style="padding:20px; position:sticky; top:calc(var(--nav-height) + 20px);">
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px; padding-bottom:12px; border-bottom:1px solid var(--border-subtle);">
           <h3 style="font-size:1.1rem; margin:0;"><i data-lucide="sliders" style="width:18px; vertical-align:middle;"></i> Filters</h3>
-          <a href="{% url 'inventory:shop' %}" style="font-size:0.8rem; color:var(--color-primary);">Reset All</a>
+          <a href="{% url 'inventory:shop' %}" style="font-size:0.8rem; color:var(--color-primary); font-weight:600;">Reset All</a>
         </div>
 
-        <form method="GET" action="{% url 'inventory:shop' %}">
+        <form method="GET" action="{% url 'inventory:shop' %}" id="shop-filters-form">
+          <!-- Keyword input if any -->
           {% if q %}<input type="hidden" name="q" value="{{ q }}">{% endif %}
-          
-          <!-- Vehicle Compatibility Checkbox -->
+
+          <!-- Vehicle Compatibility Filter -->
           {% if active_vehicle %}
           <div style="margin-bottom:20px; padding:12px; background:rgba(2, 132, 199, 0.08); border-radius:var(--radius-md); border:1px solid rgba(2, 132, 199, 0.2);">
-            <label style="display:flex; align-items:center; gap:8px; font-size:0.85rem; font-weight:700; color:var(--color-primary); cursor:pointer;">
-              <input type="checkbox" name="compatible_only" value="1" {% if request.GET.compatible_only == '1' %}checked{% endif %} onchange="this.form.submit()">
-              <span>Show ONLY parts compatible with {{ active_vehicle.model.name }}</span>
-            </label>
+            <div style="font-size:0.8rem; font-weight:700; color:var(--color-primary); margin-bottom:8px; text-transform:uppercase;">
+              Fitment Filter
+            </div>
+            <div style="display:flex; flex-direction:column; gap:6px; font-size:0.85rem;">
+              <label style="display:flex; align-items:center; gap:8px; cursor:pointer;">
+                <input type="radio" name="compatibility" value="" {% if not compatibility_filter %}checked{% endif %} onchange="this.form.submit()">
+                <span>All Parts</span>
+              </label>
+              <label style="display:flex; align-items:center; gap:8px; cursor:pointer; color:#047857; font-weight:600;">
+                <input type="radio" name="compatibility" value="compatible" {% if compatibility_filter == 'compatible' or request.GET.compatible_only == '1' %}checked{% endif %} onchange="this.form.submit()">
+                <span><i data-lucide="check" style="width:13px; vertical-align:middle;"></i> Compatible Only</span>
+              </label>
+              <label style="display:flex; align-items:center; gap:8px; cursor:pointer; color:#b45309;">
+                <input type="radio" name="compatibility" value="unverified" {% if compatibility_filter == 'unverified' %}checked{% endif %} onchange="this.form.submit()">
+                <span>Unverified Only</span>
+              </label>
+            </div>
           </div>
           {% endif %}
+
+          <!-- Availability Filter -->
+          <div style="margin-bottom:20px;">
+            <div class="form-label" style="font-size:0.85rem; text-transform:uppercase; letter-spacing:0.04em;">Stock Status</div>
+            <label style="display:flex; align-items:center; gap:8px; font-size:0.88rem; cursor:pointer;">
+              <input type="checkbox" name="in_stock" value="1" {% if in_stock_only %}checked{% endif %} onchange="this.form.submit()">
+              <span>In Stock Only</span>
+            </label>
+          </div>
 
           <!-- Categories List Filter -->
           <div style="margin-bottom:24px;">
@@ -60,8 +84,9 @@
                 <span>All Categories</span>
               </a>
               {% for cat in categories %}
-                <a href="{% url 'inventory:shop' %}?category={{ cat.slug }}{% if q %}&q={{ q }}{% endif %}" style="padding:6px 10px; border-radius:6px; font-size:0.88rem; display:flex; justify-content:space-between; {% if selected_category == cat %}background:var(--bg-surface-subtle); font-weight:700; color:var(--color-primary);{% else %}color:var(--text-main);{% endif %}">
+                <a href="{% url 'inventory:shop' %}?category={{ cat.slug }}{% if q %}&q={{ q }}{% endif %}{% if selected_brand %}&brand={{ selected_brand.slug }}{% endif %}{% if in_stock_only %}&in_stock=1{% endif %}" style="padding:6px 10px; border-radius:6px; font-size:0.88rem; display:flex; justify-content:space-between; {% if selected_category == cat %}background:var(--bg-surface-subtle); font-weight:700; color:var(--color-primary);{% else %}color:var(--text-main);{% endif %}">
                   <span>{{ cat.name }}</span>
+                  <small style="color:var(--text-muted);">{{ cat.prod_count }}</small>
                 </a>
               {% endfor %}
             </div>
@@ -75,8 +100,9 @@
                 <span>All Brands</span>
               </a>
               {% for b in brands %}
-                <a href="{% url 'inventory:shop' %}?brand={{ b.slug }}{% if selected_category %}&category={{ selected_category.slug }}{% endif %}" style="padding:6px 10px; border-radius:6px; font-size:0.88rem; display:flex; justify-content:space-between; {% if selected_brand == b %}background:var(--bg-surface-subtle); font-weight:700; color:var(--color-primary);{% else %}color:var(--text-main);{% endif %}">
+                <a href="{% url 'inventory:shop' %}?brand={{ b.slug }}{% if selected_category %}&category={{ selected_category.slug }}{% endif %}{% if q %}&q={{ q }}{% endif %}{% if in_stock_only %}&in_stock=1{% endif %}" style="padding:6px 10px; border-radius:6px; font-size:0.88rem; display:flex; justify-content:space-between; {% if selected_brand == b %}background:var(--bg-surface-subtle); font-weight:700; color:var(--color-primary);{% else %}color:var(--text-main);{% endif %}">
                   <span>{{ b.name }}</span>
+                  <small style="color:var(--text-muted);">{{ b.prod_count }}</small>
                 </a>
               {% endfor %}
             </div>
@@ -86,11 +112,11 @@
           <div style="margin-bottom:20px;">
             <div class="form-label" style="font-size:0.85rem; text-transform:uppercase; letter-spacing:0.04em;">Price Range (₹)</div>
             <div style="display:flex; gap:8px; align-items:center;">
-              <input type="number" name="min_price" value="{{ min_price|default:'' }}" placeholder="Min" class="form-control" style="padding:6px 10px; font-size:0.85rem;">
+              <input type="number" name="min_price" value="{{ min_price }}" placeholder="Min ₹" min="0" class="form-control" style="padding:6px 10px; font-size:0.85rem;">
               <span style="color:var(--text-muted);">-</span>
-              <input type="number" name="max_price" value="{{ max_price|default:'' }}" placeholder="Max" class="form-control" style="padding:6px 10px; font-size:0.85rem;">
+              <input type="number" name="max_price" value="{{ max_price }}" placeholder="Max ₹" min="0" class="form-control" style="padding:6px 10px; font-size:0.85rem;">
             </div>
-            <button type="submit" class="btn btn-secondary btn-sm" style="width:100%; margin-top:8px;">Apply Price</button>
+            <button type="submit" class="btn btn-secondary btn-sm" style="width:100%; margin-top:8px;">Apply Filters</button>
           </div>
         </form>
       </div>
@@ -112,11 +138,17 @@
             {% if q %}<input type="hidden" name="q" value="{{ q }}">{% endif %}
             {% if selected_category %}<input type="hidden" name="category" value="{{ selected_category.slug }}">{% endif %}
             {% if selected_brand %}<input type="hidden" name="brand" value="{{ selected_brand.slug }}">{% endif %}
+            {% if min_price %}<input type="hidden" name="min_price" value="{{ min_price }}">{% endif %}
+            {% if max_price %}<input type="hidden" name="max_price" value="{{ max_price }}">{% endif %}
+            {% if in_stock_only %}<input type="hidden" name="in_stock" value="1">{% endif %}
+            {% if compatibility_filter %}<input type="hidden" name="compatibility" value="{{ compatibility_filter }}">{% endif %}
+
             <select name="sort" class="form-select" style="padding:6px 12px; font-size:0.85rem; width:auto;" onchange="this.form.submit()">
               <option value="newest" {% if sort_by == 'newest' %}selected{% endif %}>Featured & Newest</option>
               <option value="price_low" {% if sort_by == 'price_low' %}selected{% endif %}>Price: Low to High</option>
               <option value="price_high" {% if sort_by == 'price_high' %}selected{% endif %}>Price: High to Low</option>
               <option value="discount" {% if sort_by == 'discount' %}selected{% endif %}>Biggest Discounts</option>
+              <option value="name_asc" {% if sort_by == 'name_asc' %}selected{% endif %}>Name: A to Z</option>
             </select>
           </form>
         </div>
@@ -134,12 +166,16 @@
             {% endif %}
 
             <div class="product-image-container">
-              {% if prod.discount_percent > 0 %}
+              {% if prod.has_valid_discount %}
                 <span class="product-discount-tag">{{ prod.discount_percent }}% OFF</span>
               {% endif %}
-              <div style="color:#0284c7;">
-                <i data-lucide="{{ prod.category.icon_name|default:'package' }}" style="width:56px; height:56px;"></i>
-              </div>
+              {% if prod.image %}
+                <img src="{{ prod.image.url }}" alt="{{ prod.name }}" style="max-height:140px; max-width:100%; object-fit:contain;">
+              {% else %}
+                <div style="color:var(--color-primary);">
+                  <i data-lucide="{{ prod.category.icon_name|default:'package' }}" style="width:56px; height:56px;"></i>
+                </div>
+              {% endif %}
             </div>
 
             <div class="product-card-body">
@@ -147,55 +183,85 @@
               <a href="{% url 'inventory:product_detail' prod.slug %}" class="product-title">{{ prod.name }}</a>
 
               <!-- Fitment badge indicator -->
-              <div style="margin-bottom:12px;">
-                {% if active_vehicle %}
-                  {% if prod.id in compat_product_ids %}
-                    <span class="badge badge-verified" style="font-size:0.72rem;"><i data-lucide="check"></i> Fits {{ active_vehicle.model.name }}</span>
-                  {% else %}
-                    <span class="badge badge-unconfirmed" style="font-size:0.72rem;"><i data-lucide="help-circle"></i> Fitment Unconfirmed</span>
-                  {% endif %}
+              <div style="margin-bottom:10px;">
+                {% if prod.fitment_state == 'compatible' %}
+                  <span class="badge badge-verified" style="font-size:0.72rem;">
+                    <i data-lucide="check-circle"></i> Compatible with {{ active_vehicle.model.name }}
+                  </span>
+                {% elif prod.fitment_state == 'incompatible' %}
+                  <span class="badge" style="font-size:0.72rem; background:rgba(239, 68, 68, 0.1); color:#b91c1c; border:1px solid rgba(239, 68, 68, 0.3);">
+                    <i data-lucide="alert-octagon"></i> Not Compatible
+                  </span>
+                {% elif prod.fitment_state == 'unverified' %}
+                  <span class="badge badge-unconfirmed" style="font-size:0.72rem;">
+                    <i data-lucide="help-circle"></i> Compatibility Not Verified
+                  </span>
                 {% else %}
-                  <span class="badge badge-universal" style="font-size:0.72rem;">SKU: {{ prod.sku }}</span>
+                  <span class="badge badge-universal open-vehicle-modal-btn" style="font-size:0.72rem; cursor:pointer;" title="Click to verify with your car">
+                    <i data-lucide="car"></i> Select Car to Check Fit
+                  </span>
                 {% endif %}
               </div>
 
+              <!-- Stock & Warranty Info -->
+              <div style="display:flex; justify-content:space-between; align-items:center; font-size:0.75rem; color:var(--text-muted); margin-bottom:10px;">
+                <span>
+                  {% if prod.in_stock %}
+                    <span style="color:#059669; font-weight:600;"><i data-lucide="check" style="width:12px; vertical-align:middle;"></i> In Stock ({{ prod.stock_quantity }})</span>
+                  {% else %}
+                    <span style="color:#b91c1c; font-weight:600;"><i data-lucide="x" style="width:12px; vertical-align:middle;"></i> Out of Stock</span>
+                  {% endif %}
+                </span>
+                <span>{{ prod.warranty_months }}M Warranty</span>
+              </div>
+
+              <!-- Price Row (Discount shown only when valid discount data exists) -->
               <div class="product-price-row">
                 <span class="product-final-price">₹{{ prod.final_price|floatformat:0 }}</span>
-                {% if prod.discount_price %}
+                {% if prod.has_valid_discount %}
                   <span class="product-original-price">₹{{ prod.price|floatformat:0 }}</span>
                 {% endif %}
               </div>
 
-              <!-- Action Buttons -->
-              <div style="display:flex; gap:8px;">
-                <a href="{% url 'inventory:product_detail' prod.slug %}" class="btn btn-secondary btn-sm" style="flex:1;">Details</a>
-                <form method="POST" action="{% url 'orders:add_to_cart' prod.id %}">
+              <!-- Action Buttons: Details, Add to Cart, Buy Now -->
+              <div style="display:flex; gap:8px; margin-top:8px;">
+                <form method="POST" action="{% url 'orders:add_to_cart' prod.id %}" style="flex:1; margin:0;">
                   {% csrf_token %}
-                  <button type="submit" class="btn btn-primary btn-sm" title="Add to Cart"><i data-lucide="shopping-cart"></i></button>
+                  <button type="submit" class="btn btn-secondary btn-sm" style="width:100%;" {% if not prod.in_stock %}disabled{% endif %}>
+                    <i data-lucide="shopping-cart"></i> Add
+                  </button>
+                </form>
+
+                <form method="POST" action="{% url 'orders:buy_now' prod.id %}" style="flex:1; margin:0;">
+                  {% csrf_token %}
+                  <button type="submit" class="btn btn-primary btn-sm" style="width:100%;" {% if not prod.in_stock %}disabled{% endif %}>
+                    <i data-lucide="zap"></i> Buy Now
+                  </button>
                 </form>
               </div>
             </div>
           </div>
         {% empty %}
+          <!-- Empty and No Results State -->
           <div class="card" style="grid-column: 1 / -1; text-align:center; padding:60px 20px;">
             <i data-lucide="package-search" style="width:54px; height:54px; color:var(--text-muted); margin-bottom:16px;"></i>
             <h3>No Matching Spare Parts Found</h3>
             <p style="color:var(--text-muted); max-width:440px; margin:8px auto 20px;">
-              We couldn't find any parts matching your active filters. Try clearing your search or request a custom part sourcing quote.
+              We couldn't find any parts matching your active filters. Try clearing your filters or submit a rare missing-part sourcing request.
             </p>
-            <div style="display:flex; justify-content:center; gap:12px;">
-              <a href="{% url 'inventory:shop' %}" class="btn btn-secondary btn-sm">Reset Filters</a>
-              <a href="{% url 'enquiries:missing_part_request' %}" class="btn btn-primary btn-sm">Submit Missing Part Request</a>
+            <div style="display:flex; justify-content:center; gap:12px; flex-wrap:wrap;">
+              <a href="{% url 'inventory:shop' %}" class="btn btn-secondary btn-sm">Reset All Filters</a>
+              <a href="{% url 'enquiries:missing_part_request' %}" class="btn btn-primary btn-sm">Find Missing Part for Me</a>
             </div>
           </div>
         {% endfor %}
       </div>
 
-      <!-- Pagination Navigation -->
+      <!-- Pagination Navigation (Preserves all query parameters) -->
       {% if page_obj.has_other_pages %}
-      <div style="display:flex; justify-content:center; align-items:center; gap:8px; margin-top:32px;">
+      <div style="display:flex; justify-content:center; align-items:center; gap:8px; margin-top:32px; flex-wrap:wrap;">
         {% if page_obj.has_previous %}
-          <a href="?page={{ page_obj.previous_page_number }}{% if q %}&q={{ q }}{% endif %}{% if selected_category %}&category={{ selected_category.slug }}{% endif %}{% if selected_brand %}&brand={{ selected_brand.slug }}{% endif %}{% if sort_by %}&sort={{ sort_by }}{% endif %}" class="btn btn-secondary btn-sm">
+          <a href="?{% if query_params %}{{ query_params }}&{% endif %}page={{ page_obj.previous_page_number }}" class="btn btn-secondary btn-sm">
             <i data-lucide="chevron-left"></i> Previous
           </a>
         {% endif %}
@@ -205,7 +271,7 @@
         </span>
 
         {% if page_obj.has_next %}
-          <a href="?page={{ page_obj.next_page_number }}{% if q %}&q={{ q }}{% endif %}{% if selected_category %}&category={{ selected_category.slug }}{% endif %}{% if selected_brand %}&brand={{ selected_brand.slug }}{% endif %}{% if sort_by %}&sort={{ sort_by }}{% endif %}" class="btn btn-secondary btn-sm">
+          <a href="?{% if query_params %}{{ query_params }}&{% endif %}page={{ page_obj.next_page_number }}" class="btn btn-secondary btn-sm">
             Next <i data-lucide="chevron-right"></i>
           </a>
         {% endif %}

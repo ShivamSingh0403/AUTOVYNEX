@@ -12,6 +12,13 @@ class CustomerProfile(models.Model):
     state = models.CharField(max_length=100, blank=True)
     pincode = models.CharField(max_length=10, blank=True)
     avatar = models.ImageField(upload_to='avatars/', blank=True, null=True)
+    selected_vehicle = models.ForeignKey(
+        'vehicles.VehicleVariant',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='saved_profiles'
+    )
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 

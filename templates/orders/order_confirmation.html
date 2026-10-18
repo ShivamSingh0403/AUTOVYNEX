@@ -1,0 +1,197 @@
+{% extends 'base.html' %}
+
+{% block title %}Order Confirmed #{{ order.order_number }} — AUTOVYNEX{% endblock %}
+
+{% block content %}
+<div class="container" style="padding-top:32px; padding-bottom:60px;">
+  <!-- Success Banner -->
+  <div class="card" style="text-align:center; padding:40px 24px; margin-bottom:32px; background:linear-gradient(135deg, rgba(8, 126, 255, 0.06), rgba(16, 185, 129, 0.08)); border:1px solid rgba(16, 185, 129, 0.3);">
+    <div style="width:68px; height:68px; border-radius:50%; background:rgba(16, 185, 129, 0.15); color:#059669; display:inline-flex; align-items:center; justify-content:center; margin-bottom:16px;">
+      <i data-lucide="check-circle-2" style="width:38px; height:38px;"></i>
+    </div>
+    <h1 style="font-size:2rem; margin:0 0 8px 0; color:var(--text-main);">Order Placed Successfully!</h1>
+    <p style="font-size:1.05rem; color:var(--text-muted); margin:0 auto 16px auto; max-width:580px;">
+      Thank you for choosing AUTOVYNEX. Your order has been securely logged into our system and inventory has been reserved.
+    </p>
+    <div style="display:inline-flex; align-items:center; gap:8px; padding:8px 18px; background:var(--bg-surface-elevated); border-radius:var(--radius-full); border:1px solid var(--border-subtle); font-family:var(--font-heading); font-weight:700; font-size:1rem;">
+      <span style="color:var(--text-muted); font-size:0.85rem; font-family:var(--font-body); font-weight:500;">Order Reference:</span>
+      <span style="color:var(--color-primary);">#{{ order.order_number }}</span>
+    </div>
+  </div>
+
+  <!-- Status & Tracking Timeline -->
+  <div class="card" style="margin-bottom:32px; background:var(--bg-surface-elevated);">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; flex-wrap:wrap; gap:12px;">
+      <div>
+        <span class="badge {% if order.status == 'cancelled' %}badge-unconfirmed{% elif order.status == 'delivered' %}badge-verified{% else %}badge-universal{% endif %}" style="font-size:0.85rem; text-transform:uppercase;">
+          Current State: {{ order.get_status_display }}
+        </span>
+        {% if estimated_days and order.status != 'cancelled' %}
+        <div style="font-size:0.88rem; color:var(--text-muted); margin-top:6px; display:flex; align-items:center; gap:6px;">
+          <i data-lucide="calendar" style="width:16px; height:16px; color:var(--color-primary);"></i>
+          Estimated Delivery: <strong style="color:var(--text-main);">{{ estimated_days }}</strong>
+        </div>
+        {% endif %}
+      </div>
+
+      <div class="demo-academic-badge">
+        <i data-lucide="shield-check"></i>
+        <span>Academic Demonstration:</span> Simulated Logistics Pipeline
+      </div>
+    </div>
+
+    <!-- Timeline Steps -->
+    {% if order.status == 'cancelled' %}
+    <div style="padding:16px 20px; border-radius:var(--radius-md); background:rgba(239, 68, 68, 0.1); border:1px solid rgba(239, 68, 68, 0.3); color:#dc2626; display:flex; align-items:center; gap:12px;">
+      <i data-lucide="x-circle" style="width:24px; height:24px;"></i>
+      <div>
+        <div style="font-weight:700; font-size:0.95rem;">Order Cancelled</div>
+        <div style="font-size:0.82rem;">This order was cancelled and inventory stock was safely restored.</div>
+      </div>
+    </div>
+    {% else %}
+    <div style="display:grid; grid-template-columns: repeat(5, 1fr); gap:10px; text-align:center;">
+      <div style="padding:12px; border-radius:var(--radius-md); background:rgba(16, 185, 129, 0.12); color:#047857;">
+        <i data-lucide="clock" style="width:20px; height:20px; margin-bottom:4px;"></i>
+        <div style="font-size:0.78rem; font-weight:700;">1. Pending</div>
+      </div>
+      <div style="padding:12px; border-radius:var(--radius-md); {% if order.status in 'confirmed,processing,shipped,delivered' %}background:rgba(16, 185, 129, 0.12); color:#047857;{% else %}background:var(--bg-surface-subtle); color:var(--text-muted);{% endif %}">
+        <i data-lucide="check-circle" style="width:20px; height:20px; margin-bottom:4px;"></i>
+        <div style="font-size:0.78rem; font-weight:700;">2. Confirmed</div>
+      </div>
+      <div style="padding:12px; border-radius:var(--radius-md); {% if order.status in 'processing,shipped,delivered' %}background:rgba(16, 185, 129, 0.12); color:#047857;{% else %}background:var(--bg-surface-subtle); color:var(--text-muted);{% endif %}">
+        <i data-lucide="package" style="width:20px; height:20px; margin-bottom:4px;"></i>
+        <div style="font-size:0.78rem; font-weight:700;">3. Processing</div>
+      </div>
+      <div style="padding:12px; border-radius:var(--radius-md); {% if order.status in 'shipped,delivered' %}background:rgba(16, 185, 129, 0.12); color:#047857;{% else %}background:var(--bg-surface-subtle); color:var(--text-muted);{% endif %}">
+        <i data-lucide="truck" style="width:20px; height:20px; margin-bottom:4px;"></i>
+        <div style="font-size:0.78rem; font-weight:700;">4. Shipped</div>
+      </div>
+      <div style="padding:12px; border-radius:var(--radius-md); {% if order.status == 'delivered' %}background:rgba(16, 185, 129, 0.12); color:#047857;{% else %}background:var(--bg-surface-subtle); color:var(--text-muted);{% endif %}">
+        <i data-lucide="shield-check" style="width:20px; height:20px; margin-bottom:4px;"></i>
+        <div style="font-size:0.78rem; font-weight:700;">5. Delivered</div>
+      </div>
+    </div>
+    {% endif %}
+  </div>
+
+  <div style="display:grid; grid-template-columns: 1fr 380px; gap:32px;" class="grid-order-detail-layout">
+    <!-- Ordered Items -->
+    <div class="card" style="padding:0; overflow:hidden;">
+      <div style="padding:16px 24px; background:var(--bg-surface-subtle); border-bottom:1px solid var(--border-subtle); font-weight:700; font-size:0.95rem; display:flex; justify-content:space-between; align-items:center;">
+        <span>Order Items ({{ order.items.count }})</span>
+        <span style="font-size:0.8rem; color:var(--text-muted);">Stock Reserved</span>
+      </div>
+
+      <div style="display:flex; flex-direction:column;">
+        {% for itm in order.items.all %}
+          <div style="padding:18px 24px; border-bottom:1px solid var(--border-subtle); display:flex; justify-content:space-between; align-items:center; gap:16px;">
+            <div style="display:flex; gap:16px; align-items:center;">
+              <div style="width:52px; height:52px; border-radius:var(--radius-md); background:var(--bg-surface-subtle); color:var(--color-primary); display:flex; align-items:center; justify-content:center; overflow:hidden; flex-shrink:0;">
+                {% if itm.product.image %}
+                  <img src="{{ itm.product.image.url }}" alt="{{ itm.product_name }}" style="width:100%; height:100%; object-fit:cover;">
+                {% else %}
+                  <i data-lucide="package" style="width:24px; height:24px;"></i>
+                {% endif %}
+              </div>
+              <div>
+                <a href="{% url 'inventory:product_detail' itm.product.slug %}" style="font-weight:700; font-size:0.95rem; color:var(--text-main); text-decoration:none;">
+                  {{ itm.product_name }}
+                </a>
+                <div style="font-size:0.78rem; color:var(--text-muted); margin-top:2px;">
+                  SKU: {{ itm.product_sku }} • Unit: ₹{{ itm.unit_price|floatformat:2 }} × {{ itm.quantity }}
+                </div>
+                {% if itm.buy_and_install %}
+                  <div class="badge badge-verified" style="margin-top:6px; font-size:0.72rem;">
+                    <i data-lucide="wrench"></i> Pro Installation (+₹{{ itm.installation_fee|floatformat:2 }})
+                  </div>
+                {% endif %}
+              </div>
+            </div>
+
+            <div style="text-align:right;">
+              <div style="font-family:var(--font-heading); font-size:1.15rem; font-weight:800; color:var(--text-main);">
+                ₹{{ itm.total_price|floatformat:2 }}
+              </div>
+            </div>
+          </div>
+        {% endfor %}
+      </div>
+    </div>
+
+    <!-- Summary Details -->
+    <div style="display:flex; flex-direction:column; gap:24px;">
+      <!-- Cost breakdown -->
+      <div class="card" style="padding:24px;">
+        <h3 style="font-size:1.1rem; margin-bottom:16px; border-bottom:1px solid var(--border-subtle); padding-bottom:10px;">
+          Payment & Billing
+        </h3>
+
+        <div style="display:flex; flex-direction:column; gap:10px; font-size:0.9rem; margin-bottom:16px;">
+          <div style="display:flex; justify-content:space-between;">
+            <span style="color:var(--text-muted);">Product Subtotal</span>
+            <strong>₹{{ order.subtotal|floatformat:2 }}</strong>
+          </div>
+          {% if order.discount_amount > 0 %}
+          <div style="display:flex; justify-content:space-between; color:#059669;">
+            <span>Discount Applied</span>
+            <strong>-₹{{ order.discount_amount|floatformat:2 }}</strong>
+          </div>
+          {% endif %}
+          <div style="display:flex; justify-content:space-between;">
+            <span style="color:var(--text-muted);">Delivery Fee</span>
+            <strong>{% if order.shipping_fee == 0 %}FREE{% else %}₹{{ order.shipping_fee|floatformat:2 }}{% endif %}</strong>
+          </div>
+          {% if order.installation_fee > 0 %}
+          <div style="display:flex; justify-content:space-between; color:var(--color-primary);">
+            <span>Installation Fee</span>
+            <strong>+₹{{ order.installation_fee|floatformat:2 }}</strong>
+          </div>
+          {% endif %}
+          <div style="display:flex; justify-content:space-between;">
+            <span style="color:var(--text-muted);">GST (18%)</span>
+            <strong>₹{{ order.tax_amount|floatformat:2 }}</strong>
+          </div>
+          <div style="border-top:1px solid var(--border-subtle); padding-top:12px; margin-top:4px; display:flex; justify-content:space-between; align-items:baseline;">
+            <span style="font-weight:700; font-size:1rem;">Final Total</span>
+            <span style="font-family:var(--font-heading); font-size:1.45rem; font-weight:800; color:var(--color-primary);">₹{{ order.total_amount|floatformat:2 }}</span>
+          </div>
+        </div>
+
+        <div style="padding:12px; background:var(--bg-surface-subtle); border-radius:var(--radius-md); font-size:0.84rem; line-height:1.5;">
+          <div><strong>Payment Method:</strong> {{ order.get_payment_method_display }}</div>
+          <div><strong>Payment Status:</strong> <span style="color:{% if 'Failed' in order.payment_status %}#dc2626{% else %}#059669{% endif %}; font-weight:700;">{{ order.payment_status }}</span></div>
+        </div>
+      </div>
+
+      <!-- Shipping Address -->
+      <div class="card" style="padding:24px;">
+        <h3 style="font-size:1.1rem; margin-bottom:12px; display:flex; align-items:center; gap:8px;">
+          <i data-lucide="map-pin" style="color:var(--color-primary); width:18px;"></i> Delivery Destination
+        </h3>
+        <div style="font-size:0.9rem; line-height:1.6; color:var(--text-main);">
+          <strong>{{ order.full_name }}</strong><br>
+          {{ order.shipping_address }}<br>
+          {{ order.city }}, {{ order.state }} - {{ order.pincode }}<br>
+          <div style="margin-top:8px; color:var(--text-muted); font-size:0.82rem;">
+            Phone: {{ order.phone }} • Email: {{ order.email }}
+          </div>
+        </div>
+      </div>
+
+      <!-- Navigation Actions -->
+      <div style="display:flex; flex-direction:column; gap:12px;">
+        <a href="{% url 'orders:order_detail' order.order_number %}" class="btn btn-primary" style="justify-content:center;">
+          <i data-lucide="truck"></i> View Live Tracking
+        </a>
+        <a href="{% url 'orders:order_history' %}" class="btn btn-secondary" style="justify-content:center;">
+          <i data-lucide="clock"></i> Customer Order History
+        </a>
+        <a href="{% url 'inventory:shop' %}" class="btn btn-outline" style="justify-content:center;">
+          <i data-lucide="shopping-bag"></i> Continue Shopping
+        </a>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

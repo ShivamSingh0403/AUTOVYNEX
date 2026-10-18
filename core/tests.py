@@ -187,7 +187,8 @@ class AutoVynexPlatformTestSuite(TestCase):
             'city': 'Bengaluru',
             'state': 'Karnataka',
             'pincode': '560001',
-            'payment_method': 'simulated_upi'
+            'payment_method': 'simulated_upi',
+            'confirm_order': '1'
         })
         self.assertEqual(checkout_res.status_code, 302)
 

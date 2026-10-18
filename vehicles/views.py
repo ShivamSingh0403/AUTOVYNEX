@@ -30,12 +30,60 @@ def api_models_by_make(request):
     return JsonResponse({'models': data})
 
 
+def api_years_by_model(request):
+    model_id = request.GET.get('model_id')
+    if not model_id:
+        return JsonResponse({'years': []})
+
+    variants = VehicleVariant.objects.filter(model_id=model_id)
+    years_set = set()
+    for v in variants:
+        start = max(1995, v.year_from)
+        end = min(2027, v.year_to)
+        for y in range(start, end + 1):
+            years_set.add(y)
+
+    sorted_years = sorted(list(years_set), reverse=True)
+    return JsonResponse({'years': sorted_years})
+
+
+def api_fuels_by_model_and_year(request):
+    model_id = request.GET.get('model_id')
+    year = request.GET.get('year')
+    if not model_id:
+        return JsonResponse({'fuels': []})
+
+    qs = VehicleVariant.objects.filter(model_id=model_id)
+    if year:
+        try:
+            y = int(year)
+            qs = qs.filter(year_from__lte=y, year_to__gte=y)
+        except (ValueError, TypeError):
+            pass
+
+    fuels = list(qs.values_list('fuel_type', flat=True).distinct().order_by('fuel_type'))
+    return JsonResponse({'fuels': fuels})
+
+
 def api_variants_by_model(request):
     model_id = request.GET.get('model_id')
+    year = request.GET.get('year')
+    fuel_type = request.GET.get('fuel_type')
     if not model_id:
         return JsonResponse({'variants': []})
 
-    variants = VehicleVariant.objects.filter(model_id=model_id).order_by('-year_to', 'name')
+    qs = VehicleVariant.objects.filter(model_id=model_id)
+    if year:
+        try:
+            y = int(year)
+            qs = qs.filter(year_from__lte=y, year_to__gte=y)
+        except (ValueError, TypeError):
+            pass
+
+    if fuel_type:
+        qs = qs.filter(fuel_type=fuel_type)
+
+    qs = qs.order_by('-year_to', 'name')
     data = [{
         'id': v.id,
         'name': v.name,
@@ -44,8 +92,9 @@ def api_variants_by_model(request):
         'year_from': v.year_from,
         'year_to': v.year_to,
         'engine_cc': v.engine_cc,
-        'power_hp': v.power_hp
-    } for v in variants]
+        'power_hp': v.power_hp,
+        'display_label': f"{v.name} ({v.transmission}, {v.engine_cc}cc)"
+    } for v in qs]
     return JsonResponse({'variants': data})
 
 
@@ -56,9 +105,16 @@ def select_vehicle_session(request):
             try:
                 variant = VehicleVariant.objects.select_related('model__make').get(pk=variant_id)
                 request.session['selected_variant_id'] = variant.id
-                messages.success(request, f"Active Vehicle set to: {variant.display_name}. Compatible spare parts will be highlighted!")
+                if request.user.is_authenticated and hasattr(request.user, 'profile'):
+                    request.user.profile.selected_vehicle = variant
+                    request.user.profile.save(update_fields=['selected_vehicle'])
+                messages.success(request, f"Active Vehicle set to: {variant.display_name}. Compatible spare parts are highlighted!")
+                if request.headers.get('x-requested-with') == 'XMLHttpRequest' or request.META.get('HTTP_X_REQUESTED_WITH') == 'XMLHttpRequest':
+                    return JsonResponse({'status': 'success', 'variant_id': variant.id, 'display_name': variant.display_name})
             except VehicleVariant.DoesNotExist:
                 messages.error(request, "Selected vehicle variant was not found.")
+                if request.headers.get('x-requested-with') == 'XMLHttpRequest' or request.META.get('HTTP_X_REQUESTED_WITH') == 'XMLHttpRequest':
+                    return JsonResponse({'status': 'error', 'message': 'Variant not found'}, status=404)
     
     return redirect(request.META.get('HTTP_REFERER', 'inventory:shop'))
 
@@ -66,5 +122,8 @@ def select_vehicle_session(request):
 def clear_vehicle_session(request):
     if 'selected_variant_id' in request.session:
         del request.session['selected_variant_id']
-        messages.info(request, "Active vehicle filter cleared. Now showing all parts.")
+    if request.user.is_authenticated and hasattr(request.user, 'profile'):
+        request.user.profile.selected_vehicle = None
+        request.user.profile.save(update_fields=['selected_vehicle'])
+    messages.info(request, "Active vehicle filter cleared. Now showing all parts.")
     return redirect(request.META.get('HTTP_REFERER', 'core:home'))

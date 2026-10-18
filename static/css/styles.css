@@ -870,7 +870,27 @@ textarea.form-control {
   gap: 16px;
 }
 
-/* Road-Inspired 'A' Logo Styles */
+/* Metallic & Electric Blue 'A' Emblem Logo Styles */
+.brand-logo-img {
+  width: auto;
+  height: 42px;
+  max-width: 48px;
+  object-fit: contain;
+  flex-shrink: 0;
+  display: block;
+  filter: drop-shadow(0 0 1px rgba(255, 255, 255, 0.35)) drop-shadow(0 2px 8px rgba(8, 126, 255, 0.45));
+  transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), filter 0.25s ease;
+}
+
+[data-theme="dark"] .brand-logo-img {
+  filter: drop-shadow(0 0 1.5px rgba(255, 255, 255, 0.45)) drop-shadow(0 0 10px rgba(8, 126, 255, 0.55));
+}
+
+.brand-wrapper:hover .brand-logo-img {
+  transform: translateY(-1px) scale(1.06);
+  filter: drop-shadow(0 0 2px rgba(255, 255, 255, 0.6)) drop-shadow(0 4px 16px rgba(0, 210, 255, 0.7));
+}
+
 .autovynex-road-a {
   width: 44px;
   height: 44px;

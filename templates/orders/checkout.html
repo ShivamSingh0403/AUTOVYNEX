@@ -1,193 +1,346 @@
 {% extends 'base.html' %}
 
-{% block title %}Checkout — AUTOVYNEX Simulated Order Finalization{% endblock %}
+{% block title %}Multi-Section Checkout — AUTOVYNEX{% endblock %}
 
 {% block content %}
-<div class="container" style="padding-top:24px;">
-  <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:28px;">
+<div class="container" style="padding-top:28px; padding-bottom:60px;">
+  <!-- Breadcrumb & Header -->
+  <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:24px; flex-wrap:wrap; gap:16px;">
     <div>
       <div style="font-size:0.85rem; color:var(--text-muted); margin-bottom:4px;">
-        <a href="{% url 'orders:cart_detail' %}">Cart</a> / <span>Checkout</span>
+        <a href="{% url 'inventory:shop' %}">Shop</a> / <a href="{% url 'orders:cart_detail' %}">Cart</a> / <span>Checkout</span>
       </div>
-      <h1 style="font-size:1.85rem; margin:0;">Finalize Order & Delivery</h1>
+      <h1 style="font-size:1.85rem; margin:0;">Secure Multi-Section Checkout</h1>
     </div>
+    <a href="{% url 'orders:cart_detail' %}" class="btn btn-secondary btn-sm">
+      <i data-lucide="arrow-left"></i> Return to Cart
+    </a>
   </div>
 
-  <!-- Mandatory Simulation Notice per requirements -->
+  <!-- Mandatory Simulation Notice -->
   <div class="alert-banner alert-warning" style="margin-bottom:28px;">
     <i data-lucide="alert-triangle"></i>
     <div>
-      <strong>Demonstration Notice:</strong> This checkout process is simulated for academic presentation. No actual financial transactions or bank debits will occur. Please do not enter real sensitive financial passwords or PINs.
+      <strong>Demonstration Notice:</strong> This checkout and payment pipeline is simulated for academic and evaluation purposes. No real monetary transactions occur and no card numbers, CVVs, or UPI PINs are ever requested or stored.
     </div>
   </div>
 
-  <form method="POST" action="{% url 'orders:checkout' %}">
+  <form method="POST" action="{% url 'orders:checkout' %}" id="checkout-form">
     {% csrf_token %}
-    <div style="display:grid; grid-template-columns: 1.2fr 0.8fr; gap:36px;" class="grid-checkout-layout">
-      <!-- Left Column: Shipping & Payment -->
-      <div>
-        <!-- Shipping Address Card -->
-        <div class="card" style="margin-bottom:28px;">
-          <h3 style="font-size:1.2rem; margin-bottom:20px; display:flex; align-items:center; gap:8px;">
-            <i data-lucide="map-pin" style="color:var(--color-primary); width:20px;"></i> Shipping Address
-          </h3>
+    <div style="display:grid; grid-template-columns: 1fr 380px; gap:36px;" class="grid-checkout-layout">
+      <!-- Left Column: Sequential Checkout Sections -->
+      <div style="display:flex; flex-direction:column; gap:28px;">
 
-          <div class="grid-2" style="gap:16px;">
-            <div class="form-group">
-              <label class="form-label">Full Name *</label>
-              <input type="text" name="full_name" required class="form-control" value="{{ user.get_full_name|default:user.username }}">
+        <!-- Section 1: Delivery Address -->
+        <div class="card" style="padding:28px;">
+          <div style="display:flex; align-items:center; gap:12px; margin-bottom:20px; border-bottom:1px solid var(--border-subtle); padding-bottom:12px;">
+            <div style="width:32px; height:32px; border-radius:50%; background:var(--color-primary); color:#ffffff; display:flex; align-items:center; justify-content:center; font-weight:700; font-size:0.9rem;">1</div>
+            <h3 style="font-size:1.2rem; margin:0; display:flex; align-items:center; gap:8px;">
+              <i data-lucide="map-pin" style="color:var(--color-primary); width:18px;"></i> Delivery Address & Contact
+            </h3>
+          </div>
+
+          <div class="grid-2" style="gap:16px; margin-bottom:16px;">
+            <div class="form-group" style="margin-bottom:0;">
+              <label class="form-label" for="full_name">Full Name *</label>
+              <input type="text" id="full_name" name="full_name" required class="form-control" value="{{ user.get_full_name|default:user.username }}" placeholder="Enter full recipient name">
             </div>
-            <div class="form-group">
-              <label class="form-label">Email Address *</label>
-              <input type="email" name="email" required class="form-control" value="{{ user.email }}">
+            <div class="form-group" style="margin-bottom:0;">
+              <label class="form-label" for="email">Email Address *</label>
+              <input type="email" id="email" name="email" required class="form-control" value="{{ user.email }}" placeholder="order-updates@domain.com">
             </div>
           </div>
 
-          <div class="form-group">
-            <label class="form-label">Contact Phone Number *</label>
-            <input type="tel" name="phone" required class="form-control" value="{{ profile.phone|default:'+91 98765 43210' }}">
+          <div class="form-group" style="margin-bottom:16px;">
+            <label class="form-label" for="phone">Indian Contact Mobile Number *</label>
+            <input type="tel" id="phone" name="phone" required class="form-control" value="{{ profile.phone|default:'9876543210' }}" placeholder="10-digit mobile number (e.g. 9876543210)">
+            <span style="font-size:0.75rem; color:var(--text-muted); margin-top:4px; display:block;">Must be at least 10 digits for delivery courier coordination.</span>
           </div>
 
-          <div class="form-group">
-            <label class="form-label">Flat / House No. / Street Address *</label>
-            <textarea name="shipping_address" required class="form-control" style="min-height:80px;">{{ profile.address|default:'Flat 402, Skyline Residency, 12th Main Road' }}</textarea>
+          <div class="form-group" style="margin-bottom:16px;">
+            <label class="form-label" for="shipping_address">Flat / House No., Apartment, Street Address *</label>
+            <textarea id="shipping_address" name="shipping_address" required class="form-control" style="min-height:75px;" placeholder="House/Flat number, Building, Street name, Landmark">{{ profile.address|default:'Flat 402, Skyline Residency, 12th Main Road' }}</textarea>
           </div>
 
           <div class="grid-3" style="gap:16px;">
-            <div class="form-group">
-              <label class="form-label">City *</label>
-              <input type="text" name="city" required class="form-control" value="{{ profile.city|default:'Bengaluru' }}">
+            <div class="form-group" style="margin-bottom:0;">
+              <label class="form-label" for="city">City / District *</label>
+              <input type="text" id="city" name="city" required class="form-control" value="{{ profile.city|default:'Bengaluru' }}" placeholder="Bengaluru">
             </div>
-            <div class="form-group">
-              <label class="form-label">State *</label>
-              <input type="text" name="state" required class="form-control" value="{{ profile.state|default:'Karnataka' }}">
+            <div class="form-group" style="margin-bottom:0;">
+              <label class="form-label" for="state">State *</label>
+              <input type="text" id="state" name="state" required class="form-control" value="{{ profile.state|default:'Karnataka' }}" placeholder="Karnataka">
             </div>
-            <div class="form-group">
-              <label class="form-label">Pincode *</label>
-              <input type="text" name="pincode" required class="form-control" value="{{ profile.pincode|default:'560038' }}">
+            <div class="form-group" style="margin-bottom:0;">
+              <label class="form-label" for="pincode">Postal PIN Code *</label>
+              <input type="text" id="pincode" name="pincode" required class="form-control" value="{{ profile.pincode|default:'560038' }}" placeholder="6-digit PIN" maxlength="6" pattern="[0-9]{6}">
             </div>
           </div>
         </div>
 
-        <!-- Buy + Install Vehicle Details if applicable -->
+        <!-- Section 2: Order Summary Preview -->
+        <div class="card" style="padding:28px;">
+          <div style="display:flex; align-items:center; gap:12px; margin-bottom:20px; border-bottom:1px solid var(--border-subtle); padding-bottom:12px;">
+            <div style="width:32px; height:32px; border-radius:50%; background:var(--color-primary); color:#ffffff; display:flex; align-items:center; justify-content:center; font-weight:700; font-size:0.9rem;">2</div>
+            <h3 style="font-size:1.2rem; margin:0; display:flex; align-items:center; gap:8px;">
+              <i data-lucide="package" style="color:var(--color-primary); width:18px;"></i> Items for Dispatch ({{ cart_items.count }})
+            </h3>
+          </div>
+
+          <div style="display:flex; flex-direction:column; gap:14px;">
+            {% for item in cart_items %}
+              <div style="display:flex; justify-content:space-between; align-items:center; padding:12px; border-radius:var(--radius-md); background:var(--bg-surface-subtle); gap:14px;">
+                <div style="display:flex; align-items:center; gap:12px;">
+                  <div style="width:44px; height:44px; border-radius:var(--radius-sm); background:var(--bg-surface); display:flex; align-items:center; justify-content:center; color:var(--color-primary); overflow:hidden; flex-shrink:0;">
+                    {% if item.product.image %}
+                      <img src="{{ item.product.image.url }}" alt="{{ item.product.name }}" style="width:100%; height:100%; object-fit:cover;">
+                    {% else %}
+                      <i data-lucide="package" style="width:20px; height:20px;"></i>
+                    {% endif %}
+                  </div>
+                  <div>
+                    <div style="font-weight:700; font-size:0.92rem; color:var(--text-main);">{{ item.product.name }}</div>
+                    <div style="font-size:0.76rem; color:var(--text-muted);">
+                      SKU: {{ item.product.sku }} • Qty: {{ item.quantity }} × ₹{{ item.unit_price|floatformat:2 }}
+                    </div>
+                    {% if item.buy_and_install %}
+                      <span class="badge badge-verified" style="font-size:0.68rem; margin-top:2px;">
+                        <i data-lucide="wrench"></i> Pro Installation (+₹{{ item.product.installation_fee|floatformat:2 }})
+                      </span>
+                    {% endif %}
+                  </div>
+                </div>
+                <div style="font-family:var(--font-heading); font-weight:700; font-size:1rem; text-align:right;">
+                  ₹{{ item.item_subtotal|floatformat:2 }}
+                </div>
+              </div>
+            {% endfor %}
+          </div>
+        </div>
+
+        <!-- Section 3: Delivery Method -->
+        <div class="card" style="padding:28px;">
+          <div style="display:flex; align-items:center; gap:12px; margin-bottom:20px; border-bottom:1px solid var(--border-subtle); padding-bottom:12px;">
+            <div style="width:32px; height:32px; border-radius:50%; background:var(--color-primary); color:#ffffff; display:flex; align-items:center; justify-content:center; font-weight:700; font-size:0.9rem;">3</div>
+            <h3 style="font-size:1.2rem; margin:0; display:flex; align-items:center; gap:8px;">
+              <i data-lucide="truck" style="color:var(--color-primary); width:18px;"></i> Delivery Method
+            </h3>
+          </div>
+
+          <label class="card" style="padding:16px; border:2px solid var(--color-primary); background:rgba(8, 126, 255, 0.04); display:flex; justify-content:space-between; align-items:center; margin:0; cursor:pointer;">
+            <div style="display:flex; align-items:center; gap:12px;">
+              <input type="radio" name="delivery_method" value="standard_express" checked style="accent-color:var(--color-primary); width:18px; height:18px;">
+              <div>
+                <div style="font-weight:700; font-size:0.95rem;">AUTOVYNEX Surface Express Logistics</div>
+                <div style="font-size:0.8rem; color:var(--text-muted); margin-top:2px;">
+                  3 to 5 business days delivery across all major Indian PIN codes
+                </div>
+              </div>
+            </div>
+            <div style="text-align:right;">
+              {% if shipping_fee == 0 %}
+                <span class="badge badge-verified" style="font-size:0.8rem;">FREE</span>
+              {% else %}
+                <span style="font-weight:700; font-size:1rem;">₹{{ shipping_fee|floatformat:2 }}</span>
+              {% endif %}
+            </div>
+          </label>
+        </div>
+
+        <!-- Section 4: Optional Installation Booking -->
         {% if has_installation %}
-        <div class="card" style="margin-bottom:28px; border-color:var(--color-primary-light);">
-          <h3 style="font-size:1.2rem; margin-bottom:12px; display:flex; align-items:center; gap:8px; color:var(--color-primary);">
-            <i data-lucide="wrench"></i> Installation Vehicle Appointment
-          </h3>
+        <div class="card" style="padding:28px; border-color:var(--color-primary-light);">
+          <div style="display:flex; align-items:center; gap:12px; margin-bottom:20px; border-bottom:1px solid var(--border-subtle); padding-bottom:12px;">
+            <div style="width:32px; height:32px; border-radius:50%; background:var(--color-primary); color:#ffffff; display:flex; align-items:center; justify-content:center; font-weight:700; font-size:0.9rem;">4</div>
+            <h3 style="font-size:1.2rem; margin:0; display:flex; align-items:center; gap:8px; color:var(--color-primary);">
+              <i data-lucide="wrench"></i> Professional Installation Booking
+            </h3>
+          </div>
+
           <p style="font-size:0.85rem; color:var(--text-muted); margin-bottom:16px;">
-            One or more items in your cart include professional installation. Please select or confirm the vehicle details:
+            You have selected Buy + Install for one or more items. Select your vehicle and scheduling preference:
           </p>
 
-          <div class="form-group">
-            <label class="form-label">Vehicle to Receive Installation *</label>
-            <select name="install_vehicle" class="form-select">
-              {% for gv in customer_vehicles %}
-                <option value="{{ gv.display_title }} [{{ gv.registration_number }}]">{{ gv.display_title }} ({{ gv.registration_number }})</option>
-              {% empty %}
-                <option value="Customer Vehicle to be confirmed">My Vehicle (To be confirmed with workshop agent)</option>
-              {% endfor %}
-            </select>
+          <div class="grid-2" style="gap:16px; margin-bottom:16px;">
+            <div class="form-group" style="margin-bottom:0;">
+              <label class="form-label" for="install_vehicle">Target Vehicle *</label>
+              <select id="install_vehicle" name="install_vehicle" class="form-select">
+                {% for gv in customer_vehicles %}
+                  <option value="{{ gv.display_title }} [{{ gv.registration_number }}]">{{ gv.display_title }} ({{ gv.registration_number }})</option>
+                {% empty %}
+                  <option value="Customer Vehicle (To be confirmed with technician)">Current Active Vehicle / To Be Confirmed</option>
+                {% endfor %}
+              </select>
+            </div>
+
+            <div class="form-group" style="margin-bottom:0;">
+              <label class="form-label" for="preferred_workshop">Authorized Fitment Center</label>
+              <select id="preferred_workshop" name="preferred_workshop" class="form-select">
+                {% for provider in service_providers %}
+                  <option value="{{ provider.name }} ({{ provider.city }})">{{ provider.name }} — {{ provider.city }}</option>
+                {% empty %}
+                  <option value="AUTOVYNEX Central Hub">AUTOVYNEX Certified Service Center</option>
+                {% endfor %}
+              </select>
+            </div>
+          </div>
+
+          <div class="grid-2" style="gap:16px;">
+            <div class="form-group" style="margin-bottom:0;">
+              <label class="form-label" for="install_time_slot">Preferred Appointment Slot</label>
+              <select id="install_time_slot" name="install_time_slot" class="form-select">
+                <option value="morning">Morning (09:30 AM - 01:00 PM)</option>
+                <option value="afternoon" selected>Afternoon (02:00 PM - 05:00 PM)</option>
+                <option value="evening">Evening (05:00 PM - 07:30 PM)</option>
+              </select>
+            </div>
+            <div class="form-group" style="margin-bottom:0;">
+              <label class="form-label">Installation Fee Total</label>
+              <div style="font-family:var(--font-heading); font-size:1.15rem; font-weight:800; color:var(--color-primary); padding-top:6px;">
+                +₹{{ installation_total|floatformat:2 }}
+              </div>
+            </div>
           </div>
         </div>
         {% endif %}
 
-        <!-- Simulated Payment Method Selection -->
-        <div class="card">
-          <h3 style="font-size:1.2rem; margin-bottom:16px; display:flex; align-items:center; gap:8px;">
-            <i data-lucide="credit-card" style="color:var(--color-primary); width:20px;"></i> Select Payment Method (Simulation)
-          </h3>
+        <!-- Section 5: Demo Payment Method -->
+        <div class="card" style="padding:28px;">
+          <div style="display:flex; align-items:center; gap:12px; margin-bottom:20px; border-bottom:1px solid var(--border-subtle); padding-bottom:12px;">
+            <div style="width:32px; height:32px; border-radius:50%; background:var(--color-primary); color:#ffffff; display:flex; align-items:center; justify-content:center; font-weight:700; font-size:0.9rem;">5</div>
+            <h3 style="font-size:1.2rem; margin:0; display:flex; align-items:center; gap:8px;">
+              <i data-lucide="credit-card" style="color:var(--color-primary); width:18px;"></i> Payment Method (Academic Simulation)
+            </h3>
+          </div>
 
-          <div style="display:flex; flex-direction:column; gap:12px;">
-            <label class="card" style="padding:14px; cursor:pointer; display:flex; align-items:center; gap:12px; border-color:var(--color-primary-light); background:var(--bg-surface-elevated);">
+          <div style="display:flex; flex-direction:column; gap:12px; margin-bottom:20px;">
+            <label class="card" style="padding:14px; cursor:pointer; display:flex; align-items:center; gap:12px; border:1px solid var(--border-subtle); background:var(--bg-surface-elevated); margin:0;">
               <input type="radio" name="payment_method" value="simulated_upi" checked style="accent-color:var(--color-primary); width:18px; height:18px;">
               <div style="flex:1;">
-                <div style="font-weight:700; font-size:0.95rem;">Instant UPI / QR Code (Simulated)</div>
-                <div style="font-size:0.78rem; color:var(--text-muted);">GPay, PhonePe, Paytm, BHIM instant simulated confirmation</div>
+                <div style="font-weight:700; font-size:0.95rem;">Instant UPI / QR Sandbox (Simulated)</div>
+                <div style="font-size:0.78rem; color:var(--text-muted);">Simulated UPI transfer test (GPay/PhonePe/Paytm sandbox)</div>
               </div>
               <span class="badge badge-verified">Recommended</span>
             </label>
 
-            <label class="card" style="padding:14px; cursor:pointer; display:flex; align-items:center; gap:12px;">
+            <label class="card" style="padding:14px; cursor:pointer; display:flex; align-items:center; gap:12px; border:1px solid var(--border-subtle); background:var(--bg-surface-elevated); margin:0;">
               <input type="radio" name="payment_method" value="simulated_card" style="accent-color:var(--color-primary); width:18px; height:18px;">
-              <div>
-                <div style="font-weight:700; font-size:0.95rem;">Credit / Debit Card (Simulated Sandbox)</div>
-                <div style="font-size:0.78rem; color:var(--text-muted);">Visa, MasterCard, RuPay (No real credentials stored)</div>
+              <div style="flex:1;">
+                <div style="font-weight:700; font-size:0.95rem;">Card Payment Gateway Sandbox</div>
+                <div style="font-size:0.78rem; color:var(--text-muted);">Simulated Visa / MasterCard / RuPay processing</div>
               </div>
             </label>
 
-            <label class="card" style="padding:14px; cursor:pointer; display:flex; align-items:center; gap:12px;">
+            <label class="card" style="padding:14px; cursor:pointer; display:flex; align-items:center; gap:12px; border:1px solid var(--border-subtle); background:var(--bg-surface-elevated); margin:0;">
               <input type="radio" name="payment_method" value="cod" style="accent-color:var(--color-primary); width:18px; height:18px;">
-              <div>
-                <div style="font-weight:700; font-size:0.95rem;">Cash on Delivery (Verified Demo)</div>
-                <div style="font-size:0.78rem; color:var(--text-muted);">Pay upon physical courier parcel arrival</div>
+              <div style="flex:1;">
+                <div style="font-weight:700; font-size:0.95rem;">Cash on Delivery (COD)</div>
+                <div style="font-size:0.78rem; color:var(--text-muted);">Pay upon courier delivery</div>
               </div>
             </label>
+          </div>
+
+          <!-- Academic Gateway Outcome Simulation Switcher -->
+          <div style="padding:14px 16px; border-radius:var(--radius-md); background:var(--bg-surface-subtle); border:1px dashed var(--border-subtle);">
+            <div style="font-size:0.82rem; font-weight:700; margin-bottom:8px; color:var(--text-main); display:flex; align-items:center; gap:6px;">
+              <i data-lucide="sliders" style="width:14px;"></i> Demo Gateway Simulation Outcome:
+            </div>
+            <div style="display:flex; gap:20px; font-size:0.82rem;">
+              <label style="display:flex; align-items:center; gap:6px; cursor:pointer;">
+                <input type="radio" name="demo_payment_status" value="success" checked style="accent-color:#059669;">
+                <span>Simulate Gateway Success (Payment Confirmed)</span>
+              </label>
+              <label style="display:flex; align-items:center; gap:6px; cursor:pointer;">
+                <input type="radio" name="demo_payment_status" value="fail" style="accent-color:#dc2626;">
+                <span>Simulate Gateway Failure (Order marked Pending)</span>
+              </label>
+            </div>
           </div>
         </div>
-      </div>
 
-      <!-- Right Column: Final Order Summary -->
-      <div>
-        <div class="card" style="position:sticky; top:calc(var(--nav-height) + 20px);">
-          <h3 style="font-size:1.2rem; margin-bottom:16px; border-bottom:1px solid var(--border-subtle); padding-bottom:12px;">
-            Items in Order ({{ cart_items.count }})
-          </h3>
-
-          <div style="max-height:240px; overflow-y:auto; display:flex; flex-direction:column; gap:12px; margin-bottom:20px; padding-right:6px;">
-            {% for item in cart_items %}
-              <div style="display:flex; justify-content:space-between; align-items:center; font-size:0.88rem;">
-                <div>
-                  <div style="font-weight:600; color:var(--text-main);">{{ item.quantity }}x {{ item.product.name|truncatewords:4 }}</div>
-                  <div style="font-size:0.75rem; color:var(--text-muted);">SKU: {{ item.product.sku }}</div>
-                  {% if item.buy_and_install %}
-                    <span class="badge badge-verified" style="font-size:0.65rem;">+Install Included</span>
-                  {% endif %}
-                </div>
-                <strong>₹{{ item.item_subtotal|floatformat:0 }}</strong>
-              </div>
-            {% endfor %}
+        <!-- Section 6: Final Confirmation Checkbox -->
+        <div class="card" style="padding:24px;">
+          <div style="display:flex; align-items:center; gap:12px; margin-bottom:16px; border-bottom:1px solid var(--border-subtle); padding-bottom:10px;">
+            <div style="width:32px; height:32px; border-radius:50%; background:var(--color-primary); color:#ffffff; display:flex; align-items:center; justify-content:center; font-weight:700; font-size:0.9rem;">6</div>
+            <h3 style="font-size:1.2rem; margin:0;">Final Review & Confirmation</h3>
           </div>
 
-          <div style="border-top:1px solid var(--border-subtle); padding-top:16px; display:flex; flex-direction:column; gap:10px; font-size:0.9rem; margin-bottom:20px;">
+          <label style="display:flex; align-items:flex-start; gap:12px; cursor:pointer; font-size:0.88rem; line-height:1.5;">
+            <input type="checkbox" name="confirm_order" value="1" required style="accent-color:var(--color-primary); width:20px; height:20px; margin-top:2px;">
+            <span>
+              I have reviewed my order items, vehicle compatibility, and shipping address. I authorize AUTOVYNEX to reserve inventory stock and process this order under academic demonstration guidelines. *
+            </span>
+          </label>
+        </div>
+
+      </div>
+
+      <!-- Right Column: Cost Breakdown & Action -->
+      <div>
+        <div class="card" style="padding:24px; position:sticky; top:calc(var(--nav-height) + 20px);">
+          <h3 style="font-size:1.15rem; margin-bottom:16px; border-bottom:1px solid var(--border-subtle); padding-bottom:10px;">
+            Financial Breakdown
+          </h3>
+
+          <div style="display:flex; flex-direction:column; gap:12px; font-size:0.9rem; margin-bottom:20px;">
             <div style="display:flex; justify-content:space-between;">
-              <span style="color:var(--text-muted);">Subtotal</span>
+              <span style="color:var(--text-muted);">Product Subtotal</span>
               <strong>₹{{ subtotal|floatformat:2 }}</strong>
             </div>
 
             {% if discount > 0 %}
             <div style="display:flex; justify-content:space-between; color:#059669;">
-              <span>Festive Discount</span>
+              <span>Volume Discount</span>
               <strong>-₹{{ discount|floatformat:2 }}</strong>
             </div>
             {% endif %}
 
             <div style="display:flex; justify-content:space-between;">
-              <span style="color:var(--text-muted);">Express Logistics</span>
+              <span style="color:var(--text-muted);">Delivery Charge</span>
               <strong>{% if shipping_fee == 0 %}<span style="color:#059669;">FREE</span>{% else %}₹{{ shipping_fee|floatformat:2 }}{% endif %}</strong>
             </div>
 
+            {% if installation_total > 0 %}
+            <div style="display:flex; justify-content:space-between; color:var(--color-primary);">
+              <span>Installation Fee</span>
+              <strong>+₹{{ installation_total|floatformat:2 }}</strong>
+            </div>
+            {% endif %}
+
             <div style="display:flex; justify-content:space-between;">
-              <span style="color:var(--text-muted);">GST (18%)</span>
+              <span style="color:var(--text-muted);">GST (18% Applicable)</span>
               <strong>₹{{ tax|floatformat:2 }}</strong>
             </div>
 
             <div style="border-top:1px solid var(--border-subtle); padding-top:14px; margin-top:4px; display:flex; justify-content:space-between; align-items:baseline;">
-              <span style="font-weight:700; font-size:1.05rem;">Total Payable</span>
+              <span style="font-weight:700; font-size:1.05rem;">Final Total (INR)</span>
               <span style="font-family:var(--font-heading); font-size:1.6rem; font-weight:800; color:var(--color-primary);">₹{{ total|floatformat:2 }}</span>
             </div>
           </div>
 
-          <button type="submit" class="btn btn-primary btn-lg" style="width:100%; justify-content:center;">
-            <i data-lucide="check-circle"></i> Place Order (Demonstration)
+          <button type="submit" id="submit-order-btn" class="btn btn-primary btn-lg" style="width:100%; justify-content:center;">
+            <i data-lucide="shield-check"></i> Confirm & Place Order
           </button>
 
-          <div style="margin-top:14px; font-size:0.75rem; color:var(--text-muted); text-align:center;">
-            By placing this order you acknowledge the academic demonstration nature of the transaction.
+          <div style="margin-top:14px; font-size:0.75rem; color:var(--text-muted); text-align:center; line-height:1.4;">
+            <i data-lucide="lock" style="width:12px; vertical-align:middle; color:#059669;"></i>
+            Protected by database row-level locking & atomic inventory deduction.
           </div>
         </div>
       </div>
     </div>
   </form>
 </div>
+
+<script>
+  // Frontend submission protection to prevent accidental multi-clicks
+  document.getElementById('checkout-form')?.addEventListener('submit', function(e) {
+    const btn = document.getElementById('submit-order-btn');
+    if (btn) {
+      btn.disabled = true;
+      btn.innerHTML = '<i data-lucide="loader-2" class="spin"></i> Securing Inventory...';
+      if (window.lucide) window.lucide.createIcons();
+    }
+  });
+</script>
 {% endblock %}

@@ -1,4 +1,5 @@
 {% extends 'base.html' %}
+{% load static %}
 
 {% block title %}Sign In — AUTOVYNEX Customer Portal{% endblock %}
 
@@ -6,7 +7,9 @@
 <div class="container" style="padding-top:36px; padding-bottom:36px;">
   <div style="max-width:440px; margin:0 auto;">
     <div style="text-align:center; margin-bottom:28px;">
-      <div class="brand-logo-emblem" style="margin:0 auto 16px; width:54px; height:54px; font-size:28px;">A</div>
+      <div style="margin:0 auto 16px; width:64px; height:64px; display:flex; align-items:center; justify-content:center;">
+        <img src="{% static 'images/logo.png' %}" alt="AUTOVYNEX Logo" style="width:100%; height:100%; object-fit:contain; filter:drop-shadow(0 4px 12px rgba(8, 126, 255, 0.45));">
+      </div>
       <h1 style="font-size:1.85rem; margin-bottom:6px;">Sign In to AUTOVYNEX</h1>
       <p style="color:var(--text-muted); font-size:0.9rem;">Access your vehicle garage, order history, and service logs.</p>
     </div>

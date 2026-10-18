@@ -24,7 +24,38 @@ def login_view(request):
                 user = None
 
         if user is not None:
+            old_session_key = request.session.session_key
             login(request, user)
+
+            # 1. Merge guest cart into user cart
+            if old_session_key:
+                from orders.models import CartItem
+                guest_items = CartItem.objects.filter(session_key=old_session_key).select_related('product')
+                for g_item in guest_items:
+                    user_item = CartItem.objects.filter(user=user, product=g_item.product).first()
+                    if user_item:
+                        user_item.quantity = min(user_item.quantity + g_item.quantity, g_item.product.stock_quantity)
+                        if g_item.buy_and_install:
+                            user_item.buy_and_install = True
+                        user_item.save()
+                        g_item.delete()
+                    else:
+                        g_item.user = user
+                        g_item.session_key = ''
+                        g_item.save()
+
+            # 2. Sync / Restore selected vehicle
+            if not request.session.get('selected_variant_id'):
+                if hasattr(user, 'profile') and user.profile.selected_vehicle:
+                    request.session['selected_variant_id'] = user.profile.selected_vehicle.id
+                elif hasattr(user, 'garage_vehicles') and user.garage_vehicles.exists():
+                    default_gv = user.garage_vehicles.filter(is_default=True).first() or user.garage_vehicles.first()
+                    if default_gv:
+                        request.session['selected_variant_id'] = default_gv.variant.id
+            elif hasattr(user, 'profile') and not user.profile.selected_vehicle:
+                user.profile.selected_vehicle_id = request.session.get('selected_variant_id')
+                user.profile.save(update_fields=['selected_vehicle'])
+
             messages.success(request, f"Welcome back, {user.first_name or user.username}!")
             next_url = request.GET.get('next') or request.POST.get('next')
             if next_url:

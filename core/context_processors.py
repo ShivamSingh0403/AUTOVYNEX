@@ -32,9 +32,14 @@ def global_context(request):
 
     if not selected_vehicle and request.user.is_authenticated:
         try:
-            default_gv = CustomerVehicle.objects.filter(user=request.user, is_default=True).select_related('variant__model__make').first()
-            if default_gv:
-                selected_vehicle = default_gv.variant
+            if hasattr(request.user, 'profile') and request.user.profile.selected_vehicle:
+                selected_vehicle = request.user.profile.selected_vehicle
+                request.session['selected_variant_id'] = selected_vehicle.id
+            else:
+                default_gv = CustomerVehicle.objects.filter(user=request.user, is_default=True).select_related('variant__model__make').first()
+                if default_gv:
+                    selected_vehicle = default_gv.variant
+                    request.session['selected_variant_id'] = selected_vehicle.id
         except Exception:
             pass
 
