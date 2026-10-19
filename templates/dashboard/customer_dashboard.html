@@ -158,37 +158,137 @@
         {% endif %}
       </div>
 
-      <!-- Garage Vehicles Card -->
+      <!-- Digital Garage Summary Card -->
       <div class="card">
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px; border-bottom:1px solid var(--border-subtle); padding-bottom:12px;">
-          <h3 style="font-size:1.2rem; margin:0;"><i data-lucide="warehouse" style="color:var(--color-primary); vertical-align:middle;"></i> Vehicles in Garage</h3>
-          <a href="{% url 'garage:index' %}" style="font-size:0.82rem; color:var(--color-primary); font-weight:600;">Manage Garage</a>
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px; border-bottom:1px solid var(--border-subtle); padding-bottom:12px; flex-wrap:wrap; gap:8px;">
+          <div>
+            <h3 style="font-size:1.2rem; margin:0; display:flex; align-items:center; gap:8px;">
+              <i data-lucide="warehouse" style="color:var(--color-primary);"></i> Digital Garage Fleet Summary
+            </h3>
+            <span style="font-size:0.78rem; color:var(--text-muted);">{{ total_vehicles }} vehicle{{ total_vehicles|pluralize }} registered • ₹{{ total_maintenance_spent|floatformat:2 }} maintenance logged</span>
+          </div>
+          <div style="display:flex; gap:8px;">
+            <a href="{% url 'garage:expense_dashboard' %}" class="btn btn-secondary btn-sm" style="font-size:0.75rem;">
+              <i data-lucide="pie-chart"></i> Expenses
+            </a>
+            <a href="{% url 'garage:index' %}" class="btn btn-primary btn-sm" style="font-size:0.75rem;">
+              Manage Garage
+            </a>
+          </div>
         </div>
 
-        {% if garage_vehicles %}
-        <div style="display:flex; flex-direction:column; gap:14px;">
-          {% for gv in garage_vehicles %}
-            <div style="padding:14px; background:var(--bg-surface-subtle); border-radius:var(--radius-md); display:flex; justify-content:space-between; align-items:center; gap:12px;">
+        {% if primary_vehicle %}
+          <!-- Primary Vehicle Spotlight -->
+          <div style="padding:16px; background:linear-gradient(135deg, rgba(8, 126, 255, 0.06), rgba(16, 24, 32, 0.03)); border:1px solid rgba(8, 126, 255, 0.2); border-radius:var(--radius-md); margin-bottom:16px;">
+            <div style="display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:10px;">
               <div>
-                <div style="font-weight:700; font-size:0.95rem; color:var(--text-main);">
-                  {{ gv.display_title }}
-                  {% if gv.is_default %}<span class="badge badge-verified" style="font-size:0.65rem; margin-left:4px;">Primary</span>{% endif %}
+                <span class="badge badge-verified" style="font-size:0.68rem; margin-bottom:4px; display:inline-block;">Primary Garage Vehicle</span>
+                <h4 style="margin:2px 0 4px 0; font-size:1.15rem; color:var(--text-main);">{{ primary_vehicle.display_title }}</h4>
+                <div style="font-size:0.8rem; color:var(--text-muted); display:flex; gap:12px; flex-wrap:wrap;">
+                  {% if primary_vehicle.registration_number %}
+                    <span><strong style="color:var(--text-main);">Reg:</strong> {{ primary_vehicle.registration_number }}</span>
+                  {% endif %}
+                  <span><strong style="color:var(--text-main);">Odometer:</strong> {{ primary_vehicle.current_mileage|floatformat:0 }} km</span>
+                  <span><strong style="color:var(--text-main);">Fuel:</strong> {{ primary_vehicle.variant.fuel_type|title }}</span>
                 </div>
-                <div style="font-size:0.78rem; color:var(--text-muted);">Reg: {{ gv.registration_number }} • {{ gv.current_mileage|floatformat:0 }} KM</div>
               </div>
-              <a href="{% url 'garage:vehicle_detail' gv.id %}" class="btn btn-secondary btn-sm" style="padding:4px 10px; font-size:0.75rem;">
-                Logs & Docs
-              </a>
+              <div style="display:flex; gap:6px;">
+                <a href="{% url 'garage:vehicle_detail' primary_vehicle.id %}" class="btn btn-secondary btn-sm" style="font-size:0.75rem;">
+                  View Vehicle Hub
+                </a>
+                <a href="{% url 'services:book' %}?vehicle_id={{ primary_vehicle.id }}" class="btn btn-primary btn-sm" style="font-size:0.75rem;">
+                  Book Service
+                </a>
+              </div>
             </div>
-          {% endfor %}
-        </div>
+          </div>
+        {% endif %}
+
+        {% if garage_vehicles %}
+          <div style="font-size:0.82rem; font-weight:700; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.04em; margin-bottom:10px;">
+            All Registered Vehicles ({{ total_vehicles }})
+          </div>
+          <div style="display:flex; flex-direction:column; gap:10px; margin-bottom:20px;">
+            {% for gv in garage_vehicles %}
+              <div style="padding:12px 14px; background:var(--bg-surface-subtle); border-radius:var(--radius-md); display:flex; justify-content:space-between; align-items:center; gap:12px; flex-wrap:wrap;">
+                <div>
+                  <div style="font-weight:700; font-size:0.92rem; color:var(--text-main);">
+                    {{ gv.display_title }}
+                    {% if gv.is_default %}<span class="badge badge-verified" style="font-size:0.65rem; margin-left:4px;">Primary</span>{% endif %}
+                  </div>
+                  <div style="font-size:0.78rem; color:var(--text-muted); margin-top:2px;">
+                    {% if gv.registration_number %}Reg: {{ gv.registration_number }} • {% endif %}{{ gv.current_mileage|floatformat:0 }} KM • Spent: ₹{{ gv.total_expenses|floatformat:0 }}
+                  </div>
+                </div>
+                <div style="display:flex; gap:6px; align-items:center;">
+                  <a href="{% url 'garage:vehicle_detail' gv.id %}" class="btn btn-secondary btn-sm" style="padding:4px 10px; font-size:0.75rem;">
+                    Health & Logs
+                  </a>
+                  <a href="{% url 'garage:edit_vehicle' gv.id %}" class="btn btn-outline btn-sm" style="padding:4px 8px; font-size:0.75rem;" title="Edit Vehicle">
+                    <i data-lucide="edit-2" style="width:14px; height:14px;"></i>
+                  </a>
+                </div>
+              </div>
+            {% endfor %}
+          </div>
         {% else %}
-        <div style="text-align:center; padding:24px 16px;">
-          <p style="font-size:0.88rem; color:var(--text-muted); margin:0 0 12px 0;">No vehicles registered in your garage yet.</p>
-          <a href="{% url 'garage:index' %}" class="btn btn-secondary btn-sm">
-            <i data-lucide="plus"></i> Add Vehicle to Garage
-          </a>
-        </div>
+          <div style="text-align:center; padding:28px 16px;">
+            <div style="width:48px; height:48px; border-radius:50%; background:rgba(8, 126, 255, 0.1); color:var(--color-primary); display:flex; align-items:center; justify-content:center; margin:0 auto 12px;">
+              <i data-lucide="car" style="width:24px; height:24px;"></i>
+            </div>
+            <h4 style="margin:0 0 6px 0;">Digital Garage is Empty</h4>
+            <p style="font-size:0.85rem; color:var(--text-muted); margin:0 0 16px 0;">Add your vehicle to track maintenance logs, configure service reminders, and monitor running costs.</p>
+            <a href="{% url 'garage:index' %}" class="btn btn-primary btn-sm">
+              <i data-lucide="plus"></i> Add Vehicle to Garage
+            </a>
+          </div>
+        {% endif %}
+
+        <!-- Upcoming Reminders in Customer Dashboard -->
+        {% if upcoming_reminders %}
+          <div style="border-top:1px solid var(--border-subtle); padding-top:14px; margin-top:14px;">
+            <div style="font-size:0.82rem; font-weight:700; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.04em; margin-bottom:10px; display:flex; justify-content:space-between; align-items:center;">
+              <span><i data-lucide="bell" style="width:14px; height:14px; vertical-align:middle;"></i> Upcoming Maintenance Reminders</span>
+              <span class="badge badge-warning" style="font-size:0.7rem;">{{ upcoming_reminders.count }} active</span>
+            </div>
+            <div style="display:flex; flex-direction:column; gap:8px;">
+              {% for rem in upcoming_reminders %}
+                <div style="padding:10px 12px; background:var(--bg-surface-subtle); border-radius:var(--radius-sm); display:flex; justify-content:space-between; align-items:center; font-size:0.85rem;">
+                  <div>
+                    <strong style="color:var(--text-main);">{{ rem.title }}</strong>
+                    <div style="font-size:0.74rem; color:var(--text-muted);">
+                      {{ rem.customer_vehicle.display_title }}
+                      {% if rem.due_date %} • Due: {{ rem.due_date|date:"d M Y" }}{% endif %}
+                      {% if rem.due_mileage %} • Target: {{ rem.due_mileage|floatformat:0 }} km{% endif %}
+                    </div>
+                  </div>
+                  <span class="badge {% if rem.status_state == 'overdue' %}badge-danger{% elif rem.status_state == 'due_soon' %}badge-warning{% else %}badge-info{% endif %}" style="font-size:0.7rem;">
+                    {{ rem.status_state|title }}
+                  </span>
+                </div>
+              {% endfor %}
+            </div>
+          </div>
+        {% endif %}
+
+        <!-- Recent Maintenance Activity -->
+        {% if recent_services %}
+          <div style="border-top:1px solid var(--border-subtle); padding-top:14px; margin-top:14px;">
+            <div style="font-size:0.82rem; font-weight:700; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.04em; margin-bottom:10px;">
+              <i data-lucide="wrench" style="width:14px; height:14px; vertical-align:middle;"></i> Recent Service Logs
+            </div>
+            <div style="display:flex; flex-direction:column; gap:8px;">
+              {% for srv in recent_services %}
+                <div style="padding:10px 12px; background:var(--bg-surface-subtle); border-radius:var(--radius-sm); display:flex; justify-content:space-between; align-items:center; font-size:0.85rem;">
+                  <div>
+                    <strong>{{ srv.service_title }}</strong> ({{ srv.workshop_name }})
+                    <div style="font-size:0.74rem; color:var(--text-muted);">{{ srv.customer_vehicle.display_title }} • {{ srv.service_date|date:"d M Y" }} • {{ srv.mileage|floatformat:0 }} km</div>
+                  </div>
+                  <strong style="color:var(--color-primary); font-size:0.88rem;">₹{{ srv.cost|floatformat:2 }}</strong>
+                </div>
+              {% endfor %}
+            </div>
+          </div>
         {% endif %}
       </div>
     </div>

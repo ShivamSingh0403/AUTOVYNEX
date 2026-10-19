@@ -50,6 +50,16 @@ class VehicleModel(models.Model):
     def __str__(self):
         return f"{self.make.name} {self.name}"
 
+    @property
+    def start_year(self):
+        first_variant = self.variants.order_by('year_from').first()
+        return first_variant.year_from if first_variant else self.release_year
+
+    @property
+    def end_year(self):
+        last_variant = self.variants.order_by('-year_to').first()
+        return last_variant.year_to if last_variant else None
+
 
 class VehicleVariant(models.Model):
     FUEL_CHOICES = [
@@ -93,6 +103,14 @@ class VehicleVariant(models.Model):
     @property
     def display_name(self):
         return f"{self.model.make.name} {self.model.name} - {self.name} [{self.fuel_type} • {self.transmission} • {self.year_from}-{self.year_to}]"
+
+    @property
+    def start_year(self):
+        return self.year_from
+
+    @property
+    def end_year(self):
+        return self.year_to
 
 
 def __getattr__(name):

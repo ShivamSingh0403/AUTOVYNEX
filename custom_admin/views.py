@@ -21,21 +21,40 @@ def is_staff_check(user):
 def customer_dashboard(request):
     user = request.user
     recent_orders = Order.objects.filter(user=user).prefetch_related('items').order_by('-created_at')[:4]
-    garage_vehicles = CustomerVehicle.objects.filter(user=user)[:4]
-    service_bookings = ServiceBooking.objects.filter(user=user)[:3]
+    garage_vehicles = CustomerVehicle.objects.filter(user=user).select_related('variant__model__make')
+    primary_vehicle = garage_vehicles.filter(is_default=True).first() or garage_vehicles.first()
+    
+    upcoming_reminders = MaintenanceReminder.objects.filter(
+        customer_vehicle__user=user,
+        is_completed=False
+    ).select_related('customer_vehicle').order_by('due_date')[:5]
+
+    recent_services = MaintenanceRecord.objects.filter(
+        customer_vehicle__user=user
+    ).select_related('customer_vehicle').order_by('-service_date', '-id')[:5]
+
+    total_maintenance_spent = MaintenanceRecord.objects.filter(
+        customer_vehicle__user=user
+    ).aggregate(s=Sum('cost'))['s'] or 0
+
+    service_bookings = ServiceBooking.objects.filter(user=user).order_by('-created_at')[:4]
     missing_enquiries = MissingPartEnquiry.objects.filter(user=user)[:3]
     assistance_requests = RoadsideAssistanceRequest.objects.filter(user=user)[:2]
     
     # Financial & Shopping metrics
     total_spent = Order.objects.filter(user=user).aggregate(s=Sum('total_amount'))['s'] or 0
-    total_vehicles = CustomerVehicle.objects.filter(user=user).count()
+    total_vehicles = garage_vehicles.count()
     cart_count = CartItem.objects.filter(user=user).count()
     profile = getattr(user, 'profile', None)
     saved_vehicle = getattr(profile, 'selected_vehicle', None)
 
     context = {
         'recent_orders': recent_orders,
-        'garage_vehicles': garage_vehicles,
+        'garage_vehicles': garage_vehicles[:4],
+        'primary_vehicle': primary_vehicle,
+        'upcoming_reminders': upcoming_reminders,
+        'recent_services': recent_services,
+        'total_maintenance_spent': total_maintenance_spent,
         'service_bookings': service_bookings,
         'missing_enquiries': missing_enquiries,
         'assistance_requests': assistance_requests,

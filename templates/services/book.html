@@ -31,12 +31,14 @@
             <label class="form-label">Vehicle for Service *</label>
             <select name="vehicle_info" class="form-select" required>
               {% for gv in customer_vehicles %}
-                <option value="{{ gv.display_title }} [{{ gv.registration_number }}]">{{ gv.display_title }} ({{ gv.registration_number }})</option>
+                <option value="{{ gv.display_title }}{% if gv.registration_number %} [{{ gv.registration_number }}]{% endif %}" {% if selected_vehicle and selected_vehicle.id == gv.id %}selected{% endif %}>
+                  {{ gv.display_title }}{% if gv.registration_number %} ({{ gv.registration_number }}){% else %} (No Plate Registered){% endif %}
+                </option>
               {% empty %}
                 <option value="Customer Vehicle (To be confirmed at workshop)">My Vehicle (Specify in notes or add to Garage)</option>
               {% endfor %}
             </select>
-            <small style="font-size:0.75rem; color:var(--text-muted);"><a href="{% url 'garage:index' %}">+ Add another vehicle in My Garage</a></small>
+            <small style="font-size:0.75rem; color:var(--text-muted);"><a href="{% url 'garage:index' %}">+ Add or manage vehicles in My Garage</a></small>
           </div>
 
           <div class="form-group">
@@ -58,12 +60,13 @@
 
         <div class="grid-3" style="gap:16px; margin-bottom:24px;">
           <div class="form-group">
-            <label class="form-label">Preferred Service Center *</label>
+            <label class="form-label">Preferred Service Center (Demo Network) *</label>
             <select name="provider_id" class="form-select" required>
               {% for prov in providers %}
-                <option value="{{ prov.id }}">{{ prov.name }} ({{ prov.city }})</option>
+                <option value="{{ prov.id }}">{{ prov.name }} [Demo Center] — {{ prov.city }}</option>
               {% endfor %}
             </select>
+            <small style="font-size:0.72rem; color:var(--text-muted);">Seed service centers are demonstration simulation partners.</small>
           </div>
 
           <div class="form-group">

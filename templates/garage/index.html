@@ -3,28 +3,39 @@
 {% block title %}My Digital Garage — AUTOVYNEX{% endblock %}
 
 {% block content %}
-<div class="container" style="padding-top:24px;">
+<div class="container" style="padding-top:24px; padding-bottom:60px;">
   <!-- Header Bar -->
   <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:16px; margin-bottom:28px;">
     <div>
       <div style="font-size:0.85rem; color:var(--text-muted); margin-bottom:4px;">
         <a href="{% url 'dashboard:customer_dashboard' %}">Dashboard</a> / <span>My Garage</span>
       </div>
-      <h1 style="font-size:1.85rem; margin:0;">Digital Vehicle Garage</h1>
+      <h1 style="font-size:1.85rem; margin:0; display:flex; align-items:center; gap:10px;">
+        <i data-lucide="warehouse" style="color:var(--color-primary);"></i> Digital Vehicle Garage
+      </h1>
+      <p style="margin:4px 0 0 0; font-size:0.92rem; color:var(--text-muted);">
+        Manage your personal car fleet, log maintenance activities, set service alerts, and monitor running expenses.
+      </p>
     </div>
-    <button type="button" class="btn btn-primary" onclick="document.getElementById('add-car-drawer').style.display='block';">
-      <i data-lucide="plus-circle"></i> Add Vehicle to Garage
-    </button>
+    
+    <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
+      <a href="{% url 'garage:expense_dashboard' %}" class="btn btn-secondary">
+        <i data-lucide="pie-chart"></i> Fleet Expenses
+      </a>
+      <button type="button" class="btn btn-primary" onclick="document.getElementById('add-car-drawer').style.display='block'; window.scrollTo({top: 180, behavior: 'smooth'});">
+        <i data-lucide="plus-circle"></i> Add Vehicle to Garage
+      </button>
+    </div>
   </div>
 
   <!-- Fleet Metrics Cards -->
   <div class="grid-3" style="margin-bottom:32px;">
     <div class="card" style="display:flex; align-items:center; gap:16px;">
-      <div style="width:52px; height:52px; border-radius:var(--radius-md); background:rgba(2, 132, 199, 0.1); color:var(--color-primary); display:flex; align-items:center; justify-content:center; flex-shrink:0;">
+      <div style="width:52px; height:52px; border-radius:var(--radius-md); background:rgba(8, 126, 255, 0.1); color:var(--color-primary); display:flex; align-items:center; justify-content:center; flex-shrink:0;">
         <i data-lucide="car" style="width:28px; height:28px;"></i>
       </div>
       <div>
-        <div style="font-size:0.82rem; color:var(--text-muted);">Active Vehicles</div>
+        <div style="font-size:0.82rem; color:var(--text-muted);">Active Garage Vehicles</div>
         <div style="font-family:var(--font-heading); font-size:1.6rem; font-weight:800; color:var(--text-main);">
           {{ total_vehicles }}
         </div>
@@ -38,7 +49,7 @@
       <div>
         <div style="font-size:0.82rem; color:var(--text-muted);">Total Maintenance Logged</div>
         <div style="font-family:var(--font-heading); font-size:1.6rem; font-weight:800; color:var(--text-main);">
-          ₹{{ total_spent|floatformat:0 }}
+          ₹{{ total_spent|floatformat:2 }}
         </div>
       </div>
     </div>
@@ -48,7 +59,7 @@
         <i data-lucide="bell" style="width:28px; height:28px;"></i>
       </div>
       <div>
-        <div style="font-size:0.82rem; color:var(--text-muted);">Pending Service Reminders</div>
+        <div style="font-size:0.82rem; color:var(--text-muted);">Outstanding Service Alerts</div>
         <div style="font-family:var(--font-heading); font-size:1.6rem; font-weight:800; color:var(--text-main);">
           {{ pending_reminders.count }}
         </div>
@@ -56,16 +67,18 @@
     </div>
   </div>
 
-  <!-- Add Vehicle Modal / Drawer Form -->
-  <div id="add-car-drawer" class="card" style="display:none; margin-bottom:32px; background:var(--bg-surface-elevated); border-color:var(--color-primary); box-shadow:var(--shadow-lg);">
+  <!-- Add Vehicle Drawer Form -->
+  <div id="add-car-drawer" class="card" style="display:none; margin-bottom:32px; background:var(--bg-surface-elevated); border:1px solid var(--color-primary); box-shadow:var(--shadow-lg);">
     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px; border-bottom:1px solid var(--border-subtle); padding-bottom:12px;">
-      <h3 style="margin:0; font-size:1.2rem; color:var(--color-primary);"><i data-lucide="plus" style="vertical-align:middle;"></i> Register New Vehicle</h3>
+      <h3 style="margin:0; font-size:1.25rem; color:var(--color-primary); display:flex; align-items:center; gap:8px;">
+        <i data-lucide="plus-circle"></i> Register Vehicle to Digital Garage
+      </h3>
       <button type="button" class="btn btn-secondary btn-sm" onclick="document.getElementById('add-car-drawer').style.display='none';">Close</button>
     </div>
 
     <form method="POST" action="{% url 'garage:add_vehicle' %}">
       {% csrf_token %}
-      <div class="grid-3" style="gap:16px;">
+      <div class="grid-3" style="gap:16px; margin-bottom:16px;">
         <div class="form-group">
           <label class="form-label">1. Make / Manufacturer *</label>
           <select id="garage-make-select" class="form-select" required>
@@ -84,39 +97,53 @@
         </div>
 
         <div class="form-group">
-          <label class="form-label">3. Variant, Fuel & Transmission *</label>
+          <label class="form-label">3. Trim Variant & Fuel *</label>
           <select id="garage-variant-select" name="variant_id" class="form-select" disabled required>
             <option value="">Select Variant...</option>
           </select>
         </div>
       </div>
 
-      <div class="grid-4" style="gap:16px;">
+      <div class="grid-4" style="gap:16px; margin-bottom:16px;">
         <div class="form-group">
           <label class="form-label">Vehicle Nickname</label>
-          <input type="text" name="nickname" class="form-control" placeholder="e.g. My Highway SUV">
+          <input type="text" name="nickname" class="form-control" placeholder="e.g. Daily Commuter">
         </div>
 
         <div class="form-group">
-          <label class="form-label">Registration Number *</label>
-          <input type="text" name="registration_number" required class="form-control" placeholder="KA-03-MN-8842">
+          <label class="form-label">Registration Number</label>
+          <input type="text" name="registration_number" class="form-control" placeholder="Optional (e.g. DL-01-AB-1234)">
+          <small style="font-size:0.72rem; color:var(--text-muted);">Leave empty if unassigned or new</small>
         </div>
 
         <div class="form-group">
-          <label class="form-label">Chassis / VIN (Confidential)</label>
-          <input type="text" name="vin_number" class="form-control" placeholder="17-Digit VIN">
+          <label class="form-label">Purchase Year *</label>
+          <input type="number" name="purchase_year" id="garage-purchase-year" class="form-control" value="{% now 'Y' %}" min="1990" max="{% now 'Y' %}" required>
+          <small style="font-size:0.72rem; color:var(--text-muted);" id="garage-year-hint">Production span validation active</small>
         </div>
 
         <div class="form-group">
           <label class="form-label">Current Odometer (KM)</label>
-          <input type="number" name="current_mileage" class="form-control" value="20000" min="0">
+          <input type="number" name="current_mileage" class="form-control" value="25000" min="0">
         </div>
       </div>
 
-      <div style="display:flex; justify-content:space-between; align-items:center; margin-top:8px;">
+      <div class="grid-2" style="gap:16px; margin-bottom:20px;">
+        <div class="form-group">
+          <label class="form-label">Chassis / VIN Number</label>
+          <input type="text" name="vin_number" class="form-control" placeholder="17-Digit VIN (Private & Confidential)">
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Exterior Color</label>
+          <input type="text" name="color" class="form-control" value="Silver" placeholder="e.g. Phantom Black, White">
+        </div>
+      </div>
+
+      <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px; border-top:1px solid var(--border-subtle); padding-top:16px;">
         <label style="display:flex; align-items:center; gap:8px; font-size:0.88rem; cursor:pointer;">
-          <input type="checkbox" name="is_default" value="1" checked style="accent-color:var(--color-primary); width:16px; height:16px;">
-          <span>Set as primary default car for parts compatibility</span>
+          <input type="checkbox" name="is_default" value="1" checked style="accent-color:var(--color-primary); width:18px; height:18px;">
+          <span><strong>Set as Primary Vehicle</strong> (Used for instant fitment check and driver dashboard summary)</span>
         </label>
         <button type="submit" id="garage-submit-btn" class="btn btn-primary" disabled>
           <i data-lucide="check"></i> Save Vehicle to Garage
@@ -126,7 +153,7 @@
   </div>
 
   <!-- Saved Vehicles List -->
-  <div style="display:flex; flex-direction:column; gap:20px; margin-bottom:40px;">
+  <div style="display:flex; flex-direction:column; gap:24px; margin-bottom:40px;">
     {% for car in vehicles %}
       <div class="card" style="padding:24px; {% if car.is_default %}border-color:var(--color-primary); box-shadow:var(--shadow-md);{% endif %}">
         <div style="display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:16px;">
@@ -135,62 +162,150 @@
               <i data-lucide="car" style="width:36px; height:36px;"></i>
             </div>
             <div>
-              <div style="display:flex; align-items:center; gap:10px; margin-bottom:4px;">
-                <h3 style="font-size:1.3rem; margin:0;">{{ car.display_title }}</h3>
+              <div style="display:flex; align-items:center; gap:10px; margin-bottom:4px; flex-wrap:wrap;">
+                <h3 style="font-size:1.35rem; margin:0; color:var(--text-main);">{{ car.display_title }}</h3>
                 {% if car.is_default %}
-                  <span class="badge badge-verified"><i data-lucide="check"></i> Primary Vehicle</span>
+                  <span class="badge badge-verified"><i data-lucide="check" style="width:12px; height:12px;"></i> Primary Vehicle</span>
+                {% endif %}
+                {% if car.nickname %}
+                  <span style="font-size:0.85rem; color:var(--text-muted); font-style:italic;">"{{ car.nickname }}"</span>
                 {% endif %}
               </div>
-              <div style="font-size:0.85rem; color:var(--text-muted);">
-                Reg: <strong>{{ car.registration_number }}</strong> • Odometer: <strong>{{ car.current_mileage|floatformat:0 }} KM</strong> • Fuel: <strong>{{ car.variant.fuel_type }}</strong> • {{ car.variant.transmission }}
+              
+              <div style="font-size:0.86rem; color:var(--text-muted); display:flex; gap:12px; flex-wrap:wrap; align-items:center;">
+                {% if car.registration_number %}
+                  <span><strong style="color:var(--text-main);">Reg:</strong> {{ car.registration_number }}</span>
+                {% endif %}
+                <span><strong style="color:var(--text-main);">Year:</strong> {{ car.purchase_year }}</span>
+                <span><strong style="color:var(--text-main);">Fuel:</strong> {{ car.variant.fuel_type|title }}</span>
+                <span><strong style="color:var(--text-main);">Transmission:</strong> {{ car.variant.transmission|title }}</span>
+                <span><strong style="color:var(--text-main);">Odometer:</strong> {{ car.current_mileage|floatformat:0 }} KM</span>
               </div>
             </div>
           </div>
 
-          <!-- Actions -->
-          <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
+          <!-- Quick Action Buttons -->
+          <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
             {% if not car.is_default %}
-              <form method="POST" action="{% url 'garage:set_default' car.id %}">
+              <form method="POST" action="{% url 'garage:set_default' car.id %}" style="margin:0;">
                 {% csrf_token %}
-                <button type="submit" class="btn btn-secondary btn-sm">Set Primary</button>
+                <button type="submit" class="btn btn-secondary btn-sm" title="Set as primary garage vehicle">
+                  Set Primary
+                </button>
               </form>
             {% endif %}
-            <form method="POST" action="{% url 'vehicles:select_vehicle_session' %}">
+
+            <form method="POST" action="{% url 'vehicles:select_vehicle_session' %}" style="margin:0;">
               {% csrf_token %}
               <input type="hidden" name="variant_id" value="{{ car.variant.id }}">
-              <button type="submit" class="btn btn-secondary btn-sm" title="Activate session compatibility filter">
+              <button type="submit" class="btn btn-secondary btn-sm" title="Filter parts specifically for this model">
                 <i data-lucide="filter"></i> Filter Parts
               </button>
             </form>
-            <a href="{% url 'garage:vehicle_detail' car.id %}" class="btn btn-primary btn-sm">
-              <i data-lucide="file-text"></i> Service Log & Docs
+
+            <a href="{% url 'garage:edit_vehicle' car.id %}" class="btn btn-secondary btn-sm" title="Edit Vehicle Details">
+              <i data-lucide="edit-2"></i> Edit
             </a>
+
+            <a href="{% url 'garage:vehicle_detail' car.id %}" class="btn btn-primary btn-sm">
+              <i data-lucide="file-text"></i> Vehicle Hub
+            </a>
+
+            <!-- Quick Delete with Confirmation -->
+            <button type="button" class="btn btn-outline btn-sm" style="color:#ef4444; border-color:rgba(239, 68, 68, 0.3); padding:4px 8px;" onclick="document.getElementById('delete-car-modal-{{ car.id }}').showModal();" title="Remove Vehicle">
+              <i data-lucide="trash-2" style="width:14px; height:14px;"></i>
+            </button>
           </div>
         </div>
 
-        <!-- Quick Reminders Strip for this vehicle -->
-        {% with car_reminders=car.reminders.all|slice:":2" %}
-          {% if car_reminders %}
-          <div style="margin-top:16px; padding-top:14px; border-top:1px solid var(--border-subtle); display:flex; gap:16px; flex-wrap:wrap; font-size:0.82rem;">
-            {% for rem in car_reminders %}
-              <div style="display:flex; align-items:center; gap:6px; color:{% if rem.is_completed %}#10b981{% else %}#d97706{% endif %};">
-                <i data-lucide="{% if rem.is_completed %}check-circle{% else %}clock{% endif %}" style="width:14px; height:14px;"></i>
-                <span>{{ rem.title }} {% if rem.due_date %}(Due: {{ rem.due_date|date:"d M Y" }}){% endif %}</span>
-              </div>
-            {% endfor %}
+        <!-- Vehicle Health & Maintenance Overview Row -->
+        <div style="margin-top:20px; padding-top:16px; border-top:1px solid var(--border-subtle); display:grid; grid-template-columns:repeat(auto-fit, minmax(200px, 1fr)); gap:16px; font-size:0.85rem;">
+          <!-- 1. Last Recorded Service -->
+          <div style="background:var(--bg-surface-subtle); padding:10px 14px; border-radius:var(--radius-sm);">
+            <div style="font-size:0.75rem; text-transform:uppercase; color:var(--text-muted); font-weight:700;">Last Service Logged</div>
+            {% if car.last_service %}
+              <div style="font-weight:700; color:var(--text-main); margin-top:2px;">{{ car.last_service.service_title }}</div>
+              <div style="font-size:0.75rem; color:var(--text-muted);">{{ car.last_service.service_date|date:"d M Y" }} ({{ car.last_service.mileage|floatformat:0 }} km)</div>
+            {% else %}
+              <div style="color:var(--text-muted); margin-top:2px;">No services logged yet</div>
+              <a href="{% url 'garage:add_record' car.id %}" style="font-size:0.75rem; color:var(--color-primary);">+ Log First Service</a>
+            {% endif %}
           </div>
-          {% endif %}
-        {% endwith %}
+
+          <!-- 2. Next Scheduled Maintenance -->
+          <div style="background:var(--bg-surface-subtle); padding:10px 14px; border-radius:var(--radius-sm);">
+            <div style="font-size:0.75rem; text-transform:uppercase; color:var(--text-muted); font-weight:700;">Next Maintenance</div>
+            {% if car.next_reminder %}
+              <div style="font-weight:700; color:var(--text-main); margin-top:2px;">{{ car.next_reminder.title }}</div>
+              <div style="font-size:0.75rem; color:var(--text-muted);">
+                {% if car.next_reminder.due_date %}Due: {{ car.next_reminder.due_date|date:"d M Y" }}{% endif %}
+                {% if car.next_reminder.due_mileage %} • Target: {{ car.next_reminder.due_mileage|floatformat:0 }} km{% endif %}
+              </div>
+            {% elif car.last_service.next_service_date %}
+              <div style="font-weight:700; color:var(--text-main); margin-top:2px;">Scheduled Service</div>
+              <div style="font-size:0.75rem; color:var(--text-muted);">Due: {{ car.last_service.next_service_date|date:"d M Y" }}</div>
+            {% else %}
+              <div style="color:var(--text-muted); margin-top:2px;">No upcoming reminders</div>
+              <a href="{% url 'garage:vehicle_detail' car.id %}#reminders" style="font-size:0.75rem; color:var(--color-primary);">+ Set Service Reminder</a>
+            {% endif %}
+          </div>
+
+          <!-- 3. Total Recorded Expenses -->
+          <div style="background:var(--bg-surface-subtle); padding:10px 14px; border-radius:var(--radius-sm);">
+            <div style="font-size:0.75rem; text-transform:uppercase; color:var(--text-muted); font-weight:700;">Recorded Expenses</div>
+            <div style="font-family:var(--font-heading); font-weight:800; font-size:1.15rem; color:var(--color-primary); margin-top:2px;">
+              ₹{{ car.total_expenses|floatformat:2 }}
+            </div>
+            <a href="{% url 'garage:vehicle_expenses' car.id %}" style="font-size:0.75rem; color:var(--text-muted); text-decoration:underline;">View Expense Analytics</a>
+          </div>
+
+          <!-- 4. Outstanding Reminders Count -->
+          <div style="background:var(--bg-surface-subtle); padding:10px 14px; border-radius:var(--radius-sm); display:flex; justify-content:space-between; align-items:center;">
+            <div>
+              <div style="font-size:0.75rem; text-transform:uppercase; color:var(--text-muted); font-weight:700;">Active Alerts</div>
+              <div style="font-weight:800; font-size:1.15rem; color:{% if car.pending_reminders_count > 0 %}#d97706{% else %}#10b981{% endif %}; margin-top:2px;">
+                {{ car.pending_reminders_count }} Reminder{{ car.pending_reminders_count|pluralize }}
+              </div>
+            </div>
+            <a href="{% url 'services:book' %}?vehicle_id={{ car.id }}" class="btn btn-secondary btn-sm" style="font-size:0.75rem;">
+              Book Service
+            </a>
+          </div>
+        </div>
       </div>
+
+      <!-- Delete Confirmation Modal for this vehicle -->
+      <dialog id="delete-car-modal-{{ car.id }}" style="border:1px solid rgba(239, 68, 68, 0.4); border-radius:var(--radius-lg); background:var(--bg-surface-elevated); padding:24px; max-width:440px; box-shadow:var(--shadow-xl); color:var(--text-main);">
+        <div style="text-align:center; margin-bottom:16px;">
+          <div style="width:48px; height:48px; border-radius:50%; background:rgba(239, 68, 68, 0.1); color:#ef4444; display:flex; align-items:center; justify-content:center; margin:0 auto 12px;">
+            <i data-lucide="alert-triangle" style="width:24px; height:24px;"></i>
+          </div>
+          <h3 style="margin:0 0 8px 0; font-size:1.2rem;">Remove {{ car.display_title }}?</h3>
+          <p style="font-size:0.85rem; color:var(--text-muted); margin:0;">
+            This will permanently remove the vehicle along with its maintenance history, receipts, reminders, and documents.
+          </p>
+        </div>
+        <div style="display:flex; justify-content:flex-end; gap:10px; margin-top:20px;">
+          <button type="button" class="btn btn-secondary btn-sm" onclick="document.getElementById('delete-car-modal-{{ car.id }}').close();">Cancel</button>
+          <form method="POST" action="{% url 'garage:delete_vehicle' car.id %}" style="margin:0;">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-primary btn-sm" style="background:#ef4444; border-color:#ef4444;">
+              Confirm Delete
+            </button>
+          </form>
+        </div>
+      </dialog>
     {% empty %}
-      <div class="card" style="text-align:center; padding:64px 20px;">
-        <i data-lucide="warehouse" style="width:54px; height:54px; color:var(--text-muted); margin-bottom:16px;"></i>
-        <h3>No Vehicles in Your Garage</h3>
-        <p style="color:var(--text-muted); max-width:440px; margin:8px auto 20px;">
-          Add your personal car to automatically filter compatible parts, track maintenance expenses, and store RC/insurance copies securely.
+      <div class="card" style="text-align:center; padding:64px 20px; max-width:640px; margin:0 auto;">
+        <div style="width:64px; height:64px; border-radius:50%; background:rgba(8, 126, 255, 0.1); color:var(--color-primary); display:flex; align-items:center; justify-content:center; margin:0 auto 16px;">
+          <i data-lucide="warehouse" style="width:34px; height:34px;"></i>
+        </div>
+        <h3 style="font-size:1.4rem; margin:0 0 8px 0;">Your Digital Garage is Empty</h3>
+        <p style="color:var(--text-muted); max-width:440px; margin:0 auto 24px; line-height:1.6; font-size:0.92rem;">
+          Add your personal car to instantly filter compatible spare parts, track periodic servicing, configure reminder notifications, and store vehicle documents securely.
         </p>
-        <button type="button" class="btn btn-primary" onclick="document.getElementById('add-car-drawer').style.display='block';">
-          <i data-lucide="plus"></i> Add Your First Car
+        <button type="button" class="btn btn-primary" onclick="document.getElementById('add-car-drawer').style.display='block'; window.scrollTo({top: 180, behavior: 'smooth'});">
+          <i data-lucide="plus-circle"></i> Add Your First Car
         </button>
       </div>
     {% endfor %}
@@ -207,7 +322,7 @@ document.addEventListener('DOMContentLoaded', () => {
   if (gMake && gModel && gVariant) {
     gMake.addEventListener('change', async () => {
       const makeId = gMake.value;
-      gModel.innerHTML = '<option value="">Loading...</option>';
+      gModel.innerHTML = '<option value="">Loading models...</option>';
       gModel.disabled = true;
       gVariant.innerHTML = '<option value="">Select Variant...</option>';
       gVariant.disabled = true;
@@ -215,28 +330,36 @@ document.addEventListener('DOMContentLoaded', () => {
 
       if (!makeId) return;
 
-      const res = await fetch(`/vehicles/api/models/?make_id=${makeId}`);
-      const data = await res.json();
-      let opts = '<option value="">Select Model...</option>';
-      data.models.forEach(m => opts += `<option value="${m.id}">${m.name}</option>`);
-      gModel.innerHTML = opts;
-      gModel.disabled = false;
+      try {
+        const res = await fetch(`/vehicles/api/models/?make_id=${makeId}`);
+        const data = await res.json();
+        let opts = '<option value="">Select Model...</option>';
+        data.models.forEach(m => opts += `<option value="${m.id}" data-start="${m.start_year}" data-end="${m.end_year || ''}">${m.name} (${m.start_year}–${m.end_year || 'Present'})</option>`);
+        gModel.innerHTML = opts;
+        gModel.disabled = false;
+      } catch (err) {
+        console.error('Error fetching models:', err);
+      }
     });
 
     gModel.addEventListener('change', async () => {
       const modelId = gModel.value;
-      gVariant.innerHTML = '<option value="">Loading...</option>';
+      gVariant.innerHTML = '<option value="">Loading variants...</option>';
       gVariant.disabled = true;
       gBtn.disabled = true;
 
       if (!modelId) return;
 
-      const res = await fetch(`/vehicles/api/variants/?model_id=${modelId}`);
-      const data = await res.json();
-      let opts = '<option value="">Select Variant...</option>';
-      data.variants.forEach(v => opts += `<option value="${v.id}">${v.name} • ${v.fuel_type} • ${v.transmission}</option>`);
-      gVariant.innerHTML = opts;
-      gVariant.disabled = false;
+      try {
+        const res = await fetch(`/vehicles/api/variants/?model_id=${modelId}`);
+        const data = await res.json();
+        let opts = '<option value="">Select Variant...</option>';
+        data.variants.forEach(v => opts += `<option value="${v.id}">${v.name} • ${v.fuel_type} • ${v.transmission} (${v.engine_cc}cc)</option>`);
+        gVariant.innerHTML = opts;
+        gVariant.disabled = false;
+      } catch (err) {
+        console.error('Error fetching variants:', err);
+      }
     });
 
     gVariant.addEventListener('change', () => {

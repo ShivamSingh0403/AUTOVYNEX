@@ -1,0 +1,128 @@
+{% extends 'base.html' %}
+
+{% block title %}Edit {{ vehicle.display_title }} — AUTOVYNEX Garage{% endblock %}
+
+{% block content %}
+<div class="container" style="padding-top:28px; padding-bottom:60px; max-width:760px; margin:0 auto;">
+  <!-- Breadcrumb -->
+  <div style="font-size:0.85rem; color:var(--text-muted); margin-bottom:12px;">
+    <a href="{% url 'dashboard:customer_dashboard' %}">Dashboard</a> / 
+    <a href="{% url 'garage:index' %}">My Garage</a> / 
+    <a href="{% url 'garage:vehicle_detail' vehicle.id %}">{{ vehicle.display_title }}</a> / 
+    <span>Edit Vehicle</span>
+  </div>
+
+  <div class="card" style="padding:28px; background:var(--bg-surface-elevated); border:1px solid var(--border-subtle); box-shadow:var(--shadow-md);">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; border-bottom:1px solid var(--border-subtle); padding-bottom:14px;">
+      <div>
+        <h2 style="margin:0; font-size:1.4rem; color:var(--text-main); display:flex; align-items:center; gap:8px;">
+          <i data-lucide="edit" style="color:var(--color-primary);"></i> Edit Vehicle Profile
+        </h2>
+        <p style="margin:4px 0 0 0; font-size:0.85rem; color:var(--text-muted);">
+          Update registration, mileage, nickname, and primary preferences for {{ vehicle.variant.model.make.name }} {{ vehicle.variant.model.name }}.
+        </p>
+      </div>
+      <a href="{% url 'garage:vehicle_detail' vehicle.id %}" class="btn btn-secondary btn-sm">Cancel</a>
+    </div>
+
+    <!-- Vehicle Model Spec (Immutable Variant) -->
+    <div style="padding:14px 18px; background:var(--bg-surface-subtle); border-radius:var(--radius-md); margin-bottom:24px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px;">
+      <div>
+        <div style="font-size:0.75rem; text-transform:uppercase; letter-spacing:0.04em; color:var(--text-muted); font-weight:700;">Vehicle Architecture</div>
+        <div style="font-weight:700; font-size:1.05rem; color:var(--text-main);">
+          {{ vehicle.variant.model.make.name }} {{ vehicle.variant.model.name }} {{ vehicle.variant.name }}
+        </div>
+        <div style="font-size:0.8rem; color:var(--text-muted); margin-top:2px;">
+          {{ vehicle.variant.engine_cc }}cc • {{ vehicle.variant.fuel_type|title }} • {{ vehicle.variant.transmission|title }} ({{ vehicle.variant.model.start_year }}–{{ vehicle.variant.model.end_year|default:'Present' }})
+        </div>
+      </div>
+      <span class="badge badge-verified" style="font-size:0.75rem;">Verified Variant</span>
+    </div>
+
+    <form method="POST" action="{% url 'garage:edit_vehicle' vehicle.id %}">
+      {% csrf_token %}
+
+      <div class="grid-2" style="gap:18px; margin-bottom:18px;">
+        <div class="form-group">
+          <label class="form-label">Vehicle Nickname</label>
+          <input type="text" name="nickname" value="{{ vehicle.nickname }}" class="form-control" placeholder="e.g. Daily Commuter, Highway Beast">
+          <small style="font-size:0.75rem; color:var(--text-muted);">Optional custom display name for your garage</small>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Registration Number</label>
+          <input type="text" name="registration_number" value="{{ vehicle.registration_number }}" class="form-control" placeholder="e.g. KA-01-AB-1234">
+          <small style="font-size:0.75rem; color:var(--text-muted);">Optional. Kept private and only visible to you</small>
+        </div>
+      </div>
+
+      <div class="grid-3" style="gap:16px; margin-bottom:18px;">
+        <div class="form-group">
+          <label class="form-label">Purchase Year *</label>
+          <input type="number" name="purchase_year" value="{{ vehicle.purchase_year }}" required min="{{ vehicle.variant.model.start_year }}" max="{% now 'Y' %}" class="form-control">
+          <small style="font-size:0.72rem; color:var(--text-muted);">Model Span: {{ vehicle.variant.model.start_year }}–{{ vehicle.variant.model.end_year|default:'Present' }}</small>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Current Odometer (KM) *</label>
+          <input type="number" name="current_mileage" value="{{ vehicle.current_mileage }}" required min="0" class="form-control">
+          <small style="font-size:0.72rem; color:var(--text-muted);">Used for maintenance suggestions</small>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Exterior Color</label>
+          <input type="text" name="color" value="{{ vehicle.color }}" class="form-control" placeholder="e.g. Pearl White, Silver">
+        </div>
+      </div>
+
+      <div class="form-group" style="margin-bottom:20px;">
+        <label class="form-label">Chassis / VIN Number</label>
+        <input type="text" name="vin_number" value="{{ vehicle.vin_number }}" class="form-control" placeholder="17-Digit Vehicle Identification Number (Optional)">
+        <small style="font-size:0.75rem; color:var(--text-muted);">Securely stored and never shared publicly</small>
+      </div>
+
+      <div style="padding:14px; background:var(--bg-surface-subtle); border-radius:var(--radius-sm); margin-bottom:24px;">
+        <label style="display:flex; align-items:center; gap:10px; cursor:pointer; font-size:0.9rem;">
+          <input type="checkbox" name="is_default" value="1" {% if vehicle.is_default %}checked{% endif %} style="accent-color:var(--color-primary); width:18px; height:18px;">
+          <span><strong>Set as Primary Vehicle</strong> — Used as the default car for parts compatibility filtering and dashboard summary</span>
+        </label>
+      </div>
+
+      <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px;">
+        <button type="button" class="btn btn-outline btn-sm" style="color:#ef4444; border-color:rgba(239, 68, 68, 0.4);" onclick="document.getElementById('delete-car-dialog').showModal();">
+          <i data-lucide="trash-2"></i> Delete Vehicle
+        </button>
+
+        <div style="display:flex; gap:10px;">
+          <a href="{% url 'garage:vehicle_detail' vehicle.id %}" class="btn btn-secondary">Cancel</a>
+          <button type="submit" class="btn btn-primary">
+            <i data-lucide="save"></i> Save Changes
+          </button>
+        </div>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Safe Delete Confirmation Modal -->
+<dialog id="delete-car-dialog" style="border:1px solid rgba(239, 68, 68, 0.4); border-radius:var(--radius-lg); background:var(--bg-surface-elevated); padding:24px; max-width:480px; box-shadow:var(--shadow-xl); color:var(--text-main);">
+  <div style="text-align:center; margin-bottom:16px;">
+    <div style="width:48px; height:48px; border-radius:50%; background:rgba(239, 68, 68, 0.1); color:#ef4444; display:flex; align-items:center; justify-content:center; margin:0 auto 12px;">
+      <i data-lucide="alert-triangle" style="width:24px; height:24px;"></i>
+    </div>
+    <h3 style="margin:0 0 8px 0; font-size:1.25rem;">Remove {{ vehicle.display_title }}?</h3>
+    <p style="font-size:0.88rem; color:var(--text-muted); margin:0;">
+      Are you sure you want to remove this vehicle from your Digital Garage? All associated service records, reminders, and uploaded documents will be permanently deleted.
+    </p>
+  </div>
+  <div style="display:flex; justify-content:flex-end; gap:12px; margin-top:20px;">
+    <button type="button" class="btn btn-secondary btn-sm" onclick="document.getElementById('delete-car-dialog').close();">Cancel</button>
+    <form method="POST" action="{% url 'garage:delete_vehicle' vehicle.id %}" style="margin:0;">
+      {% csrf_token %}
+      <button type="submit" class="btn btn-primary btn-sm" style="background:#ef4444; border-color:#ef4444;">
+        Yes, Remove Vehicle
+      </button>
+    </form>
+  </div>
+</dialog>
+{% endblock %}

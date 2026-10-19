@@ -1,0 +1,134 @@
+{% extends 'base.html' %}
+
+{% block title %}Edit Reminder — AUTOVYNEX{% endblock %}
+
+{% block content %}
+<div class="container" style="padding-top:28px; padding-bottom:60px; max-width:720px; margin:0 auto;">
+  <!-- Breadcrumb -->
+  <div style="font-size:0.85rem; color:var(--text-muted); margin-bottom:12px;">
+    <a href="{% url 'dashboard:customer_dashboard' %}">Dashboard</a> / 
+    <a href="{% url 'garage:index' %}">My Garage</a> / 
+    <a href="{% url 'garage:vehicle_detail' vehicle.id %}">{{ vehicle.display_title }}</a> / 
+    <span>Edit Reminder</span>
+  </div>
+
+  <div class="card" style="padding:28px; background:var(--bg-surface-elevated); border:1px solid var(--border-subtle); box-shadow:var(--shadow-md);">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; border-bottom:1px solid var(--border-subtle); padding-bottom:14px;">
+      <div>
+        <h2 style="margin:0; font-size:1.4rem; color:var(--text-main); display:flex; align-items:center; gap:8px;">
+          <i data-lucide="bell" style="color:#d97706;"></i> Edit Maintenance Reminder
+        </h2>
+        <p style="margin:4px 0 0 0; font-size:0.85rem; color:var(--text-muted);">
+          Configure due dates, mileage thresholds, recurrence intervals, and urgency priority for {{ vehicle.display_title }}.
+        </p>
+      </div>
+      <a href="{% url 'garage:vehicle_detail' vehicle.id %}" class="btn btn-secondary btn-sm">Cancel</a>
+    </div>
+
+    <form method="POST" action="{% url 'garage:edit_reminder' reminder.id %}">
+      {% csrf_token %}
+
+      <div class="form-group" style="margin-bottom:16px;">
+        <label class="form-label">Reminder Title *</label>
+        <input type="text" name="title" value="{{ reminder.title }}" required class="form-control" placeholder="e.g. Engine Synthetic Oil Change">
+      </div>
+
+      <div class="grid-2" style="gap:16px; margin-bottom:16px;">
+        <div class="form-group">
+          <label class="form-label">Maintenance Category *</label>
+          <select name="reminder_type" class="form-select" required>
+            {% for code, label in reminder_types %}
+              <option value="{{ code }}" {% if reminder.reminder_type == code %}selected{% endif %}>{{ label }}</option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Priority Level *</label>
+          <select name="priority" class="form-select" required>
+            {% for code, label in priority_choices %}
+              <option value="{{ code }}" {% if reminder.priority == code %}selected{% endif %}>{{ label }}</option>
+            {% endfor %}
+          </select>
+        </div>
+      </div>
+
+      <div class="grid-2" style="gap:16px; margin-bottom:16px;">
+        <div class="form-group">
+          <label class="form-label">Due Date (Calendar Deadline)</label>
+          <input type="date" name="due_date" value="{% if reminder.due_date %}{{ reminder.due_date|date:'Y-m-d' }}{% endif %}" class="form-control">
+          <small style="font-size:0.75rem; color:var(--text-muted);">Triggered when calendar reaches this date</small>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Due Odometer (Target KM)</label>
+          <input type="number" name="due_mileage" value="{{ reminder.due_mileage|default:'' }}" class="form-control" placeholder="e.g. 45000">
+          <small style="font-size:0.75rem; color:var(--text-muted);">Current vehicle odometer: {{ vehicle.current_mileage|floatformat:0 }} km</small>
+        </div>
+      </div>
+
+      <!-- Recurrence Settings -->
+      <div style="background:var(--bg-surface-subtle); border-radius:var(--radius-md); padding:16px; margin-bottom:20px; border:1px solid var(--border-subtle);">
+        <div style="font-size:0.85rem; font-weight:700; color:var(--text-main); margin-bottom:6px;">
+          Recurring Schedule (Optional)
+        </div>
+        <p style="font-size:0.8rem; color:var(--text-muted); margin:0 0 12px 0;">
+          Automatically spawns the next scheduled maintenance reminder when this task is marked complete.
+        </p>
+
+        <div class="grid-2" style="gap:14px;">
+          <div class="form-group">
+            <label class="form-label" style="font-size:0.8rem;">Repeat Every (Months)</label>
+            <input type="number" name="recurrence_months" value="{{ reminder.recurrence_months|default:'' }}" min="1" max="60" class="form-control" placeholder="e.g. 6 or 12">
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" style="font-size:0.8rem;">Repeat Every (KM)</label>
+            <input type="number" name="recurrence_km" value="{{ reminder.recurrence_km|default:'' }}" min="500" step="500" class="form-control" placeholder="e.g. 10000">
+          </div>
+        </div>
+      </div>
+
+      <div class="form-group" style="margin-bottom:24px;">
+        <label class="form-label">Notes & Instructions</label>
+        <textarea name="notes" class="form-control" style="min-height:70px;" placeholder="e.g. Use 5W-30 full synthetic, check tyre tread depth...">{{ reminder.notes }}</textarea>
+      </div>
+
+      <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px;">
+        <button type="button" class="btn btn-outline btn-sm" style="color:#ef4444; border-color:rgba(239, 68, 68, 0.4);" onclick="document.getElementById('delete-reminder-dialog').showModal();">
+          <i data-lucide="trash-2"></i> Delete Reminder
+        </button>
+
+        <div style="display:flex; gap:10px;">
+          <a href="{% url 'garage:vehicle_detail' vehicle.id %}" class="btn btn-secondary">Cancel</a>
+          <button type="submit" class="btn btn-primary">
+            <i data-lucide="save"></i> Update Reminder
+          </button>
+        </div>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Delete Confirmation Modal -->
+<dialog id="delete-reminder-dialog" style="border:1px solid rgba(239, 68, 68, 0.4); border-radius:var(--radius-lg); background:var(--bg-surface-elevated); padding:24px; max-width:440px; box-shadow:var(--shadow-xl); color:var(--text-main);">
+  <div style="text-align:center; margin-bottom:16px;">
+    <div style="width:48px; height:48px; border-radius:50%; background:rgba(239, 68, 68, 0.1); color:#ef4444; display:flex; align-items:center; justify-content:center; margin:0 auto 12px;">
+      <i data-lucide="trash-2" style="width:24px; height:24px;"></i>
+    </div>
+    <h3 style="margin:0 0 8px 0; font-size:1.2rem;">Delete Reminder?</h3>
+    <p style="font-size:0.85rem; color:var(--text-muted); margin:0;">
+      Are you sure you want to delete the reminder "{{ reminder.title }}"?
+    </p>
+  </div>
+  <div style="display:flex; justify-content:flex-end; gap:12px; margin-top:20px;">
+    <button type="button" class="btn btn-secondary btn-sm" onclick="document.getElementById('delete-reminder-dialog').close();">Cancel</button>
+    <form method="POST" action="{% url 'garage:delete_reminder' reminder.id %}" style="margin:0;">
+      {% csrf_token %}
+      <button type="submit" class="btn btn-primary btn-sm" style="background:#ef4444; border-color:#ef4444;">
+        Confirm Delete
+      </button>
+    </form>
+  </div>
+</dialog>
+{% endblock %}

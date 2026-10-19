@@ -34,6 +34,11 @@ def book_service(request):
     providers = ServiceProvider.objects.filter(is_active=True).order_by('name')
     customer_vehicles = CustomerVehicle.objects.filter(user=request.user)
 
+    selected_vehicle_id = request.GET.get('vehicle_id')
+    selected_vehicle = None
+    if selected_vehicle_id:
+        selected_vehicle = customer_vehicles.filter(pk=selected_vehicle_id).first()
+
     selected_service_id = request.GET.get('service_id')
     selected_service = None
     if selected_service_id:
@@ -93,6 +98,7 @@ def book_service(request):
         'services': services,
         'providers': providers,
         'customer_vehicles': customer_vehicles,
+        'selected_vehicle': selected_vehicle,
         'selected_service': selected_service,
         'time_slots': ServiceBooking.TIME_SLOTS,
     }
