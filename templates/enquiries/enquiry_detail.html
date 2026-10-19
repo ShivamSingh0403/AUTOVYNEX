@@ -1,0 +1,388 @@
+{% extends 'base.html' %}
+
+{% block title %}Enquiry {{ enquiry.reference_code }} — Part Sourcing Status | AUTOVYNEX{% endblock %}
+
+{% block content %}
+<div class="container" style="padding-top:24px; padding-bottom:60px;">
+  <div style="max-width:960px; margin:0 auto;">
+    <!-- Breadcrumb & Top Bar -->
+    <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:16px; margin-bottom:28px;">
+      <div>
+        <div style="font-size:0.85rem; color:var(--text-muted); margin-bottom:4px;">
+          {% if user.is_authenticated %}
+            <a href="{% url 'enquiries:my_enquiries' %}">My Enquiries</a> / 
+          {% else %}
+            <a href="{% url 'enquiries:missing_part_request' %}">Part Sourcing</a> / 
+          {% endif %}
+          <span>{{ enquiry.reference_code }}</span>
+        </div>
+        <div style="display:flex; align-items:center; gap:12px; flex-wrap:wrap;">
+          <h1 style="font-size:1.85rem; margin:0; color:var(--text-main);">
+            Enquiry #{{ enquiry.reference_code }}
+          </h1>
+          <span class="badge {% if enquiry.status == 'completed' or enquiry.status == 'customer_accepted' %}badge-verified{% elif enquiry.status == 'quote_prepared' %}badge-warning{% elif enquiry.status == 'cancelled' or enquiry.status == 'unavailable' %}badge-danger{% else %}badge-info{% endif %}" style="font-size:0.8rem;">
+            {{ enquiry.get_status_display }}
+          </span>
+        </div>
+        <div style="font-size:0.85rem; color:var(--text-muted); margin-top:4px;">
+          Submitted on {{ enquiry.created_at|date:"d M Y, h:i A" }} • Last Updated: {{ enquiry.updated_at|date:"d M Y, h:i A" }}
+        </div>
+      </div>
+
+      <div style="display:flex; gap:10px; align-items:center;">
+        {% if user.is_authenticated %}
+          <a href="{% url 'enquiries:my_enquiries' %}" class="btn btn-secondary btn-sm">
+            <i data-lucide="list"></i> All Enquiries
+          </a>
+        {% endif %}
+        <a href="{% url 'enquiries:missing_part_request' %}" class="btn btn-primary btn-sm">
+          <i data-lucide="plus"></i> New Request
+        </a>
+      </div>
+    </div>
+
+    <!-- Sourcing Pipeline Visual Timeline Card -->
+    <div class="card" style="margin-bottom:32px; background:var(--bg-surface-elevated); border:1px solid var(--border-subtle);">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; flex-wrap:wrap; gap:12px; border-bottom:1px solid var(--border-subtle); padding-bottom:12px;">
+        <div>
+          <div style="font-size:0.78rem; color:var(--text-muted); text-transform:uppercase; font-weight:700;">Current Sourcing Milestone</div>
+          <div style="font-family:var(--font-heading); font-size:1.4rem; font-weight:800; color:var(--color-primary); margin-top:2px;">
+            {{ enquiry.get_status_display }}
+          </div>
+        </div>
+        <div class="demo-academic-badge">
+          <i data-lucide="shield-check"></i>
+          <span>Tracked by AUTOVYNEX Logistics Network</span>
+        </div>
+      </div>
+
+      <!-- 5-Step Progress Bar -->
+      <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(140px, 1fr)); gap:10px; text-align:center;">
+        <!-- Step 1: Submitted -->
+        <div style="padding:10px 8px; border-radius:var(--radius-md); background:rgba(16, 185, 129, 0.12); color:#047857;">
+          <i data-lucide="check-circle" style="width:18px; height:18px; margin-bottom:4px;"></i>
+          <div style="font-size:0.75rem; font-weight:700;">1. Submitted</div>
+        </div>
+
+        <!-- Step 2: Under Review / More Info -->
+        <div style="padding:10px 8px; border-radius:var(--radius-md); {% if enquiry.status in 'under_review,info_required,sourcing,part_found,quote_prepared,customer_accepted,completed' %}background:rgba(16, 185, 129, 0.12); color:#047857;{% else %}background:var(--bg-surface-subtle); color:var(--text-muted);{% endif %}">
+          <i data-lucide="eye" style="width:18px; height:18px; margin-bottom:4px;"></i>
+          <div style="font-size:0.75rem; font-weight:700;">2. Under Review</div>
+        </div>
+
+        <!-- Step 3: Sourcing in Progress -->
+        <div style="padding:10px 8px; border-radius:var(--radius-md); {% if enquiry.status in 'sourcing,part_found,quote_prepared,customer_accepted,completed' %}background:rgba(16, 185, 129, 0.12); color:#047857;{% elif enquiry.status == 'info_required' %}background:rgba(245, 158, 11, 0.12); color:#d97706;{% else %}background:var(--bg-surface-subtle); color:var(--text-muted);{% endif %}">
+          <i data-lucide="search" style="width:18px; height:18px; margin-bottom:4px;"></i>
+          <div style="font-size:0.75rem; font-weight:700;">
+            {% if enquiry.status == 'info_required' %}Action Needed{% else %}3. Sourcing Search{% endif %}
+          </div>
+        </div>
+
+        <!-- Step 4: Quote Prepared -->
+        <div style="padding:10px 8px; border-radius:var(--radius-md); {% if enquiry.status in 'quote_prepared,customer_accepted,completed' %}background:rgba(16, 185, 129, 0.12); color:#047857;{% else %}background:var(--bg-surface-subtle); color:var(--text-muted);{% endif %}">
+          <i data-lucide="tag" style="width:18px; height:18px; margin-bottom:4px;"></i>
+          <div style="font-size:0.75rem; font-weight:700;">4. Quote Ready</div>
+        </div>
+
+        <!-- Step 5: Completed -->
+        <div style="padding:10px 8px; border-radius:var(--radius-md); {% if enquiry.status in 'customer_accepted,completed' %}background:rgba(16, 185, 129, 0.12); color:#047857;{% elif enquiry.status in 'unavailable,cancelled' %}background:rgba(239, 68, 68, 0.1); color:#dc2626;{% else %}background:var(--bg-surface-subtle); color:var(--text-muted);{% endif %}">
+          <i data-lucide="{% if enquiry.status in 'unavailable,cancelled' %}x-circle{% else %}check{% endif %}" style="width:18px; height:18px; margin-bottom:4px;"></i>
+          <div style="font-size:0.75rem; font-weight:700;">
+            {% if enquiry.status == 'cancelled' %}Cancelled{% elif enquiry.status == 'unavailable' %}Unavailable{% else %}5. Completed{% endif %}
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Action Needed Notice (If status is info_required) -->
+    {% if enquiry.status == 'info_required' %}
+      <div class="card" style="margin-bottom:28px; background:rgba(245, 158, 11, 0.08); border:1px solid rgba(245, 158, 11, 0.3); padding:20px;">
+        <div style="display:flex; align-items:flex-start; gap:14px;">
+          <i data-lucide="alert-circle" style="color:#d97706; width:26px; height:26px; flex-shrink:0;"></i>
+          <div>
+            <h4 style="margin:0 0 6px 0; color:#d97706; font-size:1.05rem;">Additional Information Requested by Sourcing Team</h4>
+            <p style="font-size:0.9rem; color:var(--text-main); margin:0 0 12px 0;">
+              {{ enquiry.customer_notes|default:'Our procurement specialists need additional details or photographs to locate this component.' }}
+            </p>
+            <button type="button" class="btn btn-primary btn-sm" onclick="document.getElementById('add-info-box').style.display='block'; window.scrollTo({top: 600, behavior:'smooth'});">
+              Provide Requested Information / Photos
+            </button>
+          </div>
+        </div>
+      </div>
+    {% elif enquiry.customer_notes %}
+      <div class="card" style="margin-bottom:28px; background:rgba(8, 126, 255, 0.05); border-left:4px solid var(--electric-blue); padding:16px 20px;">
+        <div style="font-size:0.75rem; text-transform:uppercase; font-weight:700; color:var(--electric-blue); margin-bottom:4px; display:flex; align-items:center; gap:6px;">
+          <i data-lucide="info" style="width:14px; height:14px;"></i> Latest Logistics Update
+        </div>
+        <p style="font-size:0.92rem; color:var(--text-main); margin:0; line-height:1.5;">
+          {{ enquiry.customer_notes }}
+        </p>
+      </div>
+    {% endif %}
+
+    <!-- Section 8: Official Sourcing Quote Card -->
+    {% if enquiry.is_quote_available %}
+      <div class="card" style="margin-bottom:32px; padding:28px; background:linear-gradient(135deg, rgba(8, 126, 255, 0.06), rgba(16, 185, 129, 0.04)); border:2px solid var(--color-primary); box-shadow:var(--shadow-md);">
+        <div style="display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:14px; margin-bottom:18px; border-bottom:1px solid var(--border-subtle); padding-bottom:14px;">
+          <div>
+            <span class="badge badge-verified" style="margin-bottom:4px; font-size:0.75rem;">
+              <i data-lucide="check-check" style="width:12px; height:12px;"></i> Official Sourcing Quotation
+            </span>
+            <h3 style="margin:4px 0 0 0; font-size:1.4rem; color:var(--text-main);">
+              {{ enquiry.part_name }}
+            </h3>
+            {% if enquiry.is_demo_quote %}
+              <div style="font-size:0.72rem; color:var(--text-muted); margin-top:2px;">(Simulated Demonstration Quotation)</div>
+            {% endif %}
+          </div>
+
+          <div style="text-align:right;">
+            <div style="font-size:0.78rem; text-transform:uppercase; color:var(--text-muted); font-weight:700;">Confirmed Sourced Price</div>
+            <div style="font-family:var(--font-heading); font-size:2rem; font-weight:800; color:var(--color-primary);">
+              ₹{{ enquiry.quote_amount|floatformat:2 }}
+            </div>
+            <span style="font-size:0.75rem; color:var(--text-muted);">Inclusive of taxes & sourcing logistics</span>
+          </div>
+        </div>
+
+        <div class="grid-4" style="gap:16px; margin-bottom:20px; font-size:0.88rem;">
+          <div>
+            <span style="color:var(--text-muted); font-size:0.78rem; text-transform:uppercase; font-weight:700;">Brand / Manufacturer</span><br>
+            <strong style="color:var(--text-main);">{{ enquiry.quote_brand|default:'Genuine OEM Certified' }}</strong>
+          </div>
+
+          <div>
+            <span style="color:var(--text-muted); font-size:0.78rem; text-transform:uppercase; font-weight:700;">Confirmed Part #</span><br>
+            <strong style="color:var(--text-main);">{{ enquiry.quote_part_number|default:'OEM Verified Stamping' }}</strong>
+          </div>
+
+          <div>
+            <span style="color:var(--text-muted); font-size:0.78rem; text-transform:uppercase; font-weight:700;">Condition</span><br>
+            <strong style="color:var(--text-main);">{{ enquiry.quote_condition|default:'Brand New' }}</strong>
+          </div>
+
+          <div>
+            <span style="color:var(--text-muted); font-size:0.78rem; text-transform:uppercase; font-weight:700;">Delivery Timeframe</span><br>
+            <strong style="color:var(--text-main);">{{ enquiry.quote_delivery_days|default:'3–5 Business Days' }}</strong>
+          </div>
+        </div>
+
+        <div class="grid-2" style="gap:16px; margin-bottom:20px; font-size:0.85rem; background:var(--bg-surface-subtle); padding:12px 16px; border-radius:var(--radius-sm);">
+          <div>
+            <span style="color:var(--text-muted);">Warranty Coverage:</span>
+            <strong style="color:var(--text-main);">{{ enquiry.quote_warranty|default:'6 Months AUTOVYNEX Warranty' }}</strong>
+          </div>
+          <div>
+            <span style="color:var(--text-muted);">Quote Expiry:</span>
+            <strong style="color:{% if enquiry.is_quote_expired %}#ef4444{% else %}var(--text-main){% endif %};">
+              {% if enquiry.quote_expires_at %}
+                {{ enquiry.quote_expires_at|date:"d M Y, h:i A" }}
+                {% if enquiry.is_quote_expired %}(Expired){% endif %}
+              {% else %}
+                Valid for 7 days
+              {% endif %}
+            </strong>
+          </div>
+        </div>
+
+        {% if enquiry.quote_notes %}
+          <div style="font-size:0.85rem; color:var(--text-muted); margin-bottom:20px; line-height:1.5;">
+            <strong>Procurement Terms:</strong> {{ enquiry.quote_notes }}
+          </div>
+        {% endif %}
+
+        <!-- Customer Decision Actions -->
+        {% if enquiry.status == 'quote_prepared' %}
+          {% if not enquiry.is_quote_expired %}
+            <div style="display:flex; justify-content:flex-end; gap:12px; flex-wrap:wrap; border-top:1px solid var(--border-subtle); padding-top:18px;">
+              <form method="POST" action="{% url 'enquiries:enquiry_detail' enquiry.reference_code %}" style="margin:0;">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="decline_quote">
+                <button type="submit" class="btn btn-outline btn-sm" onclick="return confirm('Are you sure you want to decline this quote?');">
+                  Decline Quote
+                </button>
+              </form>
+
+              <form method="POST" action="{% url 'enquiries:enquiry_detail' enquiry.reference_code %}" style="margin:0;">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="accept_quote">
+                <button type="submit" class="btn btn-primary">
+                  <i data-lucide="check-circle"></i> Accept Quote & Order (₹{{ enquiry.quote_amount|floatformat:2 }})
+                </button>
+              </form>
+            </div>
+          {% else %}
+            <div style="color:#ef4444; font-size:0.88rem; font-weight:600;">
+              This quote expired on {{ enquiry.quote_expires_at|date:"d M Y" }}. Please submit an updated inquiry or contact support to refresh pricing.
+            </div>
+          {% endif %}
+        {% elif enquiry.status == 'customer_accepted' %}
+          <div style="padding:10px 14px; background:rgba(16, 185, 129, 0.1); border-radius:var(--radius-sm); color:#047857; font-size:0.88rem; display:flex; align-items:center; gap:8px;">
+            <i data-lucide="check-check"></i>
+            <span><strong>Quote Accepted on {{ enquiry.quote_decision_at|date:"d M Y" }}:</strong> Sourcing dispatch is in progress with the supplier depot.</span>
+          </div>
+        {% elif enquiry.quote_status == 'declined' %}
+          <div style="padding:10px 14px; background:var(--bg-surface-subtle); border-radius:var(--radius-sm); color:var(--text-muted); font-size:0.85rem;">
+            You declined this sourcing quote on {{ enquiry.quote_decision_at|date:"d M Y" }}.
+          </div>
+        {% endif %}
+      </div>
+    {% endif %}
+
+    <!-- Specifications & Image Gallery Grid -->
+    <div style="display:grid; grid-template-columns:1.2fr 0.8fr; gap:28px; margin-bottom:36px;" class="grid-enquiry-specs">
+      <!-- Left Column: Full Specifications -->
+      <div class="card" style="padding:24px;">
+        <h3 style="font-size:1.15rem; margin:0 0 16px 0; border-bottom:1px solid var(--border-subtle); padding-bottom:10px; color:var(--text-main);">
+          Specifications & Defect Profile
+        </h3>
+
+        <div class="grid-2" style="gap:16px; margin-bottom:18px; font-size:0.88rem;">
+          <div>
+            <span style="color:var(--text-muted); font-size:0.75rem; text-transform:uppercase; font-weight:700;">Requested Part</span>
+            <div style="font-weight:700; color:var(--text-main); font-size:1.05rem;">{{ enquiry.part_name }}</div>
+            <div style="font-size:0.8rem; color:var(--text-muted);">{{ enquiry.get_category_display }}</div>
+          </div>
+
+          <div>
+            <span style="color:var(--text-muted); font-size:0.75rem; text-transform:uppercase; font-weight:700;">Vehicle Architecture</span>
+            <div style="font-weight:700; color:var(--text-main); font-size:1.05rem;">{{ enquiry.display_vehicle }}</div>
+            {% if enquiry.registration_number %}
+              <div style="font-size:0.8rem; color:var(--text-muted);">Reg: {{ enquiry.registration_number }}</div>
+            {% endif %}
+          </div>
+        </div>
+
+        <div class="grid-3" style="gap:14px; margin-bottom:18px; font-size:0.85rem;">
+          <div>
+            <span style="color:var(--text-muted); font-size:0.75rem; text-transform:uppercase; font-weight:700;">OEM Part Number</span>
+            <div style="font-weight:600; color:var(--text-main);">{{ enquiry.part_number|default:'Not provided' }}</div>
+          </div>
+
+          <div>
+            <span style="color:var(--text-muted); font-size:0.75rem; text-transform:uppercase; font-weight:700;">Preferred Brand</span>
+            <div style="font-weight:600; color:var(--text-main);">{{ enquiry.brand_preference|default:'OEM Equivalent' }}</div>
+          </div>
+
+          <div>
+            <span style="color:var(--text-muted); font-size:0.75rem; text-transform:uppercase; font-weight:700;">Urgency Level</span>
+            <div style="font-weight:600; color:var(--text-main);">{{ enquiry.get_urgency_display }}</div>
+          </div>
+        </div>
+
+        {% if enquiry.budget_range %}
+          <div style="margin-bottom:16px; font-size:0.85rem;">
+            <span style="color:var(--text-muted); font-size:0.75rem; text-transform:uppercase; font-weight:700;">Customer Budget Expectation:</span>
+            <strong style="color:var(--text-main); margin-left:6px;">{{ enquiry.budget_range }}</strong>
+          </div>
+        {% endif %}
+
+        <div>
+          <span style="color:var(--text-muted); font-size:0.75rem; text-transform:uppercase; font-weight:700; display:block; margin-bottom:4px;">
+            Description of Problem / Requirements
+          </span>
+          <p style="font-size:0.9rem; color:var(--text-main); line-height:1.6; margin:0; background:var(--bg-surface-subtle); padding:12px; border-radius:var(--radius-sm);">
+            {{ enquiry.description }}
+          </p>
+        </div>
+
+        <!-- Customer Action Drawer Form (Add Info / Photos) -->
+        <div id="add-info-box" style="display:none; margin-top:20px; padding:16px; background:var(--bg-surface-elevated); border:1px solid var(--color-primary); border-radius:var(--radius-md);">
+          <h4 style="margin:0 0 10px 0; font-size:1rem; color:var(--color-primary);">Add Additional Information or Photographs</h4>
+          <form method="POST" action="{% url 'enquiries:enquiry_detail' enquiry.reference_code %}" enctype="multipart/form-data">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="add_info">
+            <div class="form-group" style="margin-bottom:10px;">
+              <label class="form-label" style="font-size:0.8rem;">Additional Notes or Measurements</label>
+              <textarea name="additional_info" class="form-control" style="min-height:70px;" placeholder="Provide additional part stampings, measurements, or clarifications..."></textarea>
+            </div>
+            <div class="form-group" style="margin-bottom:12px;">
+              <label class="form-label" style="font-size:0.8rem;">Attach Additional Photographs (JPG, PNG, WEBP — Max 5MB)</label>
+              <input type="file" name="additional_photos" multiple class="form-control" accept=".jpg,.jpeg,.png,.webp">
+            </div>
+            <div style="display:flex; justify-content:flex-end; gap:8px;">
+              <button type="button" class="btn btn-secondary btn-sm" onclick="document.getElementById('add-info-box').style.display='none';">Cancel</button>
+              <button type="submit" class="btn btn-primary btn-sm">Submit Information</button>
+            </div>
+          </form>
+        </div>
+
+        <!-- Customer Actions Footer -->
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-top:20px; border-top:1px solid var(--border-subtle); padding-top:14px; flex-wrap:wrap; gap:8px;">
+          <button type="button" class="btn btn-secondary btn-sm" onclick="document.getElementById('add-info-box').style.display='block';">
+            <i data-lucide="plus"></i> Add Info / Photos
+          </button>
+
+          {% if enquiry.can_customer_cancel %}
+            <form method="POST" action="{% url 'enquiries:enquiry_detail' enquiry.reference_code %}" style="margin:0;" onsubmit="return confirm('Cancel this part sourcing request?');">
+              {% csrf_token %}
+              <input type="hidden" name="action" value="cancel_enquiry">
+              <button type="submit" class="btn btn-outline btn-sm" style="color:#ef4444; border-color:rgba(239, 68, 68, 0.4);">
+                Cancel Request
+              </button>
+            </form>
+          {% endif %}
+        </div>
+      </div>
+
+      <!-- Right Column: Uploaded Photos Gallery -->
+      <div class="card" style="padding:24px;">
+        <h3 style="font-size:1.15rem; margin:0 0 16px 0; border-bottom:1px solid var(--border-subtle); padding-bottom:10px; color:var(--text-main); display:flex; align-items:center; gap:8px;">
+          <i data-lucide="image"></i> Attached Photographs
+        </h3>
+
+        {% if enquiry.damaged_part_image or images %}
+          <div style="display:grid; grid-template-columns:repeat(auto-fill, minmax(110px, 1fr)); gap:10px;">
+            {% if enquiry.damaged_part_image %}
+              <div style="border:1px solid var(--border-subtle); border-radius:var(--radius-sm); overflow:hidden; height:100px; cursor:pointer;" onclick="window.open('{{ enquiry.damaged_part_image.url }}', '_blank');">
+                <img src="{{ enquiry.damaged_part_image.url }}" style="width:100%; height:100%; object-fit:cover;" title="Primary Damaged Part Photo">
+              </div>
+            {% endif %}
+            {% for img in images %}
+              <div style="border:1px solid var(--border-subtle); border-radius:var(--radius-sm); overflow:hidden; height:100px; cursor:pointer;" onclick="window.open('{% url 'enquiries:secure_photo' img.id %}', '_blank');">
+                <img src="{% url 'enquiries:secure_photo' img.id %}" style="width:100%; height:100%; object-fit:cover;" title="{{ img.caption }}">
+              </div>
+            {% endfor %}
+          </div>
+          <small style="font-size:0.75rem; color:var(--text-muted); display:block; margin-top:8px;">Click any photo to view full resolution in a secure viewer.</small>
+        {% else %}
+          <div style="text-align:center; padding:32px 10px; color:var(--text-muted);">
+            <i data-lucide="camera-off" style="width:32px; height:32px; margin-bottom:8px;"></i>
+            <div style="font-size:0.85rem;">No photos attached to this request.</div>
+          </div>
+        {% endif %}
+      </div>
+    </div>
+
+    <!-- Timeline of Status Changes (Section 5 & 6) -->
+    <div class="card" style="padding:24px;">
+      <h3 style="font-size:1.15rem; margin:0 0 18px 0; border-bottom:1px solid var(--border-subtle); padding-bottom:10px; color:var(--text-main); display:flex; align-items:center; gap:8px;">
+        <i data-lucide="activity"></i> Sourcing History & Milestones
+      </h3>
+
+      <div style="display:flex; flex-direction:column; gap:16px; position:relative; padding-left:14px; border-left:2px solid var(--border-subtle); margin-left:8px;">
+        {% for step in timeline %}
+          <div style="position:relative;">
+            <!-- Bullet -->
+            <div style="position:absolute; left:-21px; top:3px; width:12px; height:12px; border-radius:50%; background:var(--color-primary); border:2px solid var(--bg-surface);"></div>
+            <div>
+              <div style="display:flex; align-items:center; gap:8px;">
+                <strong style="color:var(--text-main); font-size:0.92rem;">{{ step.status|title }}</strong>
+                <span style="font-size:0.75rem; color:var(--text-muted);">{{ step.created_at|date:"d M Y, h:i A" }}</span>
+              </div>
+              {% if step.notes %}
+                <p style="font-size:0.85rem; color:var(--text-muted); margin:4px 0 0; line-height:1.5;">
+                  {{ step.notes }}
+                </p>
+              {% endif %}
+            </div>
+          </div>
+        {% empty %}
+          <p style="font-size:0.85rem; color:var(--text-muted); margin:0;">Enquiry submitted to logistics queue.</p>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

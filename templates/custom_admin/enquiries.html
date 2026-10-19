@@ -3,60 +3,230 @@
 {% block title %}Admin Sourcing Enquiries — AUTOVYNEX{% endblock %}
 
 {% block content %}
-<div class="container" style="padding-top:24px;">
-  <div style="margin-bottom:28px;">
-    <div style="font-size:0.85rem; color:var(--text-muted); margin-bottom:4px;">
-      <a href="{% url 'custom_admin:dashboard_overview' %}">Admin Center</a> / <span>Enquiries</span>
+<div class="container" style="padding-top:28px; padding-bottom:60px;">
+  <!-- Header -->
+  <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:28px; flex-wrap:wrap; gap:16px;">
+    <div>
+      <div style="font-size:0.85rem; color:var(--text-muted); margin-bottom:4px;">
+        <a href="{% url 'custom_admin:dashboard_overview' %}" style="color:var(--text-muted); text-decoration:none;">Admin Center</a> / <span>Sourcing Enquiries</span>
+      </div>
+      <h1 style="font-size:1.85rem; font-weight:800; margin:0; letter-spacing:-0.02em;">Missing Part Sourcing Moderation Desk</h1>
+      <p style="color:var(--text-muted); font-size:0.9rem; margin-top:4px; max-width:650px;">
+        Review driver inquiries, verify vehicle fitment details, prepare official sourcing quotes, and manage logistical statuses.
+      </p>
     </div>
-    <h1 style="font-size:1.85rem; margin:0;">Missing Part Sourcing Moderation Desk</h1>
-    <p style="color:var(--text-muted); font-size:0.9rem; margin-top:4px;">Review driver inquiries, assign quotes, and update logistical sourcing statuses.</p>
+    <div style="display:flex; gap:12px; align-items:center;">
+      <a href="{% url 'enquiries:missing_part_request' %}" target="_blank" class="btn btn-secondary" style="font-size:0.85rem;">
+        <i data-lucide="external-link"></i> Customer Form
+      </a>
+      <a href="/admin/enquiries/missingpartenquiry/" class="btn btn-secondary" style="font-size:0.85rem;">
+        <i data-lucide="shield"></i> Django Admin
+      </a>
+    </div>
   </div>
 
-  <div class="card" style="padding:0; overflow-x:auto;">
-    <table style="width:100%; border-collapse:collapse; min-width:850px; font-size:0.9rem;">
-      <thead>
-        <tr style="background:var(--bg-surface-subtle); border-bottom:1px solid var(--border-subtle); color:var(--text-muted);">
-          <th style="padding:14px 20px; text-align:left;">Reference #</th>
-          <th style="padding:14px 20px; text-align:left;">Requested Part</th>
-          <th style="padding:14px 20px; text-align:left;">Vehicle & Contact</th>
-          <th style="padding:14px 20px; text-align:center;">Status</th>
-          <th style="padding:14px 20px; text-align:right;">Quote (₹)</th>
-          <th style="padding:14px 20px; text-align:center;">Action</th>
-        </tr>
-      </thead>
-      <tbody>
-        {% for enq in enquiries %}
-          <tr style="border-bottom:1px solid var(--border-subtle);">
-            <td style="padding:14px 20px; font-weight:700;">{{ enq.reference_code }}</td>
-            <td style="padding:14px 20px;">
-              <strong>{{ enq.part_name }}</strong><br>
-              <span style="font-size:0.75rem; color:var(--text-muted);">{{ enq.category }}</span>
-            </td>
-            <td style="padding:14px 20px;">
-              {{ enq.vehicle_details }}<br>
-              <span style="font-size:0.75rem; color:var(--text-muted);">{{ enq.contact_name }} ({{ enq.contact_phone }})</span>
-            </td>
-            <td style="padding:14px 20px; text-align:center;">
-              <span class="badge {% if enq.status == 'completed' %}badge-verified{% elif enq.status == 'quote_available' %}badge-universal{% else %}badge-unconfirmed{% endif %}">
-                {{ enq.get_status_display }}
-              </span>
-            </td>
-            <td style="padding:14px 20px; text-align:right; font-weight:700;">
-              {% if enq.quote_amount %}₹{{ enq.quote_amount|floatformat:0 }}{% else %}—{% endif %}
-            </td>
-            <td style="padding:14px 20px; text-align:center;">
-              <a href="{% url 'custom_admin:admin_enquiry_update' enq.id %}" class="btn btn-primary btn-sm" style="padding:4px 10px; font-size:0.75rem;">
-                <i data-lucide="edit"></i> Quote & Manage
-              </a>
-            </td>
+  <!-- Filter & Search Toolbar -->
+  <div class="card" style="margin-bottom:24px; padding:20px; background:var(--bg-surface);">
+    <form method="GET" action="{% url 'custom_admin:admin_enquiries' %}" style="display:flex; gap:14px; flex-wrap:wrap; align-items:flex-end;">
+      <!-- Search Input -->
+      <div style="flex:2; min-width:240px;">
+        <label class="form-label" style="font-size:0.8rem; text-transform:uppercase; letter-spacing:0.05em; color:var(--text-muted);">Search Query</label>
+        <div style="position:relative;">
+          <input type="text" name="q" class="form-control" placeholder="Search reference, part, customer, phone, VIN..." value="{{ search_query|default:'' }}" style="padding-left:36px; font-size:0.9rem;">
+          <i data-lucide="search" style="position:absolute; left:12px; top:50%; transform:translateY(-50%); width:16px; height:16px; color:var(--text-muted);"></i>
+        </div>
+      </div>
+
+      <!-- Status Filter -->
+      <div style="flex:1; min-width:180px;">
+        <label class="form-label" style="font-size:0.8rem; text-transform:uppercase; letter-spacing:0.05em; color:var(--text-muted);">Workflow Status</label>
+        <select name="status" class="form-select" style="font-size:0.9rem;">
+          <option value="">All Statuses</option>
+          {% for code, label in statuses %}
+            <option value="{{ code }}" {% if selected_status == code %}selected{% endif %}>{{ label }}</option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <!-- Category Filter -->
+      <div style="flex:1; min-width:180px;">
+        <label class="form-label" style="font-size:0.8rem; text-transform:uppercase; letter-spacing:0.05em; color:var(--text-muted);">Category</label>
+        <select name="category" class="form-select" style="font-size:0.9rem;">
+          <option value="">All Categories</option>
+          {% for code, label in categories %}
+            <option value="{{ code }}" {% if selected_category == code %}selected{% endif %}>{{ label }}</option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <!-- Buttons -->
+      <div style="display:flex; gap:8px;">
+        <button type="submit" class="btn btn-primary" style="padding:10px 18px; font-size:0.9rem;">
+          <i data-lucide="filter"></i> Apply Filters
+        </button>
+        {% if search_query or selected_status or selected_category %}
+          <a href="{% url 'custom_admin:admin_enquiries' %}" class="btn btn-secondary" style="padding:10px 14px; font-size:0.9rem;" title="Reset filters">
+            <i data-lucide="x"></i> Reset
+          </a>
+        {% endif %}
+      </div>
+    </form>
+  </div>
+
+  <!-- Sourcing Enquiries Table -->
+  <div class="card" style="padding:0; overflow:hidden;">
+    <div style="padding:16px 20px; background:var(--bg-surface-subtle); border-bottom:1px solid var(--border-subtle); display:flex; justify-content:space-between; align-items:center;">
+      <span style="font-weight:700; font-size:0.95rem;">Active Enquiries ({{ enquiries|length }})</span>
+      <span style="font-size:0.8rem; color:var(--text-muted);">Sorted by newest submission</span>
+    </div>
+
+    <div style="overflow-x:auto;">
+      <table style="width:100%; border-collapse:collapse; min-width:960px; font-size:0.9rem;">
+        <thead>
+          <tr style="background:var(--bg-surface-subtle); border-bottom:1px solid var(--border-subtle); color:var(--text-muted); font-size:0.8rem; text-transform:uppercase; letter-spacing:0.04em;">
+            <th style="padding:12px 20px; text-align:left;">Reference #</th>
+            <th style="padding:12px 20px; text-align:left;">Requested Part</th>
+            <th style="padding:12px 20px; text-align:left;">Vehicle & Driver</th>
+            <th style="padding:12px 20px; text-align:center;">Urgency</th>
+            <th style="padding:12px 20px; text-align:center;">Workflow Status</th>
+            <th style="padding:12px 20px; text-align:right;">Quote (₹)</th>
+            <th style="padding:12px 20px; text-align:center;">Action</th>
           </tr>
-        {% empty %}
-          <tr>
-            <td colspan="6" style="padding:32px; text-align:center; color:var(--text-muted);">No sourcing inquiries logged.</td>
-          </tr>
-        {% endfor %}
-      </tbody>
-    </table>
+        </thead>
+        <tbody>
+          {% for enq in enquiries %}
+            <tr style="border-bottom:1px solid var(--border-subtle); transition:background 0.15s ease;">
+              <td style="padding:14px 20px; font-family:monospace; font-weight:700; color:var(--electric-blue); font-size:0.9rem;">
+                <a href="{% url 'custom_admin:admin_enquiry_update' enq.id %}" style="text-decoration:none; color:inherit;">
+                  {{ enq.reference_code }}
+                </a>
+                <div style="font-size:0.75rem; color:var(--text-muted); font-family:sans-serif; margin-top:2px;">
+                  {{ enq.created_at|date:"d M Y, H:i" }}
+                </div>
+              </td>
+              <td style="padding:14px 20px;">
+                <strong style="color:var(--text-primary); font-size:0.95rem;">{{ enq.part_name }}</strong>
+                {% if enq.part_number %}<span style="font-size:0.75rem; color:var(--text-muted); font-family:monospace;">#{{ enq.part_number }}</span>{% endif %}
+                <div style="font-size:0.8rem; color:var(--text-muted); margin-top:2px;">
+                  {{ enq.get_category_display }}
+                  {% if enq.brand_preference %} • Brand: {{ enq.brand_preference }}{% endif %}
+                </div>
+                {% if enq.additional_images.count %}
+                  <div style="margin-top:4px;">
+                    <span style="font-size:0.72rem; padding:2px 6px; background:rgba(8,126,255,0.1); color:var(--electric-blue); border-radius:4px; font-weight:600;">
+                      <i data-lucide="image" style="width:11px; height:11px; vertical-align:middle;"></i> {{ enq.additional_images.count }} photo{{ enq.additional_images.count|pluralize }}
+                    </span>
+                  </div>
+                {% endif %}
+              </td>
+              <td style="padding:14px 20px;">
+                <div style="font-weight:600; color:var(--text-primary);">
+                  {{ enq.vehicle_display }}
+                </div>
+                <div style="font-size:0.8rem; color:var(--text-muted); margin-top:2px;">
+                  {{ enq.contact_name }} • {{ enq.contact_phone }}
+                  {% if enq.whatsapp_enabled %}
+                    <span title="Customer opted-in for WhatsApp alerts" style="color:#25D366; font-size:0.75rem; font-weight:600; margin-left:4px;">[WA]</span>
+                  {% endif %}
+                </div>
+              </td>
+              <td style="padding:14px 20px; text-align:center;">
+                {% if enq.urgency == 'critical' %}
+                  <span style="display:inline-block; font-size:0.72rem; font-weight:700; padding:3px 8px; border-radius:12px; background:rgba(239,68,68,0.15); color:#EF4444; border:1px solid rgba(239,68,68,0.3);">
+                    CRITICAL
+                  </span>
+                {% elif enq.urgency == 'high' %}
+                  <span style="display:inline-block; font-size:0.72rem; font-weight:700; padding:3px 8px; border-radius:12px; background:rgba(245,158,11,0.15); color:#F59E0B; border:1px solid rgba(245,158,11,0.3);">
+                    HIGH
+                  </span>
+                {% else %}
+                  <span style="display:inline-block; font-size:0.72rem; font-weight:600; padding:3px 8px; border-radius:12px; background:var(--bg-surface-subtle); color:var(--text-muted); border:1px solid var(--border-subtle);">
+                    {{ enq.get_urgency_display|upper }}
+                  </span>
+                {% endif %}
+              </td>
+              <td style="padding:14px 20px; text-align:center;">
+                {% if enq.status == 'submitted' %}
+                  <span style="font-size:0.78rem; font-weight:700; padding:4px 10px; border-radius:12px; background:rgba(8,126,255,0.12); color:#087EFF; border:1px solid rgba(8,126,255,0.3);">
+                    Submitted
+                  </span>
+                {% elif enq.status == 'under_review' %}
+                  <span style="font-size:0.78rem; font-weight:700; padding:4px 10px; border-radius:12px; background:rgba(245,158,11,0.12); color:#F59E0B; border:1px solid rgba(245,158,11,0.3);">
+                    Under Review
+                  </span>
+                {% elif enq.status == 'info_required' %}
+                  <span style="font-size:0.78rem; font-weight:700; padding:4px 10px; border-radius:12px; background:rgba(239,68,68,0.12); color:#EF4444; border:1px solid rgba(239,68,68,0.3);">
+                    Info Required
+                  </span>
+                {% elif enq.status == 'sourcing' %}
+                  <span style="font-size:0.78rem; font-weight:700; padding:4px 10px; border-radius:12px; background:rgba(139,92,246,0.12); color:#8B5CF6; border:1px solid rgba(139,92,246,0.3);">
+                    Sourcing Active
+                  </span>
+                {% elif enq.status == 'part_found' %}
+                  <span style="font-size:0.78rem; font-weight:700; padding:4px 10px; border-radius:12px; background:rgba(16,185,129,0.12); color:#10B981; border:1px solid rgba(16,185,129,0.3);">
+                    Part Found
+                  </span>
+                {% elif enq.status == 'quote_prepared' %}
+                  <span style="font-size:0.78rem; font-weight:700; padding:4px 10px; border-radius:12px; background:rgba(14,165,233,0.15); color:#0EA5E9; border:1px solid rgba(14,165,233,0.35);">
+                    Quote Prepared
+                  </span>
+                {% elif enq.status == 'customer_accepted' %}
+                  <span style="font-size:0.78rem; font-weight:700; padding:4px 10px; border-radius:12px; background:rgba(16,185,129,0.18); color:#059669; border:1px solid rgba(16,185,129,0.4);">
+                    Customer Accepted
+                  </span>
+                {% elif enq.status == 'completed' %}
+                  <span style="font-size:0.78rem; font-weight:700; padding:4px 10px; border-radius:12px; background:rgba(16,185,129,0.22); color:#10B981; border:1px solid #10B981;">
+                    Completed
+                  </span>
+                {% elif enq.status == 'unavailable' %}
+                  <span style="font-size:0.78rem; font-weight:700; padding:4px 10px; border-radius:12px; background:rgba(107,114,128,0.15); color:var(--text-muted); border:1px solid var(--border-subtle);">
+                    Unavailable
+                  </span>
+                {% elif enq.status == 'cancelled' %}
+                  <span style="font-size:0.78rem; font-weight:700; padding:4px 10px; border-radius:12px; background:rgba(239,68,68,0.08); color:var(--text-muted); border:1px solid var(--border-subtle); text-decoration:line-through;">
+                    Cancelled
+                  </span>
+                {% else %}
+                  <span style="font-size:0.78rem; font-weight:600; padding:4px 10px; border-radius:12px; background:var(--bg-surface-subtle); color:var(--text-muted);">
+                    {{ enq.get_status_display }}
+                  </span>
+                {% endif %}
+              </td>
+              <td style="padding:14px 20px; text-align:right; font-weight:700; font-family:monospace; font-size:0.95rem;">
+                {% if enq.quote_amount %}
+                  <span style="color:#10B981;">₹{{ enq.quote_amount|floatformat:2 }}</span>
+                  <div style="font-size:0.7rem; color:var(--text-muted); font-family:sans-serif; font-weight:500;">
+                    {{ enq.get_quote_status_display }}
+                  </div>
+                {% else %}
+                  <span style="color:var(--text-muted); font-weight:400;">—</span>
+                {% endif %}
+              </td>
+              <td style="padding:14px 20px; text-align:center;">
+                <a href="{% url 'custom_admin:admin_enquiry_update' enq.id %}" class="btn btn-primary btn-sm" style="padding:6px 14px; font-size:0.8rem; display:inline-flex; align-items:center; gap:6px;">
+                  <i data-lucide="wrench" style="width:14px; height:14px;"></i> Moderate
+                </a>
+              </td>
+            </tr>
+          {% empty %}
+            <tr>
+              <td colspan="7" style="padding:48px 20px; text-align:center;">
+                <div style="width:52px; height:52px; border-radius:50%; background:var(--bg-surface-subtle); display:flex; align-items:center; justify-content:center; margin:0 auto 12px; color:var(--text-muted);">
+                  <i data-lucide="search" style="width:24px; height:24px;"></i>
+                </div>
+                <h4 style="font-size:1.05rem; margin-bottom:4px;">No Sourcing Enquiries Found</h4>
+                <p style="color:var(--text-muted); font-size:0.85rem; max-width:400px; margin:0 auto 16px;">
+                  No customer enquiries match your search query or status filter criteria.
+                </p>
+                {% if search_query or selected_status or selected_category %}
+                  <a href="{% url 'custom_admin:admin_enquiries' %}" class="btn btn-secondary btn-sm">Clear All Filters</a>
+                {% endif %}
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
   </div>
 </div>
 {% endblock %}

@@ -216,7 +216,7 @@ class AutoVynexPlatformTestSuite(TestCase):
         self.assertEqual(res.status_code, 302)
         enquiry = MissingPartEnquiry.objects.filter(part_name='High Voltage Traction Battery Fuse').first()
         self.assertIsNotNone(enquiry)
-        self.assertTrue(enquiry.reference_code.startswith('AVX-ENQ-'))
+        self.assertTrue(enquiry.reference_code.startswith('AVX-2026-'))
         self.assertEqual(enquiry.status, 'submitted')
 
     # 7. Service Booking & Duplicate Slot Conflict Prevention

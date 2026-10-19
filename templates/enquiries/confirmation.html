@@ -1,0 +1,88 @@
+{% extends 'base.html' %}
+
+{% block title %}Request Dispatched — {{ enquiry.reference_code }} | AUTOVYNEX{% endblock %}
+
+{% block content %}
+<div class="container" style="padding-top:40px; padding-bottom:70px; max-width:760px; margin:0 auto; text-align:center;">
+  <!-- Success Icon Badge -->
+  <div style="width:72px; height:72px; border-radius:50%; background:rgba(16, 185, 129, 0.12); color:#10b981; display:flex; align-items:center; justify-content:center; margin:0 auto 20px;">
+    <i data-lucide="check-circle-2" style="width:40px; height:40px;"></i>
+  </div>
+
+  <h1 style="font-size:2rem; margin:0 0 8px 0; color:var(--text-main);">Sourcing Request Dispatched</h1>
+  <p style="color:var(--text-muted); font-size:1.05rem; margin:0 0 28px 0; line-height:1.6;">
+    Your enquiry has entered the AUTOVYNEX specialized procurement queue. Our logistics network has begun scanning domestic and international distributor inventories.
+  </p>
+
+  <!-- Reference Code Card -->
+  <div class="card" style="padding:24px; background:var(--bg-surface-elevated); border:1px solid rgba(8, 126, 255, 0.3); margin-bottom:28px;">
+    <div style="font-size:0.8rem; text-transform:uppercase; letter-spacing:0.06em; color:var(--text-muted); font-weight:700;">
+      Your Unique Sourcing Reference Code
+    </div>
+    <div style="display:flex; justify-content:center; align-items:center; gap:12px; margin:10px 0 6px 0;">
+      <span style="font-family:var(--font-heading); font-size:2rem; font-weight:800; color:var(--color-primary); letter-spacing:0.04em;" id="ref-code">
+        {{ enquiry.reference_code }}
+      </span>
+      <button type="button" class="btn btn-secondary btn-sm" onclick="copyRefCode()" title="Copy Reference Code">
+        <i data-lucide="copy" style="width:14px; height:14px;"></i> Copy
+      </button>
+    </div>
+    <div style="font-size:0.78rem; color:var(--text-muted);">
+      Save this reference to track live supplier search progress and review quotations.
+    </div>
+  </div>
+
+  <!-- Summary Card -->
+  <div class="card" style="padding:20px; text-align:left; margin-bottom:28px; background:var(--bg-surface-subtle);">
+    <h4 style="margin:0 0 12px 0; font-size:1rem; color:var(--text-main); border-bottom:1px solid var(--border-subtle); padding-bottom:8px;">
+      Request Summary
+    </h4>
+    <div class="grid-2" style="gap:14px; font-size:0.88rem;">
+      <div>
+        <span style="color:var(--text-muted);">Requested Part:</span><br>
+        <strong style="color:var(--text-main);">{{ enquiry.part_name }}</strong> ({{ enquiry.get_category_display }})
+      </div>
+      <div>
+        <span style="color:var(--text-muted);">Vehicle Architecture:</span><br>
+        <strong style="color:var(--text-main);">{{ enquiry.display_vehicle }}</strong>
+      </div>
+      <div>
+        <span style="color:var(--text-muted);">Contact Details:</span><br>
+        <span style="color:var(--text-main);">{{ enquiry.contact_name }} • {{ enquiry.contact_email }}</span>
+      </div>
+      <div>
+        <span style="color:var(--text-muted);">Urgency Priority:</span><br>
+        <span class="badge {% if enquiry.urgency == 'critical' %}badge-danger{% elif enquiry.urgency == 'express' %}badge-warning{% else %}badge-universal{% endif %}" style="font-size:0.75rem;">
+          {{ enquiry.get_urgency_display }}
+        </span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Action Buttons -->
+  <div style="display:flex; justify-content:center; gap:14px; flex-wrap:wrap;">
+    <a href="{% url 'enquiries:enquiry_detail' enquiry.reference_code %}" class="btn btn-primary" style="padding:10px 24px;">
+      <i data-lucide="activity"></i> Track Live Sourcing Status
+    </a>
+    {% if user.is_authenticated %}
+      <a href="{% url 'enquiries:my_enquiries' %}" class="btn btn-secondary" style="padding:10px 20px;">
+        <i data-lucide="list"></i> My Sourcing Dashboard
+      </a>
+    {% endif %}
+    <a href="{% url 'inventory:shop' %}" class="btn btn-outline" style="padding:10px 20px;">
+      Browse Spare Parts Shop
+    </a>
+  </div>
+</div>
+
+<script>
+function copyRefCode() {
+  const code = document.getElementById('ref-code').innerText.trim();
+  navigator.clipboard.writeText(code).then(() => {
+    alert(`Copied ${code} to clipboard!`);
+  }).catch(() => {
+    prompt('Copy reference code:', code);
+  });
+}
+</script>
+{% endblock %}

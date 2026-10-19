@@ -160,29 +160,156 @@ def admin_inventory(request):
 
 @user_passes_test(is_staff_check, login_url='/accounts/login/')
 def admin_enquiries(request):
-    enquiries = MissingPartEnquiry.objects.all().order_by('-created_at')
-    return render(request, 'custom_admin/enquiries.html', {'enquiries': enquiries})
+    enquiries_qs = MissingPartEnquiry.objects.all().prefetch_related('additional_images', 'status_history').order_by('-created_at')
+
+    # Search
+    q = request.GET.get('q', '').strip()
+    if q:
+        enquiries_qs = enquiries_qs.filter(
+            Q(reference_code__icontains=q) |
+            Q(part_name__icontains=q) |
+            Q(contact_name__icontains=q) |
+            Q(contact_phone__icontains=q) |
+            Q(contact_email__icontains=q) |
+            Q(make__icontains=q) |
+            Q(model_name__icontains=q) |
+            Q(part_number__icontains=q)
+        )
+
+    # Status Filter
+    status_filter = request.GET.get('status')
+    if status_filter:
+        enquiries_qs = enquiries_qs.filter(status=status_filter)
+
+    # Category Filter
+    category_filter = request.GET.get('category')
+    if category_filter:
+        enquiries_qs = enquiries_qs.filter(category=category_filter)
+
+    categories = MissingPartEnquiry.CATEGORY_CHOICES
+    statuses = MissingPartEnquiry.STATUS_CHOICES
+
+    context = {
+        'enquiries': enquiries_qs,
+        'search_query': q,
+        'selected_status': status_filter,
+        'selected_category': category_filter,
+        'statuses': statuses,
+        'categories': categories,
+    }
+    return render(request, 'custom_admin/enquiries.html', context)
 
 
 @user_passes_test(is_staff_check, login_url='/accounts/login/')
 def admin_enquiry_update(request, enquiry_id):
-    enquiry = get_object_or_404(MissingPartEnquiry, pk=enquiry_id)
+    enquiry = get_object_or_404(
+        MissingPartEnquiry.objects.prefetch_related('additional_images', 'status_history'),
+        pk=enquiry_id
+    )
+
     if request.method == 'POST':
-        new_status = request.POST.get('status')
-        quote = request.POST.get('quote_amount')
-        admin_notes = request.POST.get('admin_notes', '').strip()
+        action = request.POST.get('action', 'update_status')
 
-        if new_status:
+        # Action 1: Status & Notes Update
+        if action == 'update_status':
+            new_status = request.POST.get('status')
+            customer_note = request.POST.get('customer_notes', '').strip()
+            internal_note = request.POST.get('internal_notes', '').strip()
+
+            if not enquiry.can_transition_to(new_status, request.user):
+                messages.error(request, f"Invalid status transition from {enquiry.get_status_display()} to {dict(MissingPartEnquiry.STATUS_CHOICES).get(new_status, new_status)}.")
+                return redirect('custom_admin:admin_enquiry_update', enquiry_id=enquiry.id)
+
+            old_st = enquiry.status
             enquiry.status = new_status
-        if quote:
-            enquiry.quote_amount = quote
-        enquiry.admin_notes = admin_notes
-        enquiry.save()
+            if customer_note:
+                enquiry.customer_notes = customer_note
+            if internal_note:
+                enquiry.internal_notes = internal_note
+            enquiry.save()
 
-        messages.success(request, f"Enquiry {enquiry.reference_code} updated successfully!")
-        return redirect('custom_admin:admin_enquiries')
+            from enquiries.models import EnquiryStatusHistory
+            from enquiries.notifications import send_enquiry_notification
 
-    return render(request, 'custom_admin/enquiry_update.html', {'enquiry': enquiry})
+            EnquiryStatusHistory.objects.create(
+                enquiry=enquiry,
+                old_status=old_st,
+                status=new_status,
+                notes=customer_note or f"Status changed to {enquiry.get_status_display()}.",
+                internal_notes=internal_note,
+                changed_by=request.user
+            )
+
+            # Customer Notification
+            event_type = 'info_required' if new_status == 'info_required' else ('completed' if new_status == 'completed' else 'sourcing_update')
+            send_enquiry_notification(enquiry, event_type)
+
+            messages.success(request, f"Enquiry {enquiry.reference_code} updated to '{enquiry.get_status_display()}'.")
+            return redirect('custom_admin:admin_enquiry_update', enquiry_id=enquiry.id)
+
+        # Action 2: Prepare Sourcing Quote
+        elif action == 'prepare_quote':
+            quote_raw = request.POST.get('quote_amount', '').strip()
+            quote_brand = request.POST.get('quote_brand', '').strip()
+            quote_part_num = request.POST.get('quote_part_number', '').strip()
+            quote_condition = request.POST.get('quote_condition', 'Brand New OEM Genuine').strip()
+            quote_delivery = request.POST.get('quote_delivery_days', '3–5 Business Days').strip()
+            quote_warranty = request.POST.get('quote_warranty', '6 Months AUTOVYNEX Warranty').strip()
+            quote_notes = request.POST.get('quote_notes', '').strip()
+
+            try:
+                from decimal import Decimal
+                clean_str = quote_raw.replace(',', '').strip()
+                quote_val = Decimal(clean_str)
+            except Exception:
+                quote_val = Decimal('0.00')
+
+            if quote_val <= Decimal('0.00'):
+                messages.error(request, "Please enter a valid positive quote price in INR.")
+                return redirect('custom_admin:admin_enquiry_update', enquiry_id=enquiry.id)
+
+            old_st = enquiry.status
+            enquiry.quote_amount = quote_val
+            enquiry.quote_brand = quote_brand
+            enquiry.quote_part_number = quote_part_num
+            enquiry.quote_condition = quote_condition
+            enquiry.quote_delivery_days = quote_delivery
+            enquiry.quote_warranty = quote_warranty
+            enquiry.quote_notes = quote_notes
+            enquiry.quote_status = 'pending'
+            from django.utils import timezone
+            from datetime import timedelta
+            enquiry.quote_expires_at = timezone.now() + timedelta(days=7)
+            enquiry.status = 'quote_prepared'
+            enquiry.customer_notes = f"Verified quote prepared for ₹{quote_val:,.2f} ({quote_brand or 'OEM'}). Delivery: {quote_delivery}."
+            enquiry.save()
+
+            from enquiries.models import EnquiryStatusHistory
+            from enquiries.notifications import send_enquiry_notification
+
+            EnquiryStatusHistory.objects.create(
+                enquiry=enquiry,
+                old_status=old_st,
+                status='quote_prepared',
+                notes=f"Official quote of ₹{quote_val:,.2f} prepared by sourcing agent.",
+                changed_by=request.user
+            )
+
+            send_enquiry_notification(enquiry, 'quote_prepared')
+
+            messages.success(request, f"Official quote of ₹{quote_val:,.2f} prepared and notified to customer!")
+            return redirect('custom_admin:admin_enquiry_update', enquiry_id=enquiry.id)
+
+    statuses = MissingPartEnquiry.STATUS_CHOICES
+    history = enquiry.status_history.all().order_by('-created_at')
+
+    context = {
+        'enquiry': enquiry,
+        'statuses': statuses,
+        'history': history,
+        'images': enquiry.additional_images.all(),
+    }
+    return render(request, 'custom_admin/enquiry_update.html', context)
 
 
 @user_passes_test(is_staff_check, login_url='/accounts/login/')

@@ -1,0 +1,176 @@
+{% extends 'base.html' %}
+
+{% block title %}My Part Sourcing Enquiries — AUTOVYNEX{% endblock %}
+
+{% block content %}
+<div class="container" style="padding-top:28px; padding-bottom:60px;">
+  <!-- Header -->
+  <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:16px; margin-bottom:28px;">
+    <div>
+      <div style="font-size:0.85rem; color:var(--text-muted); margin-bottom:4px;">
+        <a href="{% url 'dashboard:customer_dashboard' %}">Dashboard</a> / <span>Sourcing Enquiries</span>
+      </div>
+      <h1 style="font-size:1.85rem; margin:0; display:flex; align-items:center; gap:10px;">
+        <i data-lucide="search" style="color:var(--color-primary);"></i> My Part Sourcing Enquiries
+      </h1>
+      <p style="margin:4px 0 0 0; font-size:0.92rem; color:var(--text-muted);">
+        Monitor real-time sourcing progress, review prepared quotes, and provide supplementary photographs.
+      </p>
+    </div>
+
+    <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
+      <a href="{% url 'enquiries:missing_part_request' %}" class="btn btn-primary">
+        <i data-lucide="plus-circle"></i> New Sourcing Request
+      </a>
+      <a href="{% url 'dashboard:customer_dashboard' %}" class="btn btn-secondary">
+        <i data-lucide="layout-dashboard"></i> Driver Hub
+      </a>
+    </div>
+  </div>
+
+  <!-- KPI Metrics Row -->
+  <div class="grid-3" style="margin-bottom:28px;">
+    <div class="card" style="display:flex; align-items:center; gap:16px; padding:18px;">
+      <div style="width:48px; height:48px; border-radius:var(--radius-md); background:rgba(8, 126, 255, 0.1); color:var(--color-primary); display:flex; align-items:center; justify-content:center; flex-shrink:0;">
+        <i data-lucide="file-text" style="width:24px; height:24px;"></i>
+      </div>
+      <div>
+        <div style="font-size:0.8rem; color:var(--text-muted);">Total Sourcing Requests</div>
+        <div style="font-family:var(--font-heading); font-size:1.5rem; font-weight:800; color:var(--text-main);">{{ total_count }}</div>
+      </div>
+    </div>
+
+    <div class="card" style="display:flex; align-items:center; gap:16px; padding:18px;">
+      <div style="width:48px; height:48px; border-radius:var(--radius-md); background:rgba(245, 158, 11, 0.1); color:#d97706; display:flex; align-items:center; justify-content:center; flex-shrink:0;">
+        <i data-lucide="clock" style="width:24px; height:24px;"></i>
+      </div>
+      <div>
+        <div style="font-size:0.8rem; color:var(--text-muted);">Active in Logistics Queue</div>
+        <div style="font-family:var(--font-heading); font-size:1.5rem; font-weight:800; color:var(--text-main);">{{ active_count }}</div>
+      </div>
+    </div>
+
+    <div class="card" style="display:flex; align-items:center; gap:16px; padding:18px;">
+      <div style="width:48px; height:48px; border-radius:var(--radius-md); background:rgba(16, 185, 129, 0.1); color:#10b981; display:flex; align-items:center; justify-content:center; flex-shrink:0;">
+        <i data-lucide="tag" style="width:24px; height:24px;"></i>
+      </div>
+      <div>
+        <div style="font-size:0.8rem; color:var(--text-muted);">Official Quotes Ready</div>
+        <div style="font-family:var(--font-heading); font-size:1.5rem; font-weight:800; color:#10b981;">{{ quotes_count }}</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Filter Navigation Tabs -->
+  <div style="display:flex; gap:8px; margin-bottom:24px; border-bottom:1px solid var(--border-subtle); padding-bottom:12px; overflow-x:auto;">
+    <a href="{% url 'enquiries:my_enquiries' %}" class="btn btn-sm {% if selected_filter == 'all' %}btn-primary{% else %}btn-secondary{% endif %}">
+      All Requests ({{ total_count }})
+    </a>
+    <a href="{% url 'enquiries:my_enquiries' %}?status=active" class="btn btn-sm {% if selected_filter == 'active' %}btn-primary{% else %}btn-secondary{% endif %}">
+      Active Sourcing ({{ active_count }})
+    </a>
+    <a href="{% url 'enquiries:my_enquiries' %}?status=quotes" class="btn btn-sm {% if selected_filter == 'quotes' %}btn-primary{% else %}btn-secondary{% endif %}">
+      Quotes Ready ({{ quotes_count }})
+    </a>
+    <a href="{% url 'enquiries:my_enquiries' %}?status=completed" class="btn btn-sm {% if selected_filter == 'completed' %}btn-primary{% else %}btn-secondary{% endif %}">
+      Completed
+    </a>
+    <a href="{% url 'enquiries:my_enquiries' %}?status=closed" class="btn btn-sm {% if selected_filter == 'closed' %}btn-primary{% else %}btn-secondary{% endif %}">
+      Closed / Cancelled
+    </a>
+  </div>
+
+  <!-- Enquiries List / Cards -->
+  {% if enquiries %}
+    <div style="display:flex; flex-direction:column; gap:16px; margin-bottom:40px;">
+      {% for enq in enquiries %}
+        <div class="card" style="padding:22px; {% if enq.status == 'quote_prepared' %}border-color:var(--color-primary); box-shadow:var(--shadow-md);{% endif %}">
+          <div style="display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:16px;">
+            <div style="flex:1; min-width:280px;">
+              <div style="display:flex; align-items:center; gap:10px; margin-bottom:6px; flex-wrap:wrap;">
+                <span style="font-family:var(--font-heading); font-weight:800; font-size:1.05rem; color:var(--color-primary);">
+                  {{ enq.reference_code }}
+                </span>
+                
+                <!-- Status Badge -->
+                <span class="badge {% if enq.status == 'completed' or enq.status == 'customer_accepted' %}badge-verified{% elif enq.status == 'quote_prepared' %}badge-warning{% elif enq.status == 'cancelled' or enq.status == 'unavailable' %}badge-danger{% else %}badge-info{% endif %}" style="font-size:0.75rem;">
+                  {{ enq.get_status_display }}
+                </span>
+
+                {% if enq.urgency == 'critical' %}
+                  <span class="badge badge-danger" style="font-size:0.7rem;">Vehicle Off-Road</span>
+                {% endif %}
+              </div>
+
+              <h3 style="margin:0 0 6px 0; font-size:1.25rem; color:var(--text-main);">
+                {{ enq.part_name }}
+              </h3>
+
+              <div style="font-size:0.85rem; color:var(--text-muted); display:flex; gap:14px; flex-wrap:wrap; align-items:center;">
+                <span><i data-lucide="car" style="width:14px; height:14px; vertical-align:middle;"></i> {{ enq.display_vehicle }}</span>
+                <span><i data-lucide="tag" style="width:14px; height:14px; vertical-align:middle;"></i> {{ enq.get_category_display }}</span>
+                <span><i data-lucide="calendar" style="width:14px; height:14px; vertical-align:middle;"></i> {{ enq.created_at|date:"d M Y" }}</span>
+                <span><i data-lucide="image" style="width:14px; height:14px; vertical-align:middle;"></i> {{ enq.additional_images.count|add:"1" }} photo{{ enq.additional_images.count|add:"1"|pluralize }}</span>
+              </div>
+
+              {% if enq.customer_notes %}
+                <div style="margin-top:10px; padding:8px 12px; background:var(--bg-surface-subtle); border-radius:var(--radius-sm); font-size:0.82rem; color:var(--text-main);">
+                  <strong style="color:var(--color-primary);">Latest Sourcing Note:</strong> {{ enq.customer_notes }}
+                </div>
+              {% endif %}
+            </div>
+
+            <!-- Right Column Quote / Next Actions -->
+            <div style="text-align:right; min-width:200px;">
+              {% if enq.quote_amount %}
+                <div style="margin-bottom:8px;">
+                  <span style="font-size:0.75rem; text-transform:uppercase; color:var(--text-muted); font-weight:700;">Quoted Price</span>
+                  <div style="font-family:var(--font-heading); font-size:1.5rem; font-weight:800; color:var(--color-primary);">
+                    ₹{{ enq.quote_amount|floatformat:2 }}
+                  </div>
+                  <div style="font-size:0.75rem; color:var(--text-muted);">
+                    {{ enq.quote_delivery_days|default:'3–5 Days Delivery' }}
+                  </div>
+                </div>
+              {% endif %}
+
+              <div style="display:flex; justify-content:flex-end; gap:8px;">
+                <a href="{% url 'enquiries:enquiry_detail' enq.reference_code %}" class="btn btn-primary btn-sm">
+                  {% if enq.status == 'quote_prepared' %}
+                    <i data-lucide="tag"></i> Review Quote
+                  {% else %}
+                    <i data-lucide="activity"></i> Track Sourcing
+                  {% endif %}
+                </a>
+              </div>
+            </div>
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+  {% else %}
+    <!-- Empty State -->
+    <div class="card" style="text-align:center; padding:64px 20px; max-width:600px; margin:0 auto;">
+      <div style="width:64px; height:64px; border-radius:50%; background:rgba(8, 126, 255, 0.1); color:var(--color-primary); display:flex; align-items:center; justify-content:center; margin:0 auto 16px;">
+        <i data-lucide="search" style="width:32px; height:32px;"></i>
+      </div>
+      <h3 style="margin:0 0 8px 0; font-size:1.35rem;">No Sourcing Enquiries Found</h3>
+      <p style="color:var(--text-muted); font-size:0.92rem; line-height:1.6; margin:0 0 24px 0;">
+        {% if selected_filter != 'all' %}
+          No enquiries matching the filter '{{ selected_filter|title }}'.
+        {% else %}
+          You haven't submitted any missing-part sourcing requests yet. If you need a rare ECU, discontinued gear, or body panel, our procurement network can help.
+        {% endif %}
+      </p>
+      <div style="display:flex; justify-content:center; gap:12px;">
+        <a href="{% url 'enquiries:missing_part_request' %}" class="btn btn-primary">
+          <i data-lucide="plus-circle"></i> Submit Missing Part Request
+        </a>
+        <a href="{% url 'inventory:shop' %}" class="btn btn-secondary">
+          Browse Catalog
+        </a>
+      </div>
+    </div>
+  {% endif %}
+</div>
+{% endblock %}

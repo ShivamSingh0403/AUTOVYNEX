@@ -1,47 +1,366 @@
 {% extends 'base.html' %}
 
-{% block title %}Manage Sourcing Enquiry #{{ enquiry.reference_code }} — Admin Center{% endblock %}
+{% block title %}Moderate Enquiry #{{ enquiry.reference_code }} — Admin Center{% endblock %}
 
 {% block content %}
-<div class="container" style="padding-top:24px;">
-  <div style="max-width:680px; margin:0 auto;">
-    <div style="margin-bottom:24px;">
-      <a href="{% url 'custom_admin:admin_enquiries' %}" style="font-size:0.85rem; color:var(--text-muted);">← Back to Enquiries</a>
-      <h1 style="font-size:1.85rem; margin-top:8px;">Manage Enquiry #{{ enquiry.reference_code }}</h1>
-      <div style="color:var(--text-muted); font-size:0.9rem;">Part: <strong>{{ enquiry.part_name }}</strong> for {{ enquiry.vehicle_details }}</div>
+<div class="container" style="padding-top:28px; padding-bottom:70px;">
+  <!-- Breadcrumb & Header -->
+  <div style="margin-bottom:28px;">
+    <div style="font-size:0.85rem; color:var(--text-muted); margin-bottom:6px;">
+      <a href="{% url 'custom_admin:dashboard_overview' %}" style="color:var(--text-muted); text-decoration:none;">Admin Center</a> / 
+      <a href="{% url 'custom_admin:admin_enquiries' %}" style="color:var(--text-muted); text-decoration:none;">Sourcing Enquiries</a> / 
+      <span>{{ enquiry.reference_code }}</span>
+    </div>
+    <div style="display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:16px;">
+      <div>
+        <div style="display:flex; align-items:center; gap:10px; margin-bottom:4px;">
+          <h1 style="font-size:1.85rem; font-weight:800; margin:0; letter-spacing:-0.02em;">
+            Enquiry #{{ enquiry.reference_code }}
+          </h1>
+          <span style="font-size:0.78rem; font-weight:700; padding:4px 10px; border-radius:12px; background:rgba(8,126,255,0.12); color:#087EFF; border:1px solid rgba(8,126,255,0.3);">
+            {{ enquiry.get_status_display }}
+          </span>
+          {% if enquiry.urgency == 'critical' %}
+            <span style="font-size:0.75rem; font-weight:700; padding:3px 8px; border-radius:10px; background:rgba(239,68,68,0.15); color:#EF4444; border:1px solid rgba(239,68,68,0.3);">
+              CRITICAL URGENCY
+            </span>
+          {% endif %}
+        </div>
+        <p style="color:var(--text-muted); font-size:0.9rem; margin:0;">
+          Submitted on {{ enquiry.created_at|date:"d M Y \a\t H:i" }} by <strong>{{ enquiry.contact_name }}</strong> 
+          {% if enquiry.customer %}(User #{{ enquiry.customer.id }}: {{ enquiry.customer.username }}){% else %}(Guest Sourcing Request){% endif %}
+        </p>
+      </div>
+
+      <div style="display:flex; gap:10px;">
+        <a href="{% url 'custom_admin:admin_enquiries' %}" class="btn btn-secondary" style="font-size:0.85rem;">
+          <i data-lucide="arrow-left"></i> Back to Desk
+        </a>
+        <a href="{% url 'enquiries:enquiry_detail' enquiry.reference_code %}" target="_blank" class="btn btn-secondary" style="font-size:0.85rem;">
+          <i data-lucide="external-link"></i> Customer View
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <div style="display:grid; grid-template-columns:1fr 380px; gap:24px; align-items:start;">
+    <!-- Left Column: Specs, Images, Status Form, Quote Form -->
+    <div style="display:flex; flex-direction:column; gap:24px;">
+
+      <!-- Vehicle & Part Specifications Card -->
+      <div class="card" style="padding:24px;">
+        <h3 style="font-size:1.1rem; font-weight:700; margin-bottom:16px; display:flex; align-items:center; gap:8px;">
+          <i data-lucide="car" style="color:var(--electric-blue); width:20px; height:20px;"></i>
+          Vehicle Fitment & Sourcing Requirements
+        </h3>
+
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:18px; margin-bottom:20px;">
+          <div>
+            <div style="font-size:0.75rem; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.04em;">Vehicle Make & Model</div>
+            <div style="font-size:1rem; font-weight:700; color:var(--text-primary); margin-top:2px;">
+              {{ enquiry.vehicle_display }}
+            </div>
+            <div style="font-size:0.85rem; color:var(--text-muted); margin-top:2px;">
+              Fuel: <strong>{{ enquiry.fuel_type|title|default:'Not specified' }}</strong>
+              {% if enquiry.variant_name %} • Trim: {{ enquiry.variant_name }}{% endif %}
+            </div>
+          </div>
+
+          <div>
+            <div style="font-size:0.75rem; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.04em;">Part Requested</div>
+            <div style="font-size:1rem; font-weight:700; color:var(--text-primary); margin-top:2px;">
+              {{ enquiry.part_name }}
+            </div>
+            <div style="font-size:0.85rem; color:var(--text-muted); margin-top:2px;">
+              Category: <strong>{{ enquiry.get_category_display }}</strong>
+              {% if enquiry.brand_preference %} • Brand: {{ enquiry.brand_preference }}{% endif %}
+            </div>
+          </div>
+        </div>
+
+        <!-- Secondary Specs Row -->
+        <div style="display:grid; grid-template-columns:repeat(3, 1fr); gap:12px; padding:14px; background:var(--bg-surface-subtle); border-radius:8px; margin-bottom:18px; font-size:0.85rem;">
+          <div>
+            <span style="color:var(--text-muted); display:block; font-size:0.75rem;">OEM / Part #</span>
+            <span style="font-family:monospace; font-weight:700; color:var(--electric-blue);">
+              {{ enquiry.part_number|default:'Not provided' }}
+            </span>
+          </div>
+          <div>
+            <span style="color:var(--text-muted); display:block; font-size:0.75rem;">Target Budget</span>
+            <span style="font-weight:600;">{{ enquiry.budget_range|default:'Flexible / Best Available' }}</span>
+          </div>
+          <div>
+            <span style="color:var(--text-muted); display:block; font-size:0.75rem;">Urgency Level</span>
+            <span style="font-weight:700; text-transform:capitalize;">{{ enquiry.get_urgency_display }}</span>
+          </div>
+        </div>
+
+        <!-- Problem Description -->
+        <div>
+          <div style="font-size:0.75rem; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.04em; margin-bottom:4px;">Problem or Sourcing Requirement Description</div>
+          <div style="background:var(--bg-surface-subtle); padding:12px 14px; border-radius:8px; font-size:0.9rem; line-height:1.5; color:var(--text-primary); white-space:pre-wrap;">{{ enquiry.description }}</div>
+        </div>
+
+        <!-- Staff Confidential Vehicle Data -->
+        {% if enquiry.registration_number or enquiry.vin_chassis %}
+          <div style="margin-top:18px; padding:12px 16px; background:rgba(245,158,11,0.08); border-left:3px solid #F59E0B; border-radius:4px;">
+            <div style="font-size:0.75rem; font-weight:700; color:#D97706; text-transform:uppercase; letter-spacing:0.04em; display:flex; align-items:center; gap:6px;">
+              <i data-lucide="shield-alert" style="width:14px; height:14px;"></i> Confidential Fitment Verification Data (Staff Only)
+            </div>
+            <div style="display:flex; gap:24px; margin-top:6px; font-size:0.85rem;">
+              {% if enquiry.registration_number %}
+                <div>Reg #: <strong style="font-family:monospace;">{{ enquiry.registration_number }}</strong></div>
+              {% endif %}
+              {% if enquiry.vin_chassis %}
+                <div>Chassis / VIN: <strong style="font-family:monospace;">{{ enquiry.vin_chassis }}</strong></div>
+              {% endif %}
+            </div>
+          </div>
+        {% endif %}
+      </div>
+
+      <!-- Uploaded Photographs -->
+      <div class="card" style="padding:24px;">
+        <h3 style="font-size:1.1rem; font-weight:700; margin-bottom:14px; display:flex; align-items:center; gap:8px;">
+          <i data-lucide="camera" style="color:var(--electric-blue); width:20px; height:20px;"></i>
+          Attached Photographs ({{ enquiry.all_images.count }})
+        </h3>
+
+        {% if enquiry.all_images %}
+          <div style="display:grid; grid-template-columns:repeat(auto-fill, minmax(130px, 1fr)); gap:12px;">
+            {% for img in enquiry.all_images %}
+              <div style="border:1px solid var(--border-subtle); border-radius:8px; overflow:hidden; background:var(--bg-surface-subtle); text-align:center;">
+                <a href="{{ img.image.url }}" target="_blank" title="Click to view full image">
+                  <img src="{{ img.image.url }}" alt="Uploaded part photo" style="width:100%; height:110px; object-fit:cover; display:block;">
+                </a>
+                <div style="padding:6px; font-size:0.72rem; color:var(--text-muted); truncate:true;">
+                  {{ img.caption|default:"Part photo" }}
+                  {% if img.file_size %}<span style="display:block;">({{ img.file_size|filesizeformat }})</span>{% endif %}
+                </div>
+              </div>
+            {% endfor %}
+          </div>
+        {% else %}
+          <div style="padding:24px; text-align:center; color:var(--text-muted); background:var(--bg-surface-subtle); border-radius:8px; font-size:0.85rem;">
+            No photos uploaded by the customer for this enquiry.
+          </div>
+        {% endif %}
+      </div>
+
+      <!-- Action 1: Status & Notes Moderation Form -->
+      <div class="card" style="padding:24px; border-top:3px solid var(--electric-blue);">
+        <h3 style="font-size:1.1rem; font-weight:700; margin-bottom:8px; display:flex; align-items:center; gap:8px;">
+          <i data-lucide="git-commit" style="color:var(--electric-blue); width:20px; height:20px;"></i>
+          Update Workflow Status & Sourcing Notes
+        </h3>
+        <p style="color:var(--text-muted); font-size:0.85rem; margin-bottom:18px;">
+          Change the logistics progress stage. Customer notes are visible on their tracker; internal notes remain confidential to the staff team.
+        </p>
+
+        <form method="POST" action="{% url 'custom_admin:admin_enquiry_update' enquiry.id %}">
+          {% csrf_token %}
+          <input type="hidden" name="action" value="update_status">
+
+          <div class="form-group" style="margin-bottom:16px;">
+            <label class="form-label" style="font-size:0.85rem; font-weight:600;">Next Workflow State *</label>
+            <select name="status" class="form-select" style="font-size:0.9rem;">
+              {% for code, label in statuses %}
+                <option value="{{ code }}" {% if enquiry.status == code %}selected{% endif %}>
+                  {{ label }}
+                </option>
+              {% endfor %}
+            </select>
+            <div style="font-size:0.75rem; color:var(--text-muted); margin-top:4px;">
+              Current state: <strong>{{ enquiry.get_status_display }}</strong>
+            </div>
+          </div>
+
+          <div class="form-group" style="margin-bottom:16px;">
+            <label class="form-label" style="font-size:0.85rem; font-weight:600; display:flex; justify-content:space-between;">
+              <span>Customer-Visible Update Note</span>
+              <span style="font-size:0.75rem; color:var(--electric-blue); font-weight:normal;">Visible on Customer Tracker</span>
+            </label>
+            <textarea name="customer_notes" class="form-control" rows="3" placeholder="e.g. Sourcing agent contacted Mumbai central warehouse; checking OEM fitment for your 2021 Baleno...">{{ enquiry.customer_notes }}</textarea>
+          </div>
+
+          <div class="form-group" style="margin-bottom:20px;">
+            <label class="form-label" style="font-size:0.85rem; font-weight:600; display:flex; justify-content:space-between;">
+              <span>Private Staff Notes</span>
+              <span style="font-size:0.75rem; color:#EF4444; font-weight:normal;">Strictly Internal • Never Visible to Customer</span>
+            </label>
+            <textarea name="internal_notes" class="form-control" rows="3" placeholder="Supplier contact: Sharma Motors (9820011223), cost ₹2800, shipping ₹300, 20% margin...">{{ enquiry.internal_notes }}</textarea>
+          </div>
+
+          <div style="display:flex; justify-content:flex-end;">
+            <button type="submit" class="btn btn-primary" style="padding:10px 22px;">
+              <i data-lucide="check"></i> Save Status & Update Notes
+            </button>
+          </div>
+        </form>
+      </div>
+
+      <!-- Action 2: Prepare Official Sourcing Quote Form -->
+      <div class="card" style="padding:24px; border-top:3px solid #10B981;">
+        <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:8px; flex-wrap:wrap; gap:8px;">
+          <h3 style="font-size:1.1rem; font-weight:700; margin:0; display:flex; align-items:center; gap:8px;">
+            <i data-lucide="tag" style="color:#10B981; width:20px; height:20px;"></i>
+            Prepare Official Sourcing Quote
+          </h3>
+          {% if enquiry.quote_amount %}
+            <span style="font-size:0.75rem; font-weight:700; padding:3px 8px; border-radius:10px; background:rgba(16,185,129,0.15); color:#10B981;">
+              Quote Active: ₹{{ enquiry.quote_amount|floatformat:2 }} ({{ enquiry.get_quote_status_display }})
+            </span>
+          {% endif %}
+        </div>
+        <p style="color:var(--text-muted); font-size:0.85rem; margin-bottom:18px;">
+          Preparing a quote automatically updates the enquiry status to <strong>Quote Prepared</strong>, sets a 7-day expiration window, and notifies the customer.
+        </p>
+
+        <form method="POST" action="{% url 'custom_admin:admin_enquiry_update' enquiry.id %}">
+          {% csrf_token %}
+          <input type="hidden" name="action" value="prepare_quote">
+
+          <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-bottom:16px;">
+            <div class="form-group">
+              <label class="form-label" style="font-size:0.85rem; font-weight:600;">Verified Price in INR (₹) *</label>
+              <input type="number" step="0.5" name="quote_amount" class="form-control" value="{{ enquiry.quote_amount|default:'' }}" required placeholder="e.g. 4500">
+            </div>
+            <div class="form-group">
+              <label class="form-label" style="font-size:0.85rem; font-weight:600;">Confirmed Brand / Manufacturer</label>
+              <input type="text" name="quote_brand" class="form-control" value="{{ enquiry.quote_brand|default:enquiry.brand_preference }}" placeholder="e.g. Maruti Suzuki Genuine / Bosch">
+            </div>
+          </div>
+
+          <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-bottom:16px;">
+            <div class="form-group">
+              <label class="form-label" style="font-size:0.85rem; font-weight:600;">Confirmed OEM Part #</label>
+              <input type="text" name="quote_part_number" class="form-control" value="{{ enquiry.quote_part_number|default:enquiry.part_number }}" placeholder="e.g. 56110M68P00">
+            </div>
+            <div class="form-group">
+              <label class="form-label" style="font-size:0.85rem; font-weight:600;">Condition</label>
+              <select name="quote_condition" class="form-select">
+                <option value="Brand New OEM Genuine" {% if enquiry.quote_condition == 'Brand New OEM Genuine' %}selected{% endif %}>Brand New OEM Genuine</option>
+                <option value="Premium Aftermarket (OES)" {% if enquiry.quote_condition == 'Premium Aftermarket (OES)' %}selected{% endif %}>Premium Aftermarket (OES)</option>
+                <option value="Certified Tested Grade A" {% if enquiry.quote_condition == 'Certified Tested Grade A' %}selected{% endif %}>Certified Tested Grade A</option>
+              </select>
+            </div>
+          </div>
+
+          <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-bottom:16px;">
+            <div class="form-group">
+              <label class="form-label" style="font-size:0.85rem; font-weight:600;">Estimated Delivery Timeframe</label>
+              <input type="text" name="quote_delivery_days" class="form-control" value="{{ enquiry.quote_delivery_days|default:'3–5 Business Days' }}" placeholder="e.g. 3–5 Business Days">
+            </div>
+            <div class="form-group">
+              <label class="form-label" style="font-size:0.85rem; font-weight:600;">Warranty Coverage</label>
+              <input type="text" name="quote_warranty" class="form-control" value="{{ enquiry.quote_warranty|default:'6 Months AUTOVYNEX Warranty' }}" placeholder="e.g. 6 Months Warranty">
+            </div>
+          </div>
+
+          <div class="form-group" style="margin-bottom:20px;">
+            <label class="form-label" style="font-size:0.85rem; font-weight:600;">Quote Notes & Terms</label>
+            <textarea name="quote_notes" class="form-control" rows="2" placeholder="e.g. Sourced from authorized distribution hub. Includes GST invoice and return protection.">{{ enquiry.quote_notes }}</textarea>
+          </div>
+
+          <div style="display:flex; justify-content:space-between; align-items:center;">
+            <span style="font-size:0.75rem; color:var(--text-muted);">
+              <i data-lucide="info" style="width:13px; height:13px; vertical-align:middle;"></i> Quote validity is set to 7 days from dispatch.
+            </span>
+            <button type="submit" class="btn btn-primary" style="background:#10B981; border-color:#10B981; padding:10px 22px;">
+              <i data-lucide="send"></i> Dispatch Quote to Customer
+            </button>
+          </div>
+        </form>
+      </div>
+
     </div>
 
-    <div class="card">
-      <form method="POST" action="{% url 'custom_admin:admin_enquiry_update' enquiry.id %}">
-        {% csrf_token %}
+    <!-- Right Column: Customer Details, Communication Channel, and Status Audit Timeline -->
+    <div style="display:flex; flex-direction:column; gap:20px;">
 
-        <div class="form-group">
-          <label class="form-label">Sourcing Progress Status *</label>
-          <select name="status" class="form-select">
-            <option value="submitted" {% if enquiry.status == 'submitted' %}selected{% endif %}>Submitted</option>
-            <option value="under_review" {% if enquiry.status == 'under_review' %}selected{% endif %}>Under Review</option>
-            <option value="searching" {% if enquiry.status == 'searching' %}selected{% endif %}>Searching for Part Across Logistics</option>
-            <option value="quote_available" {% if enquiry.status == 'quote_available' %}selected{% endif %}>Quote Available</option>
-            <option value="completed" {% if enquiry.status == 'completed' %}selected{% endif %}>Completed / Sourced</option>
-            <option value="unavailable" {% if enquiry.status == 'unavailable' %}selected{% endif %}>Part Currently Unavailable</option>
-          </select>
-        </div>
+      <!-- Customer Contact Card -->
+      <div class="card" style="padding:20px;">
+        <h4 style="font-size:0.95rem; font-weight:700; margin-bottom:14px; display:flex; align-items:center; gap:8px;">
+          <i data-lucide="user" style="color:var(--electric-blue); width:18px; height:18px;"></i>
+          Customer Profile & Contact
+        </h4>
 
-        <div class="form-group">
-          <label class="form-label">Estimated Quote Amount (₹)</label>
-          <input type="number" name="quote_amount" step="0.5" class="form-control" value="{{ enquiry.quote_amount|default:'' }}" placeholder="e.g. 4800">
+        <div style="display:flex; flex-direction:column; gap:10px; font-size:0.85rem;">
+          <div>
+            <span style="color:var(--text-muted); display:block; font-size:0.75rem;">Customer Name</span>
+            <strong>{{ enquiry.contact_name }}</strong>
+          </div>
+          <div>
+            <span style="color:var(--text-muted); display:block; font-size:0.75rem;">Phone Number</span>
+            <a href="tel:{{ enquiry.contact_phone }}" style="color:var(--text-primary); text-decoration:none; font-family:monospace;">
+              {{ enquiry.contact_phone }}
+            </a>
+          </div>
+          {% if enquiry.contact_email %}
+            <div>
+              <span style="color:var(--text-muted); display:block; font-size:0.75rem;">Email Address</span>
+              <a href="mailto:{{ enquiry.contact_email }}" style="color:var(--electric-blue); text-decoration:none;">
+                {{ enquiry.contact_email }}
+              </a>
+            </div>
+          {% endif %}
+          <div>
+            <span style="color:var(--text-muted); display:block; font-size:0.75rem;">Preferred Contact Mode</span>
+            <span style="text-transform:capitalize; font-weight:600;">{{ enquiry.get_contact_preference_display }}</span>
+          </div>
+          <div>
+            <span style="color:var(--text-muted); display:block; font-size:0.75rem;">WhatsApp Notifications</span>
+            {% if enquiry.whatsapp_enabled %}
+              <span style="display:inline-flex; align-items:center; gap:4px; color:#25D366; font-weight:600;">
+                <i data-lucide="check-circle" style="width:14px; height:14px;"></i> Customer Opted-In (Simulation)
+              </span>
+            {% else %}
+              <span style="color:var(--text-muted);">Not enabled</span>
+            {% endif %}
+          </div>
         </div>
+      </div>
 
-        <div class="form-group">
-          <label class="form-label">Logistics Notes / Customer Progress Message</label>
-          <textarea name="admin_notes" class="form-control" style="min-height:90px;" placeholder="Update driver on shipment timeline or origin warehouse...">{{ enquiry.admin_notes }}</textarea>
-        </div>
+      <!-- Audit History Timeline -->
+      <div class="card" style="padding:20px;">
+        <h4 style="font-size:0.95rem; font-weight:700; margin-bottom:14px; display:flex; align-items:center; gap:8px;">
+          <i data-lucide="history" style="color:var(--electric-blue); width:18px; height:18px;"></i>
+          Status Audit Trail ({{ history|length }})
+        </h4>
 
-        <div style="display:flex; justify-content:flex-end; gap:12px; margin-top:24px;">
-          <a href="{% url 'custom_admin:admin_enquiries' %}" class="btn btn-secondary">Cancel</a>
-          <button type="submit" class="btn btn-primary">Save Sourcing Update</button>
+        <div style="display:flex; flex-direction:column; gap:16px;">
+          {% for record in history %}
+            <div style="position:relative; padding-left:16px; border-left:2px solid var(--border-subtle); font-size:0.82rem;">
+              <div style="position:absolute; left:-5px; top:0; width:8px; height:8px; border-radius:50%; background:var(--electric-blue);"></div>
+              <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+                <span style="font-weight:700; color:var(--text-primary);">
+                  {{ record.get_status_display }}
+                </span>
+                <span style="color:var(--text-muted); font-size:0.72rem;">
+                  {{ record.created_at|date:"d M, H:i" }}
+                </span>
+              </div>
+              <div style="color:var(--text-muted); font-size:0.75rem; margin-top:2px;">
+                By: <strong>{% if record.changed_by %}{{ record.changed_by.username }}{% else %}System{% endif %}</strong>
+              </div>
+              {% if record.notes %}
+                <div style="background:var(--bg-surface-subtle); padding:6px 8px; border-radius:4px; margin-top:4px; font-size:0.78rem; color:var(--text-primary);">
+                  {{ record.notes }}
+                </div>
+              {% endif %}
+              {% if record.internal_notes %}
+                <div style="background:rgba(239,68,68,0.06); border-left:2px solid #EF4444; padding:4px 6px; border-radius:2px; margin-top:4px; font-size:0.72rem; color:#EF4444;">
+                  <strong>[Staff Internal]:</strong> {{ record.internal_notes }}
+                </div>
+              {% endif %}
+            </div>
+          {% empty %}
+            <div style="color:var(--text-muted); font-size:0.8rem;">No status history recorded yet.</div>
+          {% endfor %}
         </div>
-      </form>
+      </div>
+
     </div>
   </div>
 </div>
