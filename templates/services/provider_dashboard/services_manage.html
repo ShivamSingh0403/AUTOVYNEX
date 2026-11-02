@@ -1,0 +1,76 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Manage Workshop Services & Pricing — {{ provider.name }} | AUTOVYNEX{% endblock %}
+
+{% block content %}
+<div class="container" style="padding-top:28px; padding-bottom:60px;">
+
+  <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:24px;">
+    <div>
+      <div style="font-size:0.85rem; color:var(--text-muted); margin-bottom:4px;">
+        <a href="{% url 'services:provider_dashboard' %}?provider_id={{ provider.id }}" style="color:var(--color-primary); text-decoration:none;">&larr; Return to Workshop Portal</a>
+      </div>
+      <h1 style="font-size:1.85rem; font-weight:800; color:var(--text-main); margin:0;">
+        Offered Services & Custom Pricing
+      </h1>
+      <p style="font-size:0.92rem; color:var(--text-muted); margin-top:4px;">
+        Set workshop-specific prices, expected durations, and availability status for {{ provider.name }}.
+      </p>
+    </div>
+  </div>
+
+  <div class="card" style="padding:28px; border:1px solid var(--border-medium);">
+    <form method="POST" action="{% url 'services:provider_services_manage' %}?provider_id={{ provider.id }}">
+      {% csrf_token %}
+
+      <div style="overflow-x:auto;">
+        <table style="width:100%; border-collapse:collapse; text-align:left; font-size:0.88rem;">
+          <thead>
+            <tr style="background:var(--bg-surface-subtle); border-bottom:1px solid var(--border-medium); color:var(--text-muted); font-size:0.75rem; text-transform:uppercase; letter-spacing:0.5px;">
+              <th style="padding:12px 16px;">Service Discipline</th>
+              <th style="padding:12px 16px;">Baseline Category</th>
+              <th style="padding:12px 16px; width:150px;">Workshop Price (₹)</th>
+              <th style="padding:12px 16px; width:140px;">Duration (Mins)</th>
+              <th style="padding:12px 16px;">Offered Here?</th>
+              <th style="padding:12px 16px;">Special Notes</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for item in offerings %}
+              <tr style="border-bottom:1px solid var(--border-subtle);">
+                <td style="padding:14px 16px; font-weight:700; color:var(--text-main);">
+                  {{ item.service.name }}
+                </td>
+                <td style="padding:14px 16px; color:var(--text-muted); font-size:0.82rem;">
+                  {{ item.service.category_ref.name|default:item.service.get_category_display }}
+                </td>
+                <td style="padding:14px 16px;">
+                  <input type="number" name="svc_{{ item.id }}_price" value="{{ item.price|floatformat:0 }}" min="0" step="1" class="form-input" style="padding:6px 10px;">
+                </td>
+                <td style="padding:14px 16px;">
+                  <input type="number" name="svc_{{ item.id }}_duration" value="{{ item.duration_minutes }}" min="15" step="15" class="form-input" style="padding:6px 10px;">
+                </td>
+                <td style="padding:14px 16px; text-align:center;">
+                  <input type="checkbox" name="svc_{{ item.id }}_available" {% if item.is_available %}checked{% endif %} class="form-checkbox">
+                </td>
+                <td style="padding:14px 16px;">
+                  <input type="text" name="svc_{{ item.id }}_notes" value="{{ item.notes }}" class="form-input" style="padding:6px 10px;" placeholder="e.g. Includes warranty">
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+
+      <div style="margin-top:24px; display:flex; justify-content:flex-end;">
+        <button type="submit" class="btn btn-primary" style="padding:10px 24px;">
+          <i data-lucide="save"></i> Save Catalogue & Pricing
+        </button>
+      </div>
+    </form>
+  </div>
+
+</div>
+{% endblock %}
+

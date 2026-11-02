@@ -1,0 +1,93 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Manage Weekly Schedule — {{ provider.name }} | AUTOVYNEX{% endblock %}
+
+{% block content %}
+<div class="container" style="padding-top:28px; padding-bottom:60px;">
+
+  <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:24px;">
+    <div>
+      <div style="font-size:0.85rem; color:var(--text-muted); margin-bottom:4px;">
+        <a href="{% url 'services:provider_dashboard' %}?provider_id={{ provider.id }}" style="color:var(--color-primary); text-decoration:none;">&larr; Return to Workshop Portal</a>
+      </div>
+      <h1 style="font-size:1.85rem; font-weight:800; color:var(--text-main); margin:0;">
+        Weekly Operating Schedule & Bay Capacities
+      </h1>
+      <p style="font-size:0.92rem; color:var(--text-muted); margin-top:4px;">
+        Configure open/close hours, break windows, slot duration, and concurrent bay limits for {{ provider.name }}.
+      </p>
+    </div>
+  </div>
+
+  <div class="card" style="padding:28px; border:1px solid var(--border-medium);">
+    <form method="POST" action="{% url 'services:provider_schedule_manage' %}?provider_id={{ provider.id }}">
+      {% csrf_token %}
+
+      <div style="display:flex; flex-direction:column; gap:20px;">
+        {% for sch in schedules %}
+          <div style="background:var(--bg-surface-elevated); border:1px solid var(--border-subtle); border-radius:var(--radius-sm); padding:18px;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+              <h3 style="font-size:1.1rem; font-weight:700; margin:0; color:var(--text-main);">
+                {{ sch.get_weekday_display }}
+              </h3>
+              <label style="display:flex; align-items:center; gap:8px; cursor:pointer; font-size:0.85rem; font-weight:600; color:#ef4444;">
+                <input type="checkbox" name="day_{{ sch.weekday }}_is_closed" {% if sch.is_closed %}checked{% endif %} class="form-checkbox">
+                <span>Closed on this day</span>
+              </label>
+            </div>
+
+            <div class="grid-4" style="gap:14px; align-items:center;">
+              <div>
+                <label style="font-size:0.78rem; font-weight:600; color:var(--text-muted); display:block; margin-bottom:4px;">Opening Time</label>
+                <input type="time" name="day_{{ sch.weekday }}_open_time" value="{{ sch.open_time|time:'H:i' }}" class="form-input">
+              </div>
+
+              <div>
+                <label style="font-size:0.78rem; font-weight:600; color:var(--text-muted); display:block; margin-bottom:4px;">Closing Time</label>
+                <input type="time" name="day_{{ sch.weekday }}_close_time" value="{{ sch.close_time|time:'H:i' }}" class="form-input">
+              </div>
+
+              <div>
+                <label style="font-size:0.78rem; font-weight:600; color:var(--text-muted); display:block; margin-bottom:4px;">Slot Duration (Mins)</label>
+                <input type="number" name="day_{{ sch.weekday }}_slot_duration" value="{{ sch.slot_duration_minutes }}" min="15" step="15" class="form-input">
+              </div>
+
+              <div>
+                <label style="font-size:0.78rem; font-weight:600; color:var(--text-muted); display:block; margin-bottom:4px;">Max Bays per Slot</label>
+                <input type="number" name="day_{{ sch.weekday }}_max_capacity" value="{{ sch.max_bookings_per_slot }}" min="1" class="form-input">
+              </div>
+            </div>
+
+            <!-- Lunch / Break Settings -->
+            <div style="margin-top:12px; padding-top:12px; border-top:1px dashed var(--border-subtle); display:flex; align-items:center; gap:20px; flex-wrap:wrap;">
+              <label style="display:flex; align-items:center; gap:8px; cursor:pointer; font-size:0.82rem; font-weight:600; color:var(--text-muted);">
+                <input type="checkbox" name="day_{{ sch.weekday }}_has_break" {% if sch.has_break %}checked{% endif %} class="form-checkbox">
+                <span>Has Lunch / Midday Break</span>
+              </label>
+
+              <div style="display:flex; align-items:center; gap:8px;">
+                <span style="font-size:0.78rem; color:var(--text-muted);">Break Start:</span>
+                <input type="time" name="day_{{ sch.weekday }}_break_start" value="{{ sch.break_start|time:'H:i' }}" class="form-input" style="width:120px; padding:4px 8px;">
+              </div>
+
+              <div style="display:flex; align-items:center; gap:8px;">
+                <span style="font-size:0.78rem; color:var(--text-muted);">Break End:</span>
+                <input type="time" name="day_{{ sch.weekday }}_break_end" value="{{ sch.break_end|time:'H:i' }}" class="form-input" style="width:120px; padding:4px 8px;">
+              </div>
+            </div>
+          </div>
+        {% endfor %}
+      </div>
+
+      <div style="margin-top:24px; display:flex; justify-content:flex-end;">
+        <button type="submit" class="btn btn-primary" style="padding:10px 24px;">
+          <i data-lucide="save"></i> Save Weekly Schedule
+        </button>
+      </div>
+    </form>
+  </div>
+
+</div>
+{% endblock %}
+

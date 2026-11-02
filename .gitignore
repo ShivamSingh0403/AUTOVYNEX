@@ -45,9 +45,7 @@ autovynex_db.sqlite3
 
 # Static / Media runtime uploads (preserve sample assets in media/ but ignore dynamic user uploads)
 staticfiles/
-media/invoices/*
-media/vehicle_documents/*
-media/missing_parts/additional/*
+media/*
 !media/.gitkeep
 
 # IDE and Editor files

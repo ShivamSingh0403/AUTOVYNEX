@@ -1,0 +1,468 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Appointment {{ booking.booking_number }} — AUTOVYNEX{% endblock %}
+
+{% block content %}
+<div class="container" style="padding-top:28px; padding-bottom:60px;">
+
+  <!-- Breadcrumb -->
+  <div style="display:flex; align-items:center; gap:8px; font-size:0.85rem; color:var(--text-muted); margin-bottom:20px;">
+    <a href="{% url 'services:my_bookings' %}" style="color:var(--color-primary); text-decoration:none;">My Appointments</a>
+    <i data-lucide="chevron-right" style="width:14px; height:14px;"></i>
+    <span style="color:var(--text-main);">{{ booking.booking_number }}</span>
+  </div>
+
+  <!-- Header Card -->
+  <div class="card" style="padding:28px; border:1px solid var(--border-medium); margin-bottom:28px;">
+    <div style="display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:16px;">
+      <div>
+        <div style="display:flex; align-items:center; gap:10px; margin-bottom:8px;">
+          <h1 style="font-size:1.85rem; font-weight:800; color:var(--text-main); margin:0;">
+            {{ booking.service.name }}
+          </h1>
+          <span style="font-family:var(--font-mono); font-size:0.9rem; font-weight:700; color:var(--color-primary); background:rgba(8, 126, 255, 0.1); padding:4px 10px; border-radius:4px;">
+            {{ booking.booking_number }}
+          </span>
+        </div>
+        <p style="color:var(--text-muted); font-size:0.95rem; margin:0;">
+          Appointment registered at <strong>{{ booking.provider.name }}</strong> on {{ booking.created_at|date:"d M Y, h:i A" }}.
+        </p>
+      </div>
+
+      <!-- Action Buttons -->
+      <div style="display:flex; gap:10px; flex-wrap:wrap;">
+        {% if is_customer and booking.can_be_rescheduled %}
+          <button type="button" class="btn btn-secondary btn-sm" onclick="document.getElementById('reschedule-modal').style.display='flex';">
+            <i data-lucide="calendar-clock"></i> Reschedule
+          </button>
+        {% endif %}
+
+        {% if is_customer and booking.can_be_cancelled %}
+          <button type="button" class="btn btn-outline btn-sm" style="color:#ef4444; border-color:#ef4444;" onclick="document.getElementById('cancel-modal').style.display='flex';">
+            <i data-lucide="x-circle"></i> Cancel Appointment
+          </button>
+        {% endif %}
+
+        {% if is_provider %}
+          <a href="{% url 'services:provider_dashboard' %}" class="btn btn-primary btn-sm">
+            <i data-lucide="shield"></i> Open in Workshop Portal
+          </a>
+        {% endif %}
+      </div>
+    </div>
+
+    <!-- Status Stepper Bar -->
+    <div style="margin-top:28px; padding-top:24px; border-top:1px solid var(--border-subtle);">
+      <div style="font-size:0.75rem; text-transform:uppercase; letter-spacing:0.5px; color:var(--text-muted); font-weight:700; margin-bottom:12px;">
+        Service Progress Workflow
+      </div>
+
+      {% if booking.status == 'cancelled' or booking.status == 'rejected' %}
+        <div style="padding:14px 18px; border-radius:var(--radius-sm); background:rgba(239, 68, 68, 0.1); border:1px solid rgba(239, 68, 68, 0.3); color:#ef4444; font-size:0.92rem; display:flex; align-items:center; gap:10px;">
+          <i data-lucide="alert-octagon" style="width:20px; height:20px;"></i>
+          <div>
+            <strong>Appointment Status: {{ booking.get_status_display }}</strong>
+            {% if booking.cancellation_reason %}
+              <div style="font-size:0.82rem; margin-top:2px;">Reason: {{ booking.cancellation_reason }}</div>
+            {% endif %}
+          </div>
+        </div>
+      {% else %}
+        <!-- Progress Stepper -->
+        <div style="display:flex; justify-content:space-between; position:relative; max-width:700px;">
+          <!-- Stepper item 1: Pending -->
+          <div style="text-align:center; flex:1; position:relative; z-index:2;">
+            <div style="width:34px; height:34px; border-radius:50%; margin:0 auto 8px; display:flex; align-items:center; justify-content:center; font-weight:700; font-size:0.85rem; background:{% if booking.status in 'pending confirmed in_progress completed' %}var(--color-primary){% else %}var(--bg-surface-elevated){% endif %}; color:#fff;">
+              <i data-lucide="check" style="width:16px; height:16px;"></i>
+            </div>
+            <div style="font-size:0.8rem; font-weight:600; color:{% if booking.status == 'pending' %}var(--color-primary){% else %}var(--text-main){% endif %};">Request Placed</div>
+          </div>
+
+          <!-- Stepper item 2: Confirmed -->
+          <div style="text-align:center; flex:1; position:relative; z-index:2;">
+            <div style="width:34px; height:34px; border-radius:50%; margin:0 auto 8px; display:flex; align-items:center; justify-content:center; font-weight:700; font-size:0.85rem; background:{% if booking.status in 'confirmed in_progress completed' %}var(--color-primary){% else %}var(--bg-surface-elevated){% endif %}; color:{% if booking.status in 'confirmed in_progress completed' %}#fff{% else %}var(--text-muted){% endif %}; border:1px solid var(--border-medium);">
+              {% if booking.status in 'confirmed in_progress completed' %}<i data-lucide="check" style="width:16px; height:16px;"></i>{% else %}2{% endif %}
+            </div>
+            <div style="font-size:0.8rem; font-weight:600; color:{% if booking.status == 'confirmed' %}var(--color-primary){% else %}var(--text-main){% endif %};">Confirmed Bay</div>
+          </div>
+
+          <!-- Stepper item 3: In Progress -->
+          <div style="text-align:center; flex:1; position:relative; z-index:2;">
+            <div style="width:34px; height:34px; border-radius:50%; margin:0 auto 8px; display:flex; align-items:center; justify-content:center; font-weight:700; font-size:0.85rem; background:{% if booking.status in 'in_progress completed' %}var(--color-primary){% else %}var(--bg-surface-elevated){% endif %}; color:{% if booking.status in 'in_progress completed' %}#fff{% else %}var(--text-muted){% endif %}; border:1px solid var(--border-medium);">
+              {% if booking.status == 'completed' %}<i data-lucide="check" style="width:16px; height:16px;"></i>{% else %}3{% endif %}
+            </div>
+            <div style="font-size:0.8rem; font-weight:600; color:{% if booking.status == 'in_progress' %}var(--color-primary){% else %}var(--text-main){% endif %};">In Service</div>
+          </div>
+
+          <!-- Stepper item 4: Completed -->
+          <div style="text-align:center; flex:1; position:relative; z-index:2;">
+            <div style="width:34px; height:34px; border-radius:50%; margin:0 auto 8px; display:flex; align-items:center; justify-content:center; font-weight:700; font-size:0.85rem; background:{% if booking.status == 'completed' %}#10b981{% else %}var(--bg-surface-elevated){% endif %}; color:{% if booking.status == 'completed' %}#fff{% else %}var(--text-muted){% endif %}; border:1px solid var(--border-medium);">
+              {% if booking.status == 'completed' %}<i data-lucide="check" style="width:16px; height:16px;"></i>{% else %}4{% endif %}
+            </div>
+            <div style="font-size:0.8rem; font-weight:600; color:{% if booking.status == 'completed' %}#10b981{% else %}var(--text-muted){% endif %};">Ready & Logged</div>
+          </div>
+        </div>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- Main Content Layout (2 Columns: Left 8 cols, Right 4 cols) -->
+  <div style="display:grid; grid-template-columns:1fr 340px; gap:28px;">
+
+    <!-- Left Column: Specs, Breakdown & History -->
+    <div>
+
+      <!-- Appointment Information Matrix -->
+      <div class="card" style="padding:24px; margin-bottom:28px;">
+        <h3 style="font-size:1.15rem; font-weight:700; margin-bottom:16px;">Appointment Specifications</h3>
+
+        <div class="grid-2" style="gap:20px; margin-bottom:20px;">
+          <div>
+            <div style="font-size:0.75rem; text-transform:uppercase; color:var(--text-muted); font-weight:700;">Scheduled Date & Bay Slot</div>
+            <div style="font-size:1.05rem; font-weight:700; color:var(--color-primary); margin-top:2px;">
+              {{ booking.booking_date|date:"l, d F Y" }}
+            </div>
+            <div style="font-size:0.88rem; color:var(--text-muted);">{{ booking.time_slot }}</div>
+          </div>
+
+          <div>
+            <div style="font-size:0.75rem; text-transform:uppercase; color:var(--text-muted); font-weight:700;">Vehicle Information</div>
+            <div style="font-size:1.05rem; font-weight:700; color:var(--text-main); margin-top:2px;">
+              {{ booking.vehicle_info }}
+            </div>
+            {% if booking.customer_vehicle %}
+              <div style="margin-top:4px;">
+                <a href="{% url 'garage:index' %}" style="font-size:0.8rem; color:var(--color-primary); text-decoration:none; font-weight:600;">
+                  <i data-lucide="warehouse" style="width:12px; height:12px; vertical-align:middle;"></i> View in Digital Garage &rarr;
+                </a>
+              </div>
+            {% endif %}
+          </div>
+        </div>
+
+        <div class="grid-2" style="gap:20px; border-top:1px solid var(--border-subtle); padding-top:16px;">
+          <div>
+            <div style="font-size:0.75rem; text-transform:uppercase; color:var(--text-muted); font-weight:700;">Contact Details</div>
+            <div style="font-size:0.9rem; color:var(--text-main); margin-top:2px;">{{ booking.customer_phone }}</div>
+            {% if booking.customer_address %}
+              <div style="font-size:0.82rem; color:var(--text-muted); margin-top:2px;">{{ booking.customer_address }}</div>
+            {% endif %}
+          </div>
+
+          <div>
+            <div style="font-size:0.75rem; text-transform:uppercase; color:var(--text-muted); font-weight:700;">Payment Status</div>
+            <div style="font-size:0.9rem; font-weight:700; color:var(--text-main); margin-top:2px;">
+              {{ booking.get_payment_status_display }}
+            </div>
+            <div style="font-size:0.75rem; color:var(--text-muted);">Settled at workshop upon job completion</div>
+          </div>
+        </div>
+
+        {% if booking.problem_description %}
+          <div style="border-top:1px solid var(--border-subtle); padding-top:16px; margin-top:16px;">
+            <div style="font-size:0.75rem; text-transform:uppercase; color:var(--text-muted); font-weight:700;">Customer Notes / Reported Symptoms</div>
+            <p style="font-size:0.88rem; color:var(--text-main); margin-top:4px; line-height:1.5;">
+              {{ booking.problem_description }}
+            </p>
+          </div>
+        {% endif %}
+      </div>
+
+      <!-- Service Completion Details (If Completed) -->
+      {% if completion_details %}
+        <div class="card" style="padding:24px; border:1px solid #10b981; margin-bottom:28px; background:linear-gradient(135deg, rgba(16, 185, 129, 0.05), rgba(8, 126, 255, 0.02));">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
+            <h3 style="font-size:1.15rem; font-weight:700; color:#10b981; margin:0; display:flex; align-items:center; gap:8px;">
+              <i data-lucide="check-circle" style="width:20px; height:20px;"></i>
+              Service Completion & Garage Sync Record
+            </h3>
+            <span style="font-size:0.8rem; color:var(--text-muted);">Completed {{ completion_details.completed_at|date:"d M Y, h:i A" }}</span>
+          </div>
+
+          <div class="grid-2" style="gap:16px; margin-bottom:16px;">
+            <div>
+              <div style="font-size:0.75rem; text-transform:uppercase; color:var(--text-muted); font-weight:700;">Work Performed</div>
+              <p style="font-size:0.88rem; color:var(--text-main); margin:4px 0 0; line-height:1.5;">
+                {{ completion_details.work_performed }}
+              </p>
+            </div>
+            {% if completion_details.parts_replaced %}
+              <div>
+                <div style="font-size:0.75rem; text-transform:uppercase; color:var(--text-muted); font-weight:700;">Parts & Consumables Replaced</div>
+                <p style="font-size:0.88rem; color:var(--text-main); margin:4px 0 0; line-height:1.5;">
+                  {{ completion_details.parts_replaced }}
+                </p>
+              </div>
+            {% endif %}
+          </div>
+
+          <!-- Expense Breakdown Table -->
+          <div style="background:var(--bg-surface-elevated); border:1px solid var(--border-subtle); border-radius:var(--radius-sm); padding:16px; margin-bottom:16px;">
+            <div style="font-size:0.75rem; text-transform:uppercase; color:var(--text-muted); font-weight:700; margin-bottom:8px;">
+              Granular Invoice Breakdown
+            </div>
+            <div style="display:flex; justify-content:space-between; font-size:0.85rem; padding:4px 0; border-bottom:1px solid var(--border-subtle);">
+              <span>Labour Charges:</span>
+              <strong>₹{{ completion_details.labour_charges|floatformat:2 }}</strong>
+            </div>
+            <div style="display:flex; justify-content:space-between; font-size:0.85rem; padding:4px 0; border-bottom:1px solid var(--border-subtle);">
+              <span>Parts & Consumables:</span>
+              <strong>₹{{ completion_details.parts_charges|floatformat:2 }}</strong>
+            </div>
+            {% if completion_details.other_charges %}
+              <div style="display:flex; justify-content:space-between; font-size:0.85rem; padding:4px 0; border-bottom:1px solid var(--border-subtle);">
+                <span>Other Taxes / Environmental Surcharge:</span>
+                <strong>₹{{ completion_details.other_charges|floatformat:2 }}</strong>
+              </div>
+            {% endif %}
+            <div style="display:flex; justify-content:space-between; font-size:1.05rem; font-weight:800; color:var(--color-primary); padding-top:8px;">
+              <span>Total Final Amount:</span>
+              <span>₹{{ completion_details.final_amount|floatformat:2 }}</span>
+            </div>
+          </div>
+
+          <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px;">
+            {% if completion_details.odometer_reading %}
+              <span style="font-size:0.85rem; color:var(--text-muted);">
+                <i data-lucide="gauge" style="width:14px; height:14px; vertical-align:middle;"></i> Recorded Odometer: <strong>{{ completion_details.odometer_reading }} KM</strong>
+              </span>
+            {% endif %}
+
+            {% if completion_details.linked_maintenance_record %}
+              <a href="{% url 'garage:index' %}" class="btn btn-secondary btn-sm">
+                <i data-lucide="external-link"></i> View Record in Digital Garage
+              </a>
+            {% endif %}
+          </div>
+        </div>
+      {% endif %}
+
+      <!-- Audit History Timeline -->
+      <div class="card" style="padding:24px;">
+        <h3 style="font-size:1.15rem; font-weight:700; margin-bottom:16px; display:flex; align-items:center; gap:8px;">
+          <i data-lucide="history" style="width:18px; height:18px; color:var(--color-primary);"></i>
+          Appointment Audit Timeline
+        </h3>
+
+        <div style="position:relative; padding-left:24px; border-left:2px solid var(--border-medium);">
+          {% for log in history_logs %}
+            <div style="margin-bottom:20px; position:relative;">
+              <!-- Dot -->
+              <div style="position:absolute; left:-31px; top:2px; width:12px; height:12px; border-radius:50%; background:var(--color-primary); border:2px solid var(--bg-surface-elevated);"></div>
+              
+              <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
+                <span style="font-size:0.88rem; font-weight:700; color:var(--text-main); text-transform:capitalize;">
+                  {{ log.new_status }}
+                </span>
+                <span style="font-size:0.75rem; color:var(--text-muted);">
+                  {{ log.created_at|date:"d M Y, h:i A" }}
+                </span>
+              </div>
+
+              {% if log.customer_note %}
+                <p style="font-size:0.82rem; color:var(--text-muted); margin:0; line-height:1.4;">
+                  {{ log.customer_note }}
+                </p>
+              {% endif %}
+
+              {% if log.changed_by %}
+                <div style="font-size:0.72rem; color:var(--text-muted); margin-top:2px;">
+                  Authorized by: {{ log.changed_by.get_full_name|default:log.changed_by.username }}
+                </div>
+              {% endif %}
+            </div>
+          {% endfor %}
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Right Column: Workshop Card & Pricing Snapshot -->
+    <div>
+
+      <!-- Price Snapshot Box -->
+      <div class="card" style="padding:24px; margin-bottom:24px;">
+        <div style="font-size:0.75rem; text-transform:uppercase; letter-spacing:0.5px; color:var(--text-muted); font-weight:700;">
+          {% if booking.status == 'completed' %}Final Bill Amount{% else %}Initial Price Snapshot{% endif %}
+        </div>
+        <div style="font-size:1.8rem; font-weight:800; color:var(--text-main); margin:6px 0 12px;">
+          {% if booking.status == 'completed' and booking.final_amount %}
+            ₹{{ booking.final_amount|floatformat:2 }}
+          {% else %}
+            ₹{{ booking.price_estimate_snapshot|default:booking.estimated_cost|floatformat:2 }}
+          {% endif %}
+        </div>
+        <p style="font-size:0.78rem; color:var(--text-muted); line-height:1.5; margin:0;">
+          * Snapshot captured from workshop catalogue at appointment placement. Any extra parts or fluids require prior customer authorization.
+        </p>
+      </div>
+
+      <!-- Workshop Profile Box -->
+      <div class="card" style="padding:20px;">
+        <h4 style="font-size:1.05rem; font-weight:700; margin-bottom:12px; color:var(--text-main);">
+          Workshop Information
+        </h4>
+        <div style="font-size:0.9rem; font-weight:700; color:var(--text-main); margin-bottom:4px;">
+          {{ booking.provider.name }}
+        </div>
+        <p style="font-size:0.82rem; color:var(--text-muted); line-height:1.5; margin-bottom:14px;">
+          {{ booking.provider.address }}<br>
+          {{ booking.provider.city }} - {{ booking.provider.postal_code }}
+        </p>
+        <div style="font-size:0.85rem; color:var(--text-muted); margin-bottom:16px;">
+          <i data-lucide="phone" style="width:14px; height:14px; vertical-align:middle; color:var(--color-primary);"></i>
+          <span style="color:var(--text-main); font-weight:600;">{{ booking.provider.contact_number }}</span>
+        </div>
+
+        <div style="display:flex; flex-direction:column; gap:8px;">
+          <a href="{{ booking.provider.external_map_url }}" target="_blank" rel="noopener noreferrer" class="btn btn-outline btn-sm" style="justify-content:center;">
+            <i data-lucide="navigation"></i> Directions in Google Maps
+          </a>
+          <a href="{% url 'services:provider_detail' slug=booking.provider.slug %}" class="btn btn-secondary btn-sm" style="justify-content:center;">
+            View Workshop Profile
+          </a>
+        </div>
+      </div>
+
+    </div>
+
+  </div>
+
+</div>
+
+<!-- CANCEL APPOINTMENT MODAL -->
+<div id="cancel-modal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.6); z-index:9999; align-items:center; justify-content:center; padding:20px;">
+  <div class="card" style="max-width:480px; width:100%; padding:28px;">
+    <h3 style="font-size:1.25rem; font-weight:700; color:var(--text-main); margin-bottom:8px;">
+      Cancel Service Appointment
+    </h3>
+    <p style="font-size:0.85rem; color:var(--text-muted); margin-bottom:16px;">
+      Are you sure you want to cancel appointment <strong>{{ booking.booking_number }}</strong>? Your allocated workshop bay will be released.
+    </p>
+
+    <form method="POST" action="{% url 'services:cancel_booking' booking_number=booking.booking_number %}">
+      {% csrf_token %}
+      <div style="margin-bottom:18px;">
+        <label style="font-size:0.8rem; font-weight:600; color:var(--text-muted); display:block; margin-bottom:6px;">Cancellation Reason (Optional)</label>
+        <textarea name="cancellation_reason" class="form-textarea" rows="3" placeholder="e.g. Schedule change, resolved issue privately..."></textarea>
+      </div>
+
+      <div style="display:flex; justify-content:flex-end; gap:10px;">
+        <button type="button" class="btn btn-secondary btn-sm" onclick="document.getElementById('cancel-modal').style.display='none';">
+          Keep Appointment
+        </button>
+        <button type="submit" class="btn btn-primary btn-sm" style="background:#ef4444; border-color:#ef4444;">
+          Confirm Cancellation
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- RESCHEDULE MODAL -->
+<div id="reschedule-modal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.6); z-index:9999; align-items:center; justify-content:center; padding:20px;">
+  <div class="card" style="max-width:540px; width:100%; padding:28px;">
+    <h3 style="font-size:1.25rem; font-weight:700; color:var(--text-main); margin-bottom:8px;">
+      Reschedule Appointment
+    </h3>
+    <p style="font-size:0.85rem; color:var(--text-muted); margin-bottom:16px;">
+      Select an upcoming date and an available operating bay at <strong>{{ booking.provider.name }}</strong>.
+    </p>
+
+    <form method="POST" action="{% url 'services:reschedule_booking' booking_number=booking.booking_number %}">
+      {% csrf_token %}
+      <div style="margin-bottom:16px;">
+        <label style="font-size:0.8rem; font-weight:600; color:var(--text-muted); display:block; margin-bottom:6px;">New Appointment Date *</label>
+        <input type="date" name="reschedule_date" id="modal-reschedule-date" class="form-input" required>
+      </div>
+
+      <div style="margin-bottom:16px;">
+        <label style="font-size:0.8rem; font-weight:600; color:var(--text-muted); display:block; margin-bottom:6px;">Select New Operating Slot *</label>
+        <input type="hidden" name="reschedule_slot" id="modal-reschedule-slot" required>
+
+        <div id="modal-slots-grid" style="display:grid; grid-template-columns:repeat(auto-fill, minmax(130px, 1fr)); gap:8px;">
+          <!-- Loaded via JS -->
+        </div>
+        <div id="modal-slots-msg" style="display:none; font-size:0.82rem; margin-top:8px; color:#ef4444;"></div>
+      </div>
+
+      <div style="margin-bottom:20px;">
+        <label style="font-size:0.8rem; font-weight:600; color:var(--text-muted); display:block; margin-bottom:6px;">Reason for Rescheduling</label>
+        <input type="text" name="reschedule_reason" class="form-input" placeholder="e.g. Travel out of town, work commitment">
+      </div>
+
+      <div style="display:flex; justify-content:flex-end; gap:10px;">
+        <button type="button" class="btn btn-secondary btn-sm" onclick="document.getElementById('reschedule-modal').style.display='none';">
+          Close
+        </button>
+        <button type="submit" class="btn btn-primary btn-sm">
+          Save & Reschedule
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  const modalDate = document.getElementById('modal-reschedule-date');
+  const modalSlotInput = document.getElementById('modal-reschedule-slot');
+  const modalSlotsGrid = document.getElementById('modal-slots-grid');
+  const modalSlotsMsg = document.getElementById('modal-slots-msg');
+
+  if (modalDate) {
+    const tomorrow = new Date();
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    modalDate.min = tomorrow.toISOString().split('T')[0];
+    modalDate.value = tomorrow.toISOString().split('T')[0];
+
+    function fetchModalSlots() {
+      const d = modalDate.value;
+      if (!d) return;
+
+      modalSlotsGrid.innerHTML = 'Loading slots...';
+      modalSlotsMsg.style.display = 'none';
+      modalSlotInput.value = '';
+
+      fetch(`/services/api/slots/?provider_id={{ booking.provider.id }}&date=${d}`)
+        .then(res => res.json())
+        .then(data => {
+          modalSlotsGrid.innerHTML = '';
+          if (!data.success || !data.is_open) {
+            modalSlotsMsg.style.display = 'block';
+            modalSlotsMsg.textContent = data.reason || 'Workshop closed on this date.';
+            return;
+          }
+
+          data.slots.forEach(s => {
+            const btn = document.createElement('button');
+            btn.type = 'button';
+            btn.className = 'slot-pill-btn';
+            btn.innerHTML = `${s.formatted_start}<br><span style="font-size:0.7rem;">${s.status_text}</span>`;
+            if (!s.is_available) {
+              btn.disabled = true;
+            } else {
+              btn.addEventListener('click', () => {
+                modalSlotsGrid.querySelectorAll('.slot-pill-btn').forEach(b => b.classList.remove('selected'));
+                btn.classList.add('selected');
+                modalSlotInput.value = s.slot_label;
+              });
+              if (!modalSlotInput.value) {
+                btn.classList.add('selected');
+                modalSlotInput.value = s.slot_label;
+              }
+            }
+            modalSlotsGrid.appendChild(btn);
+          });
+        });
+    }
+
+    modalDate.addEventListener('change', fetchModalSlots);
+    // Initial fetch
+    fetchModalSlots();
+  }
+});
+</script>
+{% endblock %}
+

@@ -1,0 +1,80 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}My Service Appointments — AUTOVYNEX{% endblock %}
+
+{% block content %}
+<div class="container" style="padding-top:28px; padding-bottom:60px;">
+
+  <!-- Header -->
+  <div style="display:flex; justify-content:space-between; align-items:flex-end; flex-wrap:wrap; gap:16px; margin-bottom:32px;">
+    <div>
+      <div style="display:inline-flex; align-items:center; gap:8px; background:rgba(8, 126, 255, 0.12); padding:4px 12px; border-radius:20px; font-size:0.8rem; font-weight:600; color:var(--color-primary); margin-bottom:10px;">
+        <i data-lucide="wrench" style="width:14px; height:14px;"></i>
+        <span>Customer Booking Dashboard</span>
+      </div>
+      <h1 style="font-size:2rem; font-weight:800; color:var(--text-main); margin:0;">My Service Appointments</h1>
+      <p style="color:var(--text-muted); font-size:0.95rem; margin-top:6px;">
+        Track appointment statuses, request rescheduling, view workshop invoices, and sync history to your Digital Garage.
+      </p>
+    </div>
+
+    <div style="display:flex; gap:10px;">
+      <a href="{% url 'services:book' %}" class="btn btn-primary">
+        <i data-lucide="plus-circle"></i> Book New Service
+      </a>
+      <a href="{% url 'garage:index' %}" class="btn btn-secondary">
+        <i data-lucide="warehouse"></i> Digital Garage
+      </a>
+    </div>
+  </div>
+
+  <!-- Tabs Navigation -->
+  <div style="display:flex; gap:8px; border-bottom:1px solid var(--border-medium); margin-bottom:28px; overflow-x:auto;">
+    <a href="?tab=upcoming" class="tab-link {% if active_tab == 'upcoming' or not active_tab %}active{% endif %}" style="padding:10px 18px; font-size:0.9rem; font-weight:600; text-decoration:none; display:flex; align-items:center; gap:8px; border-bottom:2px solid {% if active_tab == 'upcoming' or not active_tab %}var(--color-primary){% else %}transparent{% endif %}; color:{% if active_tab == 'upcoming' or not active_tab %}var(--color-primary){% else %}var(--text-muted){% endif %};">
+      <i data-lucide="calendar" style="width:16px; height:16px;"></i>
+      <span>Upcoming Appointments</span>
+      <span class="badge" style="background:var(--bg-surface-elevated); font-size:0.75rem;">{{ upcoming_bookings.count }}</span>
+    </a>
+
+    <a href="?tab=in_progress" class="tab-link {% if active_tab == 'in_progress' %}active{% endif %}" style="padding:10px 18px; font-size:0.9rem; font-weight:600; text-decoration:none; display:flex; align-items:center; gap:8px; border-bottom:2px solid {% if active_tab == 'in_progress' %}var(--color-primary){% else %}transparent{% endif %}; color:{% if active_tab == 'in_progress' %}var(--color-primary){% else %}var(--text-muted){% endif %};">
+      <i data-lucide="refresh-cw" style="width:16px; height:16px;"></i>
+      <span>In Progress (At Bay)</span>
+      <span class="badge" style="background:var(--bg-surface-elevated); font-size:0.75rem;">{{ in_progress_bookings.count }}</span>
+    </a>
+
+    <a href="?tab=completed" class="tab-link {% if active_tab == 'completed' %}active{% endif %}" style="padding:10px 18px; font-size:0.9rem; font-weight:600; text-decoration:none; display:flex; align-items:center; gap:8px; border-bottom:2px solid {% if active_tab == 'completed' %}var(--color-primary){% else %}transparent{% endif %}; color:{% if active_tab == 'completed' %}var(--color-primary){% else %}var(--text-muted){% endif %};">
+      <i data-lucide="check-circle" style="width:16px; height:16px;"></i>
+      <span>Completed History</span>
+      <span class="badge" style="background:var(--bg-surface-elevated); font-size:0.75rem;">{{ completed_bookings.count }}</span>
+    </a>
+
+    <a href="?tab=cancelled" class="tab-link {% if active_tab == 'cancelled' %}active{% endif %}" style="padding:10px 18px; font-size:0.9rem; font-weight:600; text-decoration:none; display:flex; align-items:center; gap:8px; border-bottom:2px solid {% if active_tab == 'cancelled' %}var(--color-primary){% else %}transparent{% endif %}; color:{% if active_tab == 'cancelled' %}var(--color-primary){% else %}var(--text-muted){% endif %};">
+      <i data-lucide="x-circle" style="width:16px; height:16px;"></i>
+      <span>Cancelled / Rejected</span>
+      <span class="badge" style="background:var(--bg-surface-elevated); font-size:0.75rem;">{{ cancelled_bookings.count }}</span>
+    </a>
+  </div>
+
+  <!-- Appointments Content -->
+  {% if active_tab == 'in_progress' %}
+    {% with booking_list=in_progress_bookings empty_msg="No vehicles currently in service at a workshop bay." %}
+      {% include 'services/includes/booking_cards_list.html' %}
+    {% endwith %}
+  {% elif active_tab == 'completed' %}
+    {% with booking_list=completed_bookings empty_msg="You have not completed any service appointments yet." %}
+      {% include 'services/includes/booking_cards_list.html' %}
+    {% endwith %}
+  {% elif active_tab == 'cancelled' %}
+    {% with booking_list=cancelled_bookings empty_msg="No cancelled or rejected appointment records." %}
+      {% include 'services/includes/booking_cards_list.html' %}
+    {% endwith %}
+  {% else %}
+    {% with booking_list=upcoming_bookings empty_msg="You have no upcoming service appointments scheduled." %}
+      {% include 'services/includes/booking_cards_list.html' %}
+    {% endwith %}
+  {% endif %}
+
+</div>
+{% endblock %}
+

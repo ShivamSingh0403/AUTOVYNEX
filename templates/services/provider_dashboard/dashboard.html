@@ -1,0 +1,355 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Workshop Management Portal — {{ provider.name }} | AUTOVYNEX{% endblock %}
+
+{% block content %}
+<div class="container" style="padding-top:28px; padding-bottom:60px;">
+
+  <!-- Portal Header & Provider Selector -->
+  <div style="display:flex; justify-content:space-between; align-items:flex-end; flex-wrap:wrap; gap:16px; margin-bottom:28px;">
+    <div>
+      <div style="display:inline-flex; align-items:center; gap:8px; background:rgba(8, 126, 255, 0.12); padding:4px 12px; border-radius:20px; font-size:0.8rem; font-weight:700; color:var(--color-primary); margin-bottom:10px;">
+        <i data-lucide="shield-check" style="width:14px; height:14px;"></i>
+        <span>Authorized Workshop Portal</span>
+      </div>
+      <h1 style="font-size:2rem; font-weight:800; color:var(--text-main); margin:0;">
+        {{ provider.name }}
+      </h1>
+      <p style="color:var(--text-muted); font-size:0.95rem; margin-top:6px;">
+        {{ provider.address }}, {{ provider.city }} &bull; Helpline: {{ provider.contact_number }}
+      </p>
+    </div>
+
+    <!-- Provider switch (for staff) & Navigation links -->
+    <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
+      {% if user.is_staff and all_providers|length > 1 %}
+        <form method="GET" action="{% url 'services:provider_dashboard' %}" style="margin:0;">
+          <select name="provider_id" class="form-select" onchange="this.form.submit()" style="padding:6px 12px; font-size:0.85rem;">
+            {% for p in all_providers %}
+              <option value="{{ p.id }}" {% if p.id == provider.id %}selected{% endif %}>{{ p.name }} ({{ p.city }})</option>
+            {% endfor %}
+          </select>
+        </form>
+      {% endif %}
+
+      <a href="{% url 'services:provider_schedule_manage' %}?provider_id={{ provider.id }}" class="btn btn-secondary btn-sm">
+        <i data-lucide="calendar"></i> Weekly Schedule
+      </a>
+      <a href="{% url 'services:provider_services_manage' %}?provider_id={{ provider.id }}" class="btn btn-secondary btn-sm">
+        <i data-lucide="wrench"></i> Services & Pricing
+      </a>
+      <a href="{% url 'services:provider_unavailable_dates' %}?provider_id={{ provider.id }}" class="btn btn-secondary btn-sm">
+        <i data-lucide="clock"></i> Holidays & Closures
+      </a>
+    </div>
+  </div>
+
+  <!-- Metric KPI Cards -->
+  <div class="grid-4" style="gap:16px; margin-bottom:32px;">
+    <div class="card" style="padding:20px; border-left:4px solid var(--color-primary);">
+      <div style="font-size:0.8rem; text-transform:uppercase; color:var(--text-muted); font-weight:700;">Total Bookings</div>
+      <div style="font-size:1.8rem; font-weight:800; color:var(--text-main); margin-top:4px;">{{ total_count }}</div>
+      <div style="font-size:0.75rem; color:var(--text-muted);">All-time registered</div>
+    </div>
+
+    <div class="card" style="padding:20px; border-left:4px solid #f59e0b;">
+      <div style="font-size:0.8rem; text-transform:uppercase; color:var(--text-muted); font-weight:700;">Pending Approval</div>
+      <div style="font-size:1.8rem; font-weight:800; color:#f59e0b; margin-top:4px;">{{ pending_count }}</div>
+      <div style="font-size:0.75rem; color:var(--text-muted);">Require workshop response</div>
+    </div>
+
+    <div class="card" style="padding:20px; border-left:4px solid #087eff;">
+      <div style="font-size:0.8rem; text-transform:uppercase; color:var(--text-muted); font-weight:700;">Active in Bay Today</div>
+      <div style="font-size:1.8rem; font-weight:800; color:var(--color-primary); margin-top:4px;">{{ in_progress_count }}</div>
+      <div style="font-size:0.75rem; color:var(--text-muted);">Vehicle work in progress</div>
+    </div>
+
+    <div class="card" style="padding:20px; border-left:4px solid #10b981;">
+      <div style="font-size:0.8rem; text-transform:uppercase; color:var(--text-muted); font-weight:700;">Completed Services</div>
+      <div style="font-size:1.8rem; font-weight:800; color:#10b981; margin-top:4px;">{{ completed_count }}</div>
+      <div style="font-size:0.75rem; color:var(--text-muted);">Synced to Digital Garage</div>
+    </div>
+  </div>
+
+  <!-- Status Filter Toolbar -->
+  <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px; margin-bottom:20px;">
+    <div style="display:flex; gap:8px; flex-wrap:wrap;">
+      <a href="?provider_id={{ provider.id }}&status=all" class="btn {% if selected_status == 'all' %}btn-primary{% else %}btn-secondary{% endif %} btn-sm">
+        All ({{ total_count }})
+      </a>
+      <a href="?provider_id={{ provider.id }}&status=pending" class="btn {% if selected_status == 'pending' %}btn-primary{% else %}btn-secondary{% endif %} btn-sm">
+        Pending ({{ pending_count }})
+      </a>
+      <a href="?provider_id={{ provider.id }}&status=confirmed" class="btn {% if selected_status == 'confirmed' %}btn-primary{% else %}btn-secondary{% endif %} btn-sm">
+        Confirmed
+      </a>
+      <a href="?provider_id={{ provider.id }}&status=in_progress" class="btn {% if selected_status == 'in_progress' %}btn-primary{% else %}btn-secondary{% endif %} btn-sm">
+        In Progress ({{ in_progress_count }})
+      </a>
+      <a href="?provider_id={{ provider.id }}&status=completed" class="btn {% if selected_status == 'completed' %}btn-primary{% else %}btn-secondary{% endif %} btn-sm">
+        Completed ({{ completed_count }})
+      </a>
+      <a href="?provider_id={{ provider.id }}&status=cancelled" class="btn {% if selected_status == 'cancelled' %}btn-primary{% else %}btn-secondary{% endif %} btn-sm">
+        Cancelled
+      </a>
+    </div>
+
+    <div style="font-size:0.85rem; color:var(--text-muted);">
+      Showing <strong>{{ bookings|length }}</strong> appointments
+    </div>
+  </div>
+
+  <!-- Bookings Table / List -->
+  <div class="card" style="padding:0; overflow:hidden; border:1px solid var(--border-medium);">
+    {% if bookings %}
+      <div style="overflow-x:auto;">
+        <table style="width:100%; border-collapse:collapse; text-align:left; font-size:0.88rem;">
+          <thead>
+            <tr style="background:var(--bg-surface-subtle); border-bottom:1px solid var(--border-medium); color:var(--text-muted); font-size:0.75rem; text-transform:uppercase; letter-spacing:0.5px;">
+              <th style="padding:14px 18px;">Reference & Customer</th>
+              <th style="padding:14px 18px;">Vehicle & Service</th>
+              <th style="padding:14px 18px;">Date & Bay Slot</th>
+              <th style="padding:14px 18px;">Cost Snapshot</th>
+              <th style="padding:14px 18px;">Current Status</th>
+              <th style="padding:14px 18px; text-align:right;">Workshop Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for b in bookings %}
+              <tr style="border-bottom:1px solid var(--border-subtle); transition:background 0.15s ease;">
+                <!-- Ref & Customer -->
+                <td style="padding:16px 18px; vertical-align:top;">
+                  <div style="font-family:var(--font-mono); font-weight:700; color:var(--color-primary); margin-bottom:4px;">
+                    <a href="{% url 'services:booking_detail' booking_number=b.booking_number %}" style="color:inherit; text-decoration:none;">
+                      {{ b.booking_number }}
+                    </a>
+                  </div>
+                  <div style="font-weight:600; color:var(--text-main);">{{ b.user.get_full_name|default:b.user.username }}</div>
+                  <div style="font-size:0.8rem; color:var(--text-muted);">{{ b.customer_phone }}</div>
+                </td>
+
+                <!-- Vehicle & Service -->
+                <td style="padding:16px 18px; vertical-align:top;">
+                  <div style="font-weight:700; color:var(--text-main); margin-bottom:4px;">{{ b.service.name }}</div>
+                  <div style="font-size:0.82rem; color:var(--text-muted);">{{ b.vehicle_info }}</div>
+                  {% if b.customer_vehicle %}
+                    <span style="font-size:0.72rem; color:#10b981;">
+                      <i data-lucide="check" style="width:10px; height:10px; vertical-align:middle;"></i> Garage Synced
+                    </span>
+                  {% endif %}
+                </td>
+
+                <!-- Date & Slot -->
+                <td style="padding:16px 18px; vertical-align:top;">
+                  <div style="font-weight:700; color:var(--text-main);">{{ b.booking_date|date:"D, d M Y" }}</div>
+                  <div style="font-size:0.82rem; color:var(--color-primary); font-weight:600;">{{ b.time_slot }}</div>
+                </td>
+
+                <!-- Cost -->
+                <td style="padding:16px 18px; vertical-align:top;">
+                  {% if b.status == 'completed' and b.final_amount %}
+                    <div style="font-weight:800; color:#10b981; font-size:1rem;">₹{{ b.final_amount|floatformat:2 }}</div>
+                    <div style="font-size:0.72rem; color:var(--text-muted);">Final Billed</div>
+                  {% else %}
+                    <div style="font-weight:700; color:var(--text-main);">₹{{ b.price_estimate_snapshot|default:b.estimated_cost|floatformat:2 }}</div>
+                    <div style="font-size:0.72rem; color:var(--text-muted);">Estimated</div>
+                  {% endif %}
+                </td>
+
+                <!-- Status -->
+                <td style="padding:16px 18px; vertical-align:top;">
+                  {% if b.status == 'confirmed' %}
+                    <span class="badge" style="background:rgba(16, 185, 129, 0.15); border:1px solid rgba(16, 185, 129, 0.4); color:#10b981; font-weight:700;">Confirmed</span>
+                  {% elif b.status == 'pending' %}
+                    <span class="badge" style="background:rgba(245, 158, 11, 0.15); border:1px solid rgba(245, 158, 11, 0.4); color:#f59e0b; font-weight:700;">Pending Approval</span>
+                  {% elif b.status == 'rescheduled' %}
+                    <span class="badge" style="background:rgba(147, 51, 234, 0.15); border:1px solid rgba(147, 51, 234, 0.4); color:#a855f7; font-weight:700;">Rescheduled</span>
+                  {% elif b.status == 'in_progress' %}
+                    <span class="badge" style="background:rgba(8, 126, 255, 0.15); border:1px solid rgba(8, 126, 255, 0.4); color:var(--color-primary); font-weight:700;">In Service</span>
+                  {% elif b.status == 'completed' %}
+                    <span class="badge" style="background:rgba(16, 185, 129, 0.15); border:1px solid rgba(16, 185, 129, 0.4); color:#10b981; font-weight:700;">Completed</span>
+                  {% elif b.status == 'cancelled' %}
+                    <span class="badge" style="background:rgba(239, 68, 68, 0.15); border:1px solid rgba(239, 68, 68, 0.4); color:#ef4444; font-weight:700;">Cancelled</span>
+                  {% elif b.status == 'rejected' %}
+                    <span class="badge" style="background:rgba(239, 68, 68, 0.15); border:1px solid rgba(239, 68, 68, 0.4); color:#ef4444; font-weight:700;">Rejected</span>
+                  {% endif %}
+                </td>
+
+                <!-- Workshop Actions -->
+                <td style="padding:16px 18px; vertical-align:top; text-align:right;">
+                  <div style="display:flex; justify-content:flex-end; gap:6px; flex-wrap:wrap;">
+
+                    {% if b.status == 'pending' or b.status == 'rescheduled' %}
+                      <!-- Confirm Action -->
+                      <form method="POST" action="{% url 'services:provider_update_status' booking_number=b.booking_number %}" style="display:inline;">
+                        {% csrf_token %}
+                        <input type="hidden" name="status" value="confirmed">
+                        <input type="hidden" name="staff_note" value="Bay allocation confirmed by workshop manager.">
+                        <button type="submit" class="btn btn-primary btn-sm" title="Confirm Appointment">
+                          Confirm
+                        </button>
+                      </form>
+
+                      <!-- Reject Action -->
+                      <form method="POST" action="{% url 'services:provider_update_status' booking_number=b.booking_number %}" style="display:inline;" onsubmit="return confirm('Decline this appointment booking?');">
+                        {% csrf_token %}
+                        <input type="hidden" name="status" value="rejected">
+                        <input type="hidden" name="staff_note" value="Capacity exceeded or equipment maintenance.">
+                        <button type="submit" class="btn btn-secondary btn-sm" style="color:#ef4444;" title="Reject Appointment">
+                          Decline
+                        </button>
+                      </form>
+                    {% endif %}
+
+                    {% if b.status == 'confirmed' %}
+                      <!-- Mark In Progress -->
+                      <form method="POST" action="{% url 'services:provider_update_status' booking_number=b.booking_number %}" style="display:inline;">
+                        {% csrf_token %}
+                        <input type="hidden" name="status" value="in_progress">
+                        <input type="hidden" name="staff_note" value="Vehicle received at workshop bay. Inspection underway.">
+                        <button type="submit" class="btn btn-primary btn-sm" title="Vehicle Checked into Bay">
+                          Start Service
+                        </button>
+                      </form>
+                    {% endif %}
+
+                    {% if b.status == 'in_progress' %}
+                      <!-- Complete Service Modal Trigger -->
+                      <button type="button" class="btn btn-primary btn-sm" style="background:#10b981; border-color:#10b981;" onclick="openCompletionModal('{{ b.booking_number }}', '{{ b.service.name }}', '{{ b.vehicle_info }}', '{{ b.price_estimate_snapshot|floatformat:2 }}')">
+                        <i data-lucide="check-circle" style="width:14px; height:14px;"></i> Complete Job
+                      </button>
+                    {% endif %}
+
+                    <a href="{% url 'services:booking_detail' booking_number=b.booking_number %}" class="btn btn-secondary btn-sm" title="View Full File">
+                      Details
+                    </a>
+                  </div>
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    {% else %}
+      <div style="text-align:center; padding:48px 20px; color:var(--text-muted);">
+        <i data-lucide="inbox" style="width:36px; height:36px; margin:0 auto 10px; display:block; opacity:0.5;"></i>
+        No appointments found matching this status filter.
+      </div>
+    {% endif %}
+  </div>
+
+</div>
+
+<!-- SERVICE COMPLETION MODAL -->
+<div id="completion-modal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.65); z-index:9999; align-items:center; justify-content:center; padding:20px; overflow-y:auto;">
+  <div class="card" style="max-width:620px; width:100%; padding:28px; max-height:90vh; overflow-y:auto;">
+    <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:16px;">
+      <div>
+        <h3 style="font-size:1.3rem; font-weight:800; color:var(--text-main); margin:0 0 4px;">
+          Complete Service & Bill Customer
+        </h3>
+        <p style="font-size:0.85rem; color:var(--text-muted); margin:0;" id="modal-completion-subtitle">
+          Record final labour, parts charges, and auto-sync maintenance record to customer's Digital Garage.
+        </p>
+      </div>
+      <button type="button" onclick="closeCompletionModal()" style="background:none; border:none; cursor:pointer; color:var(--text-muted);">
+        <i data-lucide="x" style="width:20px; height:20px;"></i>
+      </button>
+    </div>
+
+    <form method="POST" id="completion-form" action="">
+      {% csrf_token %}
+
+      <div class="grid-3" style="gap:12px; margin-bottom:16px;">
+        <div>
+          <label style="font-size:0.8rem; font-weight:600; color:var(--text-muted); display:block; margin-bottom:4px;">Labour Charges (₹) *</label>
+          <input type="number" name="labour_charges" id="comp-labour" step="0.01" min="0" class="form-input" required value="1200.00" oninput="calcTotal()">
+        </div>
+        <div>
+          <label style="font-size:0.8rem; font-weight:600; color:var(--text-muted); display:block; margin-bottom:4px;">Parts & Fluids (₹) *</label>
+          <input type="number" name="parts_charges" id="comp-parts" step="0.01" min="0" class="form-input" required value="2299.00" oninput="calcTotal()">
+        </div>
+        <div>
+          <label style="font-size:0.8rem; font-weight:600; color:var(--text-muted); display:block; margin-bottom:4px;">Other / Taxes (₹)</label>
+          <input type="number" name="other_charges" id="comp-other" step="0.01" min="0" class="form-input" value="0.00" oninput="calcTotal()">
+        </div>
+      </div>
+
+      <!-- Total Calculated Amount Display -->
+      <div style="background:var(--bg-surface-elevated); border:1px solid var(--border-subtle); padding:12px 16px; border-radius:var(--radius-sm); margin-bottom:16px; display:flex; justify-content:space-between; align-items:center;">
+        <span style="font-size:0.9rem; font-weight:700; color:var(--text-main);">Final Total Invoice Amount:</span>
+        <span style="font-size:1.25rem; font-weight:800; color:#10b981;" id="comp-total-display">₹3,499.00</span>
+      </div>
+
+      <div class="grid-2" style="gap:14px; margin-bottom:16px;">
+        <div>
+          <label style="font-size:0.8rem; font-weight:600; color:var(--text-muted); display:block; margin-bottom:4px;">Odometer at Completion (KM)</label>
+          <input type="number" name="odometer_reading" class="form-input" placeholder="e.g. 42350">
+        </div>
+        <div>
+          <label style="font-size:0.8rem; font-weight:600; color:var(--text-muted); display:block; margin-bottom:4px;">Recommended Next Service Date</label>
+          <input type="date" name="next_service_recommendation_date" class="form-input">
+        </div>
+      </div>
+
+      <div style="margin-bottom:14px;">
+        <label style="font-size:0.8rem; font-weight:600; color:var(--text-muted); display:block; margin-bottom:4px;">Work Performed Summary *</label>
+        <textarea name="work_performed" class="form-textarea" rows="2" required placeholder="e.g. Engine oil replaced with Castrol 5W-40, brake caliper cleaned, AC pollen filter renewed."></textarea>
+      </div>
+
+      <div style="margin-bottom:14px;">
+        <label style="font-size:0.8rem; font-weight:600; color:var(--text-muted); display:block; margin-bottom:4px;">Parts & Consumables Replaced</label>
+        <input type="text" name="parts_replaced" class="form-input" placeholder="e.g. Synthetic Oil (3.8L), Oil Filter, Air Filter">
+      </div>
+
+      <div style="margin-bottom:18px;">
+        <label style="font-size:0.8rem; font-weight:600; color:var(--text-muted); display:block; margin-bottom:4px;">Technician Advice / Observations</label>
+        <input type="text" name="technician_notes" class="form-input" placeholder="e.g. Front tyre tread at 4mm, consider replacement within 8,000 KM.">
+      </div>
+
+      <div style="margin-bottom:20px;">
+        <label style="display:flex; align-items:center; gap:8px; cursor:pointer; font-size:0.85rem; font-weight:600; color:var(--text-main);">
+          <input type="checkbox" name="mark_paid" checked class="form-checkbox">
+          <span>Payment collected at workshop (Mark as Paid)</span>
+        </label>
+      </div>
+
+      <div style="display:flex; justify-content:flex-end; gap:10px;">
+        <button type="button" class="btn btn-secondary btn-sm" onclick="closeCompletionModal()">
+          Cancel
+        </button>
+        <button type="submit" class="btn btn-primary btn-sm" style="background:#10b981; border-color:#10b981;">
+          <i data-lucide="check"></i> Confirm Completion & Sync to Garage
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+function openCompletionModal(bookingNumber, serviceName, vehicleInfo, estimatedCost) {
+  const modal = document.getElementById('completion-modal');
+  const form = document.getElementById('completion-form');
+  const subtitle = document.getElementById('modal-completion-subtitle');
+  
+  form.action = `/services/workshop/complete/${bookingNumber}/`;
+  subtitle.textContent = `${serviceName} for ${vehicleInfo} (Est: ₹${estimatedCost})`;
+  modal.style.display = 'flex';
+  calcTotal();
+}
+
+function closeCompletionModal() {
+  document.getElementById('completion-modal').style.display = 'none';
+}
+
+function calcTotal() {
+  const labour = parseFloat(document.getElementById('comp-labour').value) || 0;
+  const parts = parseFloat(document.getElementById('comp-parts').value) || 0;
+  const other = parseFloat(document.getElementById('comp-other').value) || 0;
+  const total = labour + parts + other;
+  document.getElementById('comp-total-display').textContent = '₹' + total.toLocaleString('en-IN', { minimumFractionDigits: 2 });
+}
+</script>
+{% endblock %}
+

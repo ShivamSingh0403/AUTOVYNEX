@@ -1,0 +1,267 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ provider.name }} — Workshop Details & Bookings | AUTOVYNEX{% endblock %}
+
+{% block content %}
+<div class="container" style="padding-top:24px; padding-bottom:60px;">
+
+  <!-- Breadcrumb Navigation -->
+  <div style="display:flex; align-items:center; gap:8px; font-size:0.85rem; color:var(--text-muted); margin-bottom:20px;">
+    <a href="{% url 'services:directory' %}" style="color:var(--color-primary); text-decoration:none;">Service Directory</a>
+    <i data-lucide="chevron-right" style="width:14px; height:14px;"></i>
+    <span style="color:var(--text-main);">{{ provider.name }}</span>
+  </div>
+
+  <!-- Hero Profile Banner -->
+  <div class="card" style="padding:0; overflow:hidden; border:1px solid var(--border-medium); margin-bottom:32px;">
+    <div style="background:linear-gradient(135deg, #101820 0%, #1e293b 100%); padding:40px 32px; position:relative;">
+      {% if provider.cover_image or provider.image %}
+        <img src="{% if provider.cover_image %}{{ provider.cover_image.url }}{% else %}{{ provider.image.url }}{% endif %}" alt="{{ provider.name }}" style="position:absolute; top:0; left:0; width:100%; height:100%; object-fit:cover; opacity:0.25;">
+      {% endif %}
+
+      <div style="position:relative; z-index:2; display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:20px;">
+        <div style="max-width:700px;">
+          <!-- Status / Badge -->
+          <div style="display:flex; align-items:center; gap:10px; margin-bottom:12px;">
+            {% if provider.is_demo %}
+              <span class="badge" style="background:rgba(245, 158, 11, 0.2); border:1px solid rgba(245, 158, 11, 0.5); color:#f59e0b; font-weight:700; font-size:0.75rem;">
+                <i data-lucide="alert-circle" style="width:12px; height:12px;"></i> Demo Service Centre Listing
+              </span>
+            {% elif provider.is_verified %}
+              <span class="badge" style="background:rgba(16, 185, 129, 0.2); border:1px solid rgba(16, 185, 129, 0.5); color:#10b981; font-weight:700; font-size:0.75rem;">
+                <i data-lucide="shield-check" style="width:12px; height:12px;"></i> Verified Real Business
+              </span>
+            {% else %}
+              <span class="badge" style="background:rgba(148, 163, 184, 0.2); color:#94a3b8; font-size:0.75rem;">
+                Registered Provider
+              </span>
+            {% endif %}
+
+            <span style="font-size:0.8rem; color:#94a3b8;">
+              <i data-lucide="map-pin" style="width:12px; height:12px; vertical-align:middle;"></i> {{ provider.city }}, {{ provider.state }}
+            </span>
+          </div>
+
+          <h1 style="font-size:2.2rem; font-weight:800; color:#fff; margin-bottom:12px; line-height:1.2;">
+            {{ provider.name }}
+          </h1>
+
+          <p style="font-size:1rem; color:#cbd5e1; line-height:1.6; margin-bottom:20px;">
+            {{ provider.description|default:"State-of-the-art multi-brand vehicle service centre equipped with computerized diagnostic bays and certified mechanics." }}
+          </p>
+
+          <div style="display:flex; flex-wrap:wrap; gap:16px; font-size:0.88rem; color:#94a3b8;">
+            <div style="display:flex; align-items:center; gap:6px;">
+              <i data-lucide="phone" style="width:16px; height:16px; color:var(--color-primary);"></i>
+              <span style="color:#fff;">{{ provider.contact_number }}</span>
+            </div>
+            {% if provider.email %}
+            <div style="display:flex; align-items:center; gap:6px;">
+              <i data-lucide="mail" style="width:16px; height:16px; color:var(--color-primary);"></i>
+              <span style="color:#fff;">{{ provider.email }}</span>
+            </div>
+            {% endif %}
+            <div style="display:flex; align-items:center; gap:6px;">
+              <i data-lucide="clock" style="width:16px; height:16px; color:var(--color-primary);"></i>
+              <span style="color:#fff;">{{ provider.operating_hours }}</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Right Side Book CTA Box -->
+        <div style="background:rgba(16, 24, 32, 0.85); border:1px solid rgba(255,255,255,0.1); border-radius:var(--radius-md); padding:20px; min-width:240px; text-align:center; backdrop-filter:blur(8px);">
+          <div style="font-size:0.8rem; color:#94a3b8; margin-bottom:4px;">Appointment Booking</div>
+          <div style="font-size:1.1rem; font-weight:700; color:#fff; margin-bottom:14px;">Instant Bay Allocation</div>
+          <a href="{% url 'services:book' %}?provider_id={{ provider.id }}" class="btn btn-primary" style="width:100%; justify-content:center; margin-bottom:8px;">
+            <i data-lucide="calendar"></i> Book Appointment
+          </a>
+          <a href="{{ provider.external_map_url }}" target="_blank" rel="noopener noreferrer" class="btn btn-secondary btn-sm" style="width:100%; justify-content:center;">
+            <i data-lucide="navigation"></i> Open in Maps
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main Content Layout (2 Columns: Left 8 cols, Right 4 cols) -->
+  <div style="display:grid; grid-template-columns:1fr 340px; gap:32px;">
+
+    <!-- Left Column: Services & Facilities -->
+    <div>
+
+      <!-- Offered Services Matrix -->
+      <div style="margin-bottom:40px;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
+          <div>
+            <h2 style="font-size:1.4rem; font-weight:800; margin-bottom:4px; color:var(--text-main);">
+              Available Services & Workshop Pricing
+            </h2>
+            <p style="font-size:0.88rem; color:var(--text-muted); margin:0;">
+              Prices configured directly from workshop database records. No hidden billing.
+            </p>
+          </div>
+        </div>
+
+        {% if offerings %}
+          <div style="display:grid; grid-template-columns:1fr; gap:12px;">
+            {% for item in offerings %}
+              <div class="card" style="padding:16px 20px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:16px; border:1px solid var(--border-subtle);">
+                <div style="display:flex; align-items:flex-start; gap:14px; max-width:65%;">
+                  <div style="width:40px; height:40px; border-radius:8px; background:rgba(8, 126, 255, 0.1); color:var(--color-primary); display:flex; align-items:center; justify-content:center; flex-shrink:0;">
+                    <i data-lucide="{{ item.service.icon_name|default:'wrench' }}" style="width:20px; height:20px;"></i>
+                  </div>
+                  <div>
+                    <h4 style="font-size:1.02rem; font-weight:700; margin:0 0 4px; color:var(--text-main);">{{ item.service.name }}</h4>
+                    <p style="font-size:0.82rem; color:var(--text-muted); margin:0 0 6px; line-height:1.4;">{{ item.service.description }}</p>
+                    <div style="display:flex; gap:12px; font-size:0.75rem; color:var(--text-muted);">
+                      <span><i data-lucide="clock" style="width:12px; height:12px; vertical-align:middle;"></i> ~{{ item.duration_minutes }} mins</span>
+                      <span><i data-lucide="car" style="width:12px; height:12px; vertical-align:middle;"></i> {{ item.service.supported_vehicle_types }}</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div style="text-align:right; display:flex; align-items:center; gap:16px;">
+                  <div>
+                    <div style="font-size:0.75rem; color:var(--text-muted);">Estimated Price</div>
+                    <div style="font-size:1.25rem; font-weight:800; color:var(--color-primary);">₹{{ item.price|floatformat:0 }}</div>
+                  </div>
+                  <a href="{% url 'services:book' %}?provider_id={{ provider.id }}&service_id={{ item.service.id }}" class="btn btn-primary btn-sm">
+                    Book This
+                  </a>
+                </div>
+              </div>
+            {% endfor %}
+          </div>
+        {% else %}
+          <div class="card" style="padding:24px; text-align:center; color:var(--text-muted);">
+            No custom service offerings currently configured for this provider.
+          </div>
+        {% endif %}
+      </div>
+
+      <!-- Workshop Facilities & Features -->
+      <div class="card" style="padding:24px; margin-bottom:32px;">
+        <h3 style="font-size:1.15rem; font-weight:700; margin-bottom:16px;">Workshop Amenities & Equipment</h3>
+        <div style="display:flex; flex-wrap:wrap; gap:10px;">
+          {% for fac in provider.facilities_list %}
+            <div style="display:flex; align-items:center; gap:8px; background:var(--bg-surface-elevated); border:1px solid var(--border-subtle); padding:8px 14px; border-radius:var(--radius-sm); font-size:0.85rem; font-weight:600; color:var(--text-main);">
+              <i data-lucide="check" style="width:14px; height:14px; color:#10b981;"></i>
+              <span>{{ fac }}</span>
+            </div>
+          {% endfor %}
+        </div>
+      </div>
+
+      <!-- Supported Vehicle Brands -->
+      <div class="card" style="padding:24px; margin-bottom:32px;">
+        <h3 style="font-size:1.15rem; font-weight:700; margin-bottom:16px;">Supported Vehicle Manufacturers</h3>
+        {% if provider.supported_brands.all %}
+          <div style="display:flex; flex-wrap:wrap; gap:10px;">
+            {% for b in provider.supported_brands.all %}
+              <div style="padding:8px 16px; background:var(--bg-surface-subtle); border:1px solid var(--border-medium); border-radius:var(--radius-sm); font-size:0.88rem; font-weight:600; color:var(--text-main);">
+                {{ b.name }}
+              </div>
+            {% endfor %}
+          </div>
+        {% else %}
+          <p style="font-size:0.85rem; color:var(--text-muted);">This workshop services all major domestic and imported car brands.</p>
+        {% endif %}
+      </div>
+
+    </div>
+
+    <!-- Right Column: Operating Hours, Map, and Enquiry Form -->
+    <div>
+
+      <!-- Operating Hours Card -->
+      <div class="card" style="padding:20px; margin-bottom:24px;">
+        <h3 style="font-size:1.05rem; font-weight:700; margin-bottom:14px; display:flex; align-items:center; gap:8px;">
+          <i data-lucide="calendar" style="width:16px; height:16px; color:var(--color-primary);"></i>
+          <span>Weekly Operating Hours</span>
+        </h3>
+
+        <div style="font-size:0.85rem; line-height:2;">
+          {% for sch in schedules %}
+            <div style="display:flex; justify-content:space-between; border-bottom:1px solid var(--border-subtle); padding:4px 0;">
+              <span style="font-weight:600; color:var(--text-main);">{{ sch.get_weekday_display }}</span>
+              {% if sch.is_closed %}
+                <span style="color:#ef4444; font-weight:600;">Closed</span>
+              {% else %}
+                <span style="color:var(--text-muted);">{{ sch.open_time|time:"g:i A" }} - {{ sch.close_time|time:"g:i A" }}</span>
+              {% endif %}
+            </div>
+          {% endfor %}
+        </div>
+
+        {% if unavailable_dates %}
+          <div style="margin-top:14px; padding-top:12px; border-top:1px dashed var(--border-medium);">
+            <div style="font-size:0.75rem; text-transform:uppercase; letter-spacing:0.5px; color:#f59e0b; font-weight:700; margin-bottom:6px;">
+              Upcoming Planned Closures
+            </div>
+            {% for u in unavailable_dates %}
+              <div style="font-size:0.8rem; color:var(--text-muted); margin-bottom:4px;">
+                <strong>{{ u.date|date:"d M Y" }}:</strong> {{ u.reason }}
+              </div>
+            {% endfor %}
+          </div>
+        {% endif %}
+      </div>
+
+      <!-- Workshop Address & External Map Card -->
+      <div class="card" style="padding:20px; margin-bottom:24px;">
+        <h3 style="font-size:1.05rem; font-weight:700; margin-bottom:12px; display:flex; align-items:center; gap:8px;">
+          <i data-lucide="map-pin" style="width:16px; height:16px; color:var(--color-primary);"></i>
+          <span>Workshop Location</span>
+        </h3>
+        <p style="font-size:0.88rem; color:var(--text-muted); line-height:1.6; margin-bottom:14px;">
+          {{ provider.address }}<br>
+          {{ provider.city }}, {{ provider.state }} - {{ provider.postal_code }}
+        </p>
+
+        <a href="{{ provider.external_map_url }}" target="_blank" rel="noopener noreferrer" class="btn btn-outline btn-sm" style="width:100%; justify-content:center;">
+          <i data-lucide="external-link"></i> Open Location in Google Maps
+        </a>
+      </div>
+
+      <!-- Contact / Enquiry Form -->
+      <div class="card" style="padding:20px;">
+        <h3 style="font-size:1.05rem; font-weight:700; margin-bottom:8px; display:flex; align-items:center; gap:8px;">
+          <i data-lucide="message-square" style="width:16px; height:16px; color:var(--color-primary);"></i>
+          <span>Ask Workshop a Question</span>
+        </h3>
+        <p style="font-size:0.82rem; color:var(--text-muted); margin-bottom:16px;">
+          Need a custom quotation, specific parts enquiry, or fleet rate inquiry? Send a direct enquiry to {{ provider.name }}.
+        </p>
+
+        <form method="POST" action="{% url 'services:provider_detail' slug=provider.slug %}">
+          {% csrf_token %}
+          <div style="margin-bottom:12px;">
+            <label style="font-size:0.8rem; font-weight:600; color:var(--text-muted); display:block; margin-bottom:4px;">Your Name</label>
+            {{ enquiry_form.name }}
+          </div>
+          <div style="margin-bottom:12px;">
+            <label style="font-size:0.8rem; font-weight:600; color:var(--text-muted); display:block; margin-bottom:4px;">Phone Number</label>
+            {{ enquiry_form.phone }}
+          </div>
+          <div style="margin-bottom:12px;">
+            <label style="font-size:0.8rem; font-weight:600; color:var(--text-muted); display:block; margin-bottom:4px;">Email (Optional)</label>
+            {{ enquiry_form.email }}
+          </div>
+          <div style="margin-bottom:16px;">
+            <label style="font-size:0.8rem; font-weight:600; color:var(--text-muted); display:block; margin-bottom:4px;">Your Message / Enquiry</label>
+            {{ enquiry_form.message }}
+          </div>
+          <button type="submit" name="submit_enquiry" class="btn btn-primary btn-sm" style="width:100%; justify-content:center;">
+            <i data-lucide="send"></i> Submit Enquiry
+          </button>
+        </form>
+      </div>
+
+    </div>
+
+  </div>
+
+</div>
+{% endblock %}
+

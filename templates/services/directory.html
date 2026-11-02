@@ -1,98 +1,325 @@
 {% extends 'base.html' %}
+{% load static %}
 
-{% block title %}Service Provider Directory — Verified Workshops | AUTOVYNEX{% endblock %}
+{% block title %}Service Centre Marketplace & Workshop Directory | AUTOVYNEX{% endblock %}
 
 {% block content %}
-<div class="container" style="padding-top:24px;">
-  <!-- Title & City Filter -->
-  <div style="display:flex; justify-content:space-between; align-items:flex-end; flex-wrap:wrap; gap:16px; margin-bottom:32px;">
-    <div>
-      <div class="demo-academic-badge" style="margin-bottom:8px;">
-        <i data-lucide="shield-check"></i>
-        <span>Verified Workshop Network</span>
+<div class="container" style="padding-top:28px; padding-bottom:60px;">
+
+  <!-- Header Banner -->
+  <div style="background:linear-gradient(135deg, rgba(16, 24, 32, 0.95), rgba(8, 126, 255, 0.12)); border:1px solid var(--border-subtle); border-radius:var(--radius-lg); padding:32px; margin-bottom:32px; position:relative; overflow:hidden;">
+    <div style="position:relative; z-index:2; max-width:850px;">
+      <div style="display:inline-flex; align-items:center; gap:8px; background:rgba(8, 126, 255, 0.15); border:1px solid rgba(8, 126, 255, 0.3); padding:4px 12px; border-radius:20px; font-size:0.8rem; font-weight:600; color:var(--color-primary); margin-bottom:12px;">
+        <i data-lucide="wrench" style="width:14px; height:14px;"></i>
+        <span>AUTOVYNEX Service Network & Booking Engine</span>
       </div>
-      <h1 style="font-size:1.85rem; margin:0;">Certified Service Providers & Workshops</h1>
-      <p style="color:var(--text-muted); font-size:1rem; margin-top:6px;">
-        Technicians certified with computerized OBD diagnostics, genuine OEM parts fitment, and standardized labor pricing.
+      <h1 style="font-size:2.2rem; font-weight:800; color:var(--text-main); margin-bottom:12px; line-height:1.2;">
+        Certified Service Centres & Multi-Brand Workshops
+      </h1>
+      <p style="font-size:1rem; color:var(--text-muted); line-height:1.6; margin-bottom:20px;">
+        Discover authorized workshop facilities, certified diagnostic bays, and real-time appointment scheduling across major Indian metropolitan hubs. Transparent pricing from database records with zero invented ratings.
       </p>
-    </div>
 
-    <div style="display:flex; align-items:center; gap:8px;">
-      <label style="font-size:0.85rem; color:var(--text-muted);">Filter by City:</label>
-      <form method="GET" action="{% url 'services:directory' %}" style="margin:0;">
-        <select name="city" class="form-select" style="padding:6px 12px; font-size:0.85rem;" onchange="this.form.submit()">
-          <option value="">All Indian Hubs</option>
-          {% for c in cities %}
-            <option value="{{ c }}" {% if selected_city == c %}selected{% endif %}>{{ c }}</option>
-          {% endfor %}
-        </select>
-      </form>
+      <div style="display:flex; flex-wrap:wrap; gap:12px; align-items:center;">
+        <a href="{% url 'services:book' %}" class="btn btn-primary" style="padding:10px 22px;">
+          <i data-lucide="calendar"></i> Book Appointment Now
+        </a>
+        {% if user.is_authenticated %}
+        <a href="{% url 'services:my_bookings' %}" class="btn btn-secondary" style="padding:10px 20px;">
+          <i data-lucide="clock"></i> My Appointments
+        </a>
+        {% endif %}
+        {% if user.is_staff or user.owned_service_providers.exists %}
+        <a href="{% url 'services:provider_dashboard' %}" class="btn btn-outline" style="padding:10px 20px;">
+          <i data-lucide="shield-check"></i> Workshop Portal
+        </a>
+        {% endif %}
+      </div>
     </div>
   </div>
 
-  <!-- Workshop Grid -->
-  <div class="grid-3" style="margin-bottom:48px;">
-    {% for prov in providers %}
-      <div class="card card-interactive" style="display:flex; flex-direction:column; padding:24px;">
-        <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:12px;">
-          <div style="width:50px; height:50px; border-radius:var(--radius-md); background:linear-gradient(135deg, rgba(2, 132, 199, 0.12), rgba(6, 182, 212, 0.12)); color:var(--color-primary); display:flex; align-items:center; justify-content:center;">
-            <i data-lucide="wrench" style="width:26px; height:26px;"></i>
-          </div>
-          <span class="badge badge-verified">
-            ★ {{ prov.rating }} ({{ prov.total_reviews }} reviews)
-          </span>
-        </div>
-
-        <h3 style="font-size:1.15rem; margin-bottom:8px; color:var(--text-main);">{{ prov.name }}</h3>
-        
-        <div style="font-size:0.85rem; color:var(--text-muted); line-height:1.6; margin-bottom:16px; flex-grow:1;">
-          <div style="display:flex; gap:6px; align-items:flex-start; margin-bottom:6px;">
-            <i data-lucide="map-pin" style="width:16px; color:var(--color-primary); flex-shrink:0;"></i>
-            <span>{{ prov.address }}</span>
-          </div>
-          <div style="display:flex; gap:6px; align-items:center; margin-bottom:6px;">
-            <i data-lucide="clock" style="width:16px; color:var(--color-primary); flex-shrink:0;"></i>
-            <span>{{ prov.operating_hours }}</span>
-          </div>
-          <div style="display:flex; gap:6px; align-items:center;">
-            <i data-lucide="phone" style="width:16px; color:var(--color-primary); flex-shrink:0;"></i>
-            <span>{{ prov.contact_number }}</span>
+  <!-- Search & Advanced Filter Toolbar -->
+  <div class="card" style="padding:24px; margin-bottom:32px; border:1px solid var(--border-medium);">
+    <form method="GET" action="{% url 'services:directory' %}" id="services-filter-form">
+      <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(200px, 1fr)); gap:16px; margin-bottom:16px;">
+        <!-- Search Keyword -->
+        <div style="grid-column: span 2;">
+          <label style="font-size:0.82rem; font-weight:600; color:var(--text-muted); display:block; margin-bottom:6px;">Search Service Centre or Keyword</label>
+          <div style="position:relative;">
+            <i data-lucide="search" style="position:absolute; left:12px; top:11px; width:16px; height:16px; color:var(--text-muted);"></i>
+            <input type="text" name="q" value="{{ search_query }}" class="form-input" style="padding-left:36px;" placeholder="Search workshop name, address, services, OBD...">
           </div>
         </div>
 
-        <div style="border-top:1px solid var(--border-subtle); padding-top:16px;">
-          <a href="{% url 'services:book' %}" class="btn btn-primary btn-sm" style="width:100%; justify-content:center;">
-            <i data-lucide="calendar"></i> Book Appointment
-          </a>
+        <!-- City Filter -->
+        <div>
+          <label style="font-size:0.82rem; font-weight:600; color:var(--text-muted); display:block; margin-bottom:6px;">City / Hub</label>
+          <select name="city" class="form-select">
+            <option value="">All Cities</option>
+            {% for c in cities %}
+              <option value="{{ c }}" {% if selected_city == c %}selected{% endif %}>{{ c }}</option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <!-- Postal Code -->
+        <div>
+          <label style="font-size:0.82rem; font-weight:600; color:var(--text-muted); display:block; margin-bottom:6px;">Postal PIN Code</label>
+          <input type="text" name="postal_code" value="{{ selected_postal_code }}" class="form-input" placeholder="e.g. 560001">
+        </div>
+
+        <!-- Service Category -->
+        <div>
+          <label style="font-size:0.82rem; font-weight:600; color:var(--text-muted); display:block; margin-bottom:6px;">Service Category</label>
+          <select name="category" class="form-select">
+            <option value="">All 16 Categories</option>
+            {% for cat in categories %}
+              <option value="{{ cat.slug }}" {% if selected_category == cat.slug %}selected{% endif %}>{{ cat.name }}</option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <!-- Supported Brand -->
+        <div>
+          <label style="font-size:0.82rem; font-weight:600; color:var(--text-muted); display:block; margin-bottom:6px;">Vehicle Brand</label>
+          <select name="brand" class="form-select">
+            <option value="">All Supported Brands</option>
+            {% for b in brands %}
+              <option value="{{ b.id }}" {% if selected_brand == b.id|stringformat:"i" %}selected{% endif %}>{{ b.name }}</option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <!-- Sort Option -->
+        <div>
+          <label style="font-size:0.82rem; font-weight:600; color:var(--text-muted); display:block; margin-bottom:6px;">Sort By</label>
+          <select name="sort" class="form-select">
+            <option value="" {% if not selected_sort %}selected{% endif %}>Recommended (Verified first)</option>
+            <option value="name" {% if selected_sort == 'name' %}selected{% endif %}>Workshop Name (A - Z)</option>
+            <option value="price_asc" {% if selected_sort == 'price_asc' %}selected{% endif %}>Lowest Configured Price</option>
+            <option value="newest" {% if selected_sort == 'newest' %}selected{% endif %}>Recently Added</option>
+          </select>
+        </div>
+
+        <!-- Availability Toggle -->
+        <div style="display:flex; flex-direction:column; justify-content:flex-end;">
+          <label style="display:flex; align-items:center; gap:8px; cursor:pointer; font-size:0.85rem; font-weight:600; color:var(--text-main); margin-bottom:10px;">
+            <input type="checkbox" name="availability" value="active" {% if selected_availability == 'active' %}checked{% endif %} class="form-checkbox">
+            <span>Accepting Bookings Only</span>
+          </label>
         </div>
       </div>
-    {% endfor %}
+
+      <!-- Price Range & Buttons Row -->
+      <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:16px; border-top:1px solid var(--border-subtle); padding-top:16px;">
+        <div style="display:flex; align-items:center; gap:8px;">
+          <span style="font-size:0.82rem; font-weight:600; color:var(--text-muted);">Starting Price:</span>
+          <input type="number" name="min_price" value="{{ min_price }}" class="form-input" style="width:110px;" placeholder="Min ₹" min="0">
+          <span style="color:var(--text-muted);">-</span>
+          <input type="number" name="max_price" value="{{ max_price }}" class="form-input" style="width:110px;" placeholder="Max ₹" min="0">
+        </div>
+
+        <div style="display:flex; gap:10px;">
+          {% if search_query or selected_city or selected_postal_code or selected_category or selected_brand or min_price or max_price or selected_availability or selected_sort %}
+            <a href="{% url 'services:directory' %}" class="btn btn-secondary btn-sm">
+              <i data-lucide="x"></i> Clear All Filters
+            </a>
+          {% endif %}
+          <button type="submit" class="btn btn-primary btn-sm">
+            <i data-lucide="filter"></i> Apply Filters
+          </button>
+        </div>
+      </div>
+    </form>
   </div>
 
-  <!-- Available Services Matrix -->
-  <div style="margin-bottom:48px;">
-    <h2 style="font-size:1.5rem; margin-bottom:20px;">Standardized Service Catalog</h2>
-    <div class="grid-4">
-      {% for s in services %}
-        <div class="card">
-          <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:10px;">
-            <i data-lucide="{{ s.icon_name|default:'wrench' }}" style="color:var(--color-primary); width:28px; height:28px;"></i>
-            <span class="badge badge-universal" style="font-size:0.7rem;">{{ s.estimated_duration }}</span>
-          </div>
-          <h4 style="font-size:1.05rem; margin-bottom:6px;">{{ s.name }}</h4>
-          <p style="font-size:0.85rem; color:var(--text-muted); margin-bottom:16px; min-height:48px;">
-            {{ s.description|truncatewords:14 }}
-          </p>
-          <div style="display:flex; justify-content:space-between; align-items:center; border-top:1px solid var(--border-subtle); padding-top:12px;">
-            <div>
-              <div style="font-size:0.75rem; color:var(--text-muted);">From</div>
-              <strong style="color:var(--text-main);">₹{{ s.starting_price|floatformat:0 }}</strong>
+  <!-- Results Count Bar -->
+  <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+    <div style="font-size:0.95rem; color:var(--text-muted);">
+      Showing <strong style="color:var(--text-main);">{{ providers|length }}</strong> of <strong style="color:var(--text-main);">{{ total_providers }}</strong> workshop locations
+    </div>
+  </div>
+
+  <!-- Workshop Listings Grid -->
+  {% if providers %}
+    <div class="grid-3" style="gap:24px; margin-bottom:48px;">
+      {% for prov in providers %}
+        <div class="card card-interactive" style="display:flex; flex-direction:column; padding:0; overflow:hidden; border:1px solid var(--border-subtle); transition:all 0.25s ease;">
+          <!-- Card Header Image / Visual -->
+          <div style="position:relative; height:150px; background:linear-gradient(135deg, #101820 0%, #1e293b 100%); display:flex; align-items:center; justify-content:center; padding:16px;">
+            {% if prov.image %}
+              <img src="{{ prov.image.url }}" alt="{{ prov.name }}" style="width:100%; height:100%; object-fit:cover; position:absolute; top:0; left:0; opacity:0.35;">
+            {% endif %}
+            <div style="position:relative; z-index:2; text-align:center;">
+              <div style="width:54px; height:54px; margin:0 auto 8px; border-radius:50%; background:var(--color-primary); color:#fff; display:flex; align-items:center; justify-content:center; box-shadow:0 4px 14px rgba(8, 126, 255, 0.4);">
+                <i data-lucide="wrench" style="width:26px; height:26px;"></i>
+              </div>
+              <div style="font-size:0.75rem; text-transform:uppercase; letter-spacing:1px; color:#cbd5e1; font-weight:700;">{{ prov.city }}</div>
             </div>
-            <a href="{% url 'services:book' %}?service_id={{ s.id }}" class="btn btn-primary btn-sm">Book</a>
+
+            <!-- Demo / Verified Badge (Explicitly distinguishes sample listings) -->
+            <div style="position:absolute; top:12px; right:12px; z-index:3;">
+              {% if prov.is_demo %}
+                <span class="badge" style="background:rgba(245, 158, 11, 0.15); border:1px solid rgba(245, 158, 11, 0.4); color:#f59e0b; font-size:0.72rem; font-weight:700;">
+                  Sample Listing (Demo)
+                </span>
+              {% elif prov.is_verified %}
+                <span class="badge" style="background:rgba(16, 185, 129, 0.15); border:1px solid rgba(16, 185, 129, 0.4); color:#10b981; font-size:0.72rem; font-weight:700;">
+                  <i data-lucide="check-circle" style="width:12px; height:12px; vertical-align:middle;"></i> Independently Verified
+                </span>
+              {% else %}
+                <span class="badge" style="background:rgba(148, 163, 184, 0.15); border:1px solid rgba(148, 163, 184, 0.4); color:#94a3b8; font-size:0.72rem;">
+                  Registered Workshop
+                </span>
+              {% endif %}
+            </div>
+          </div>
+
+          <!-- Card Body -->
+          <div style="padding:20px; display:flex; flex-direction:column; flex-grow:1;">
+            <h3 style="font-size:1.2rem; font-weight:700; margin-bottom:8px; color:var(--text-main); line-height:1.3;">
+              <a href="{% url 'services:provider_detail' slug=prov.slug %}" style="color:inherit; text-decoration:none;">{{ prov.name }}</a>
+            </h3>
+
+            <div style="font-size:0.85rem; color:var(--text-muted); line-height:1.6; margin-bottom:16px; flex-grow:1;">
+              <div style="display:flex; gap:8px; align-items:flex-start; margin-bottom:6px;">
+                <i data-lucide="map-pin" style="width:16px; height:16px; color:var(--color-primary); flex-shrink:0; margin-top:2px;"></i>
+                <span>{{ prov.address }}, {{ prov.city }} - {{ prov.postal_code }}</span>
+              </div>
+              <div style="display:flex; gap:8px; align-items:center; margin-bottom:6px;">
+                <i data-lucide="clock" style="width:16px; height:16px; color:var(--color-primary); flex-shrink:0;"></i>
+                <span>{{ prov.operating_hours }}</span>
+              </div>
+              <div style="display:flex; gap:8px; align-items:center;">
+                <i data-lucide="phone" style="width:16px; height:16px; color:var(--color-primary); flex-shrink:0;"></i>
+                <span>{{ prov.contact_number }}</span>
+              </div>
+            </div>
+
+            <!-- Supported Brands Pills -->
+            {% if prov.supported_brands.all %}
+              <div style="margin-bottom:16px;">
+                <div style="font-size:0.75rem; text-transform:uppercase; letter-spacing:0.5px; color:var(--text-muted); margin-bottom:6px; font-weight:700;">Supported Brands</div>
+                <div style="display:flex; flex-wrap:wrap; gap:6px;">
+                  {% for b in prov.supported_brands.all|slice:":4" %}
+                    <span style="background:var(--bg-surface-elevated); border:1px solid var(--border-subtle); padding:2px 8px; border-radius:4px; font-size:0.75rem; color:var(--text-main);">{{ b.name }}</span>
+                  {% endfor %}
+                  {% if prov.supported_brands.count > 4 %}
+                    <span style="font-size:0.75rem; color:var(--text-muted); align-self:center;">+{{ prov.supported_brands.count|add:"-4" }} more</span>
+                  {% endif %}
+                </div>
+              </div>
+            {% endif %}
+
+            <!-- Facilities Snippet -->
+            <div style="display:flex; gap:8px; align-items:center; font-size:0.75rem; color:var(--text-muted); margin-bottom:16px; background:var(--bg-surface-subtle); padding:8px 12px; border-radius:var(--radius-sm);">
+              <i data-lucide="coffee" style="width:14px; height:14px; color:var(--color-primary); flex-shrink:0;"></i>
+              <span style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">{{ prov.facilities }}</span>
+            </div>
+
+            <!-- Pricing & Action Footer -->
+            <div style="border-top:1px solid var(--border-subtle); padding-top:14px; margin-top:auto; display:flex; justify-content:space-between; align-items:center; gap:8px;">
+              <div>
+                <span style="font-size:0.72rem; color:var(--text-muted); display:block;">Starting from</span>
+                {% if prov.min_configured_price %}
+                  <strong style="font-size:1.05rem; color:var(--color-primary);">₹{{ prov.min_configured_price|floatformat:0 }}</strong>
+                {% else %}
+                  <span style="font-size:0.85rem; color:var(--text-muted);">Configured on request</span>
+                {% endif %}
+              </div>
+              <div style="display:flex; gap:6px;">
+                <a href="{% url 'services:provider_detail' slug=prov.slug %}" class="btn btn-secondary btn-sm" title="View Workshop Details">
+                  Details
+                </a>
+                <a href="{% url 'services:book' %}?provider_id={{ prov.id }}" class="btn btn-primary btn-sm">
+                  <i data-lucide="calendar"></i> Book
+                </a>
+              </div>
+            </div>
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+
+    <!-- Pagination -->
+    {% if page_obj.has_other_pages %}
+      <div style="display:flex; justify-content:center; align-items:center; gap:8px; margin-top:32px;">
+        {% if page_obj.has_previous %}
+          <a href="?page={{ page_obj.previous_page_number }}{% if querystring %}&{{ querystring }}{% endif %}" class="btn btn-secondary btn-sm">
+            <i data-lucide="chevron-left"></i> Previous
+          </a>
+        {% endif %}
+
+        <span style="font-size:0.88rem; color:var(--text-muted); padding:0 12px;">
+          Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}
+        </span>
+
+        {% if page_obj.has_next %}
+          <a href="?page={{ page_obj.next_page_number }}{% if querystring %}&{{ querystring }}{% endif %}" class="btn btn-secondary btn-sm">
+            Next <i data-lucide="chevron-right"></i>
+          </a>
+        {% endif %}
+      </div>
+    {% endif %}
+
+  {% else %}
+    <!-- Empty State -->
+    <div class="card" style="text-align:center; padding:60px 20px; border:1px dashed var(--border-medium);">
+      <div style="width:64px; height:64px; border-radius:50%; background:rgba(8, 126, 255, 0.1); color:var(--color-primary); display:flex; align-items:center; justify-content:center; margin:0 auto 16px;">
+        <i data-lucide="search-x" style="width:32px; height:32px;"></i>
+      </div>
+      <h3 style="font-size:1.3rem; margin-bottom:8px;">No Service Providers Found</h3>
+      <p style="color:var(--text-muted); max-width:480px; margin:0 auto 20px;">
+        We could not find any active workshop locations matching your filter criteria. Try adjusting your city, clearing specific brand filters, or resetting the search query.
+      </p>
+      <a href="{% url 'services:directory' %}" class="btn btn-primary">
+        <i data-lucide="refresh-cw"></i> Reset All Filters
+      </a>
+    </div>
+  {% endif %}
+
+  <!-- 16 Standardized Service Categories Catalogue Section -->
+  <div style="margin-top:60px; padding-top:40px; border-top:1px solid var(--border-subtle);">
+    <div style="display:flex; justify-content:space-between; align-items:flex-end; margin-bottom:24px; flex-wrap:wrap; gap:16px;">
+      <div>
+        <h2 style="font-size:1.6rem; font-weight:800; color:var(--text-main); margin-bottom:6px;">
+          Standardized Service Catalogue (16 Categories)
+        </h2>
+        <p style="color:var(--text-muted); font-size:0.95rem; margin:0;">
+          Explore all certified repair and maintenance disciplines supported across AUTOVYNEX workshop partner bays.
+        </p>
+      </div>
+      <a href="{% url 'services:book' %}" class="btn btn-outline btn-sm">
+        <i data-lucide="calendar"></i> Direct Service Booking
+      </a>
+    </div>
+
+    <div class="grid-4" style="gap:16px;">
+      {% for cat in categories %}
+        <div class="card" style="padding:18px; border:1px solid var(--border-subtle); display:flex; flex-direction:column; justify-content:space-between;">
+          <div>
+            <div style="display:flex; align-items:center; gap:10px; margin-bottom:10px;">
+              <div style="width:36px; height:36px; border-radius:8px; background:rgba(8, 126, 255, 0.12); color:var(--color-primary); display:flex; align-items:center; justify-content:center; flex-shrink:0;">
+                <i data-lucide="{{ cat.icon_name|default:'wrench' }}" style="width:18px; height:18px;"></i>
+              </div>
+              <h4 style="font-size:0.95rem; font-weight:700; margin:0; color:var(--text-main);">{{ cat.name }}</h4>
+            </div>
+            <p style="font-size:0.8rem; color:var(--text-muted); line-height:1.5; margin-bottom:12px;">
+              {{ cat.description|truncatewords:12 }}
+            </p>
+          </div>
+          <div style="border-top:1px solid var(--border-subtle); padding-top:10px; display:flex; justify-content:space-between; align-items:center;">
+            <a href="{% url 'services:directory' %}?category={{ cat.slug }}" style="font-size:0.78rem; color:var(--color-primary); text-decoration:none; font-weight:600;">
+              View Workshops &rarr;
+            </a>
+            <a href="{% url 'services:book' %}?category={{ cat.slug }}" class="btn btn-secondary btn-sm" style="padding:4px 8px; font-size:0.72rem;">
+              Book
+            </a>
           </div>
         </div>
       {% endfor %}
     </div>
   </div>
+
 </div>
 {% endblock %}

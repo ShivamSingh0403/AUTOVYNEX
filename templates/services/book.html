@@ -1,138 +1,359 @@
 {% extends 'base.html' %}
+{% load static %}
 
-{% block title %}Book Automotive Service — AUTOVYNEX{% endblock %}
+{% block title %}Book Vehicle Service Appointment | AUTOVYNEX{% endblock %}
 
 {% block content %}
-<div class="container" style="padding-top:24px;">
-  <div style="max-width:880px; margin:0 auto;">
-    <div style="text-align:center; margin-bottom:36px;">
-      <div class="demo-academic-badge" style="margin-bottom:12px;">
-        <i data-lucide="calendar"></i>
-        <span>Certified Workshop Booking System</span>
+<div class="container" style="padding-top:28px; padding-bottom:60px;">
+  <div style="max-width:920px; margin:0 auto;">
+
+    <!-- Header -->
+    <div style="text-align:center; margin-bottom:32px;">
+      <div style="display:inline-flex; align-items:center; gap:8px; background:rgba(8, 126, 255, 0.12); border:1px solid rgba(8, 126, 255, 0.25); padding:4px 12px; border-radius:20px; font-size:0.8rem; font-weight:600; color:var(--color-primary); margin-bottom:12px;">
+        <i data-lucide="calendar" style="width:14px; height:14px;"></i>
+        <span>Multi-Step Appointment Scheduler</span>
       </div>
-      <h1>Book an Automotive Service Appointment</h1>
-      <p style="color:var(--text-muted); font-size:1.05rem; max-width:600px; margin:8px auto 0;">
-        Select your vehicle, certified workshop, preferred date & time slot with instant slot availability check.
+      <h1 style="font-size:2.1rem; font-weight:800; color:var(--text-main); margin-bottom:8px;">
+        Book Certified Automotive Service
+      </h1>
+      <p style="font-size:1rem; color:var(--text-muted); max-width:620px; margin:0 auto;">
+        Real-time bay availability, certified workshop allocation, transparent database pricing, and seamless Digital Garage integration.
       </p>
     </div>
 
-    <!-- Booking Form Card -->
-    <div class="card" style="margin-bottom:32px;">
-      <form method="POST" action="{% url 'services:book' %}">
+    <!-- Booking Form Container -->
+    <div class="card" style="padding:32px; border:1px solid var(--border-medium); box-shadow:var(--shadow-md);">
+      <form method="POST" action="{% url 'services:book' %}" id="service-booking-form">
         {% csrf_token %}
 
-        <!-- Step 1: Vehicle & Service -->
-        <h3 style="font-size:1.15rem; margin-bottom:16px; color:var(--color-primary); display:flex; align-items:center; gap:8px;">
-          <i data-lucide="car"></i> 1. Choose Vehicle & Service
-        </h3>
+        <!-- STEP 1: Select Workshop & Service -->
+        <div style="margin-bottom:32px;">
+          <div style="display:flex; align-items:center; gap:10px; margin-bottom:16px;">
+            <div style="width:28px; height:28px; border-radius:50%; background:var(--color-primary); color:#fff; display:flex; align-items:center; justify-content:center; font-weight:700; font-size:0.85rem;">1</div>
+            <h3 style="font-size:1.2rem; font-weight:700; margin:0; color:var(--text-main);">Workshop & Service Discipline</h3>
+          </div>
 
-        <div class="grid-2" style="gap:20px; margin-bottom:24px;">
-          <div class="form-group">
-            <label class="form-label">Vehicle for Service *</label>
-            <select name="vehicle_info" class="form-select" required>
-              {% for gv in customer_vehicles %}
-                <option value="{{ gv.display_title }}{% if gv.registration_number %} [{{ gv.registration_number }}]{% endif %}" {% if selected_vehicle and selected_vehicle.id == gv.id %}selected{% endif %}>
-                  {{ gv.display_title }}{% if gv.registration_number %} ({{ gv.registration_number }}){% else %} (No Plate Registered){% endif %}
+          <div class="grid-2" style="gap:20px;">
+            <div>
+              <label style="display:block; font-size:0.85rem; font-weight:600; color:var(--text-muted); margin-bottom:6px;">Select Service Centre / Workshop *</label>
+              <select name="provider" id="provider-select" class="form-select" required>
+                <option value="">-- Choose Workshop Location --</option>
+                {% for p in providers %}
+                  <option value="{{ p.id }}" {% if preselected_provider and preselected_provider.id == p.id %}selected{% endif %}>
+                    {{ p.name }} ({{ p.city }}){% if p.is_demo %} [Demo]{% endif %}
+                  </option>
+                {% endfor %}
+              </select>
+            </div>
+
+            <div>
+              <label style="display:block; font-size:0.85rem; font-weight:600; color:var(--text-muted); margin-bottom:6px;">Select Service Package *</label>
+              <select name="service" id="service-select" class="form-select" required>
+                <option value="">-- Choose Service --</option>
+                {% for s in services %}
+                  <option value="{{ s.id }}" data-price="{{ s.starting_price }}" data-duration="{{ s.estimated_duration }}" {% if preselected_service and preselected_service.id == s.id %}selected{% endif %}>
+                    {{ s.name }} (from ₹{{ s.starting_price|floatformat:0 }} • {{ s.estimated_duration }})
+                  </option>
+                {% endfor %}
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <!-- STEP 2: Choose Vehicle -->
+        <div style="margin-bottom:32px; border-top:1px solid var(--border-subtle); padding-top:24px;">
+          <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:16px; flex-wrap:wrap; gap:10px;">
+            <div style="display:flex; align-items:center; gap:10px;">
+              <div style="width:28px; height:28px; border-radius:50%; background:var(--color-primary); color:#fff; display:flex; align-items:center; justify-content:center; font-weight:700; font-size:0.85rem;">2</div>
+              <h3 style="font-size:1.2rem; font-weight:700; margin:0; color:var(--text-main);">Vehicle Selection</h3>
+            </div>
+            <a href="{% url 'garage:index' %}" target="_blank" style="font-size:0.82rem; color:var(--color-primary); text-decoration:none; font-weight:600;">
+              <i data-lucide="plus-circle" style="width:14px; height:14px; vertical-align:middle;"></i> Add New Car to Digital Garage
+            </a>
+          </div>
+
+          <!-- Vehicle Choice Selector -->
+          <div style="margin-bottom:16px; display:flex; gap:20px;">
+            <label style="display:flex; align-items:center; gap:8px; cursor:pointer; font-size:0.9rem;">
+              <input type="radio" name="vehicle_source" value="garage" id="src-garage" {% if customer_vehicles %}checked{% endif %}>
+              <span>Saved in Digital Garage (Recommended)</span>
+            </label>
+            <label style="display:flex; align-items:center; gap:8px; cursor:pointer; font-size:0.9rem;">
+              <input type="radio" name="vehicle_source" value="custom" id="src-custom" {% if not customer_vehicles %}checked{% endif %}>
+              <span>Enter Vehicle Details Manually</span>
+            </label>
+          </div>
+
+          <!-- Digital Garage Selector -->
+          <div id="garage-vehicle-block" style="{% if not customer_vehicles %}display:none;{% endif %}">
+            <label style="display:block; font-size:0.85rem; font-weight:600; color:var(--text-muted); margin-bottom:6px;">Choose Your Registered Vehicle</label>
+            <select name="customer_vehicle_id" id="customer-vehicle-select" class="form-select">
+              {% for v in customer_vehicles %}
+                <option value="{{ v.id }}" {% if preselected_vehicle and preselected_vehicle.id == v.id %}selected{% elif v.is_default %}selected{% endif %}>
+                  {{ v.display_title }} {% if v.registration_number %}[{{ v.registration_number }}]{% endif %} — {{ v.current_mileage|default:0 }} KM
                 </option>
               {% empty %}
-                <option value="Customer Vehicle (To be confirmed at workshop)">My Vehicle (Specify in notes or add to Garage)</option>
+                <option value="">No vehicles currently registered in your garage</option>
               {% endfor %}
             </select>
-            <small style="font-size:0.75rem; color:var(--text-muted);"><a href="{% url 'garage:index' %}">+ Add or manage vehicles in My Garage</a></small>
           </div>
 
-          <div class="form-group">
-            <label class="form-label">Service Type *</label>
-            <select name="service_id" class="form-select" required>
-              {% for s in services %}
-                <option value="{{ s.id }}" {% if selected_service and selected_service.id == s.id %}selected{% endif %}>
-                  {{ s.name }} (Starting ₹{{ s.starting_price|floatformat:0 }} • {{ s.estimated_duration }})
-                </option>
-              {% endfor %}
-            </select>
+          <!-- Custom Vehicle Entry Block -->
+          <div id="custom-vehicle-block" style="{% if customer_vehicles %}display:none;{% endif %}">
+            <label style="display:block; font-size:0.85rem; font-weight:600; color:var(--text-muted); margin-bottom:6px;">Vehicle Make, Model, Variant & Registration Number</label>
+            <input type="text" name="custom_vehicle_text" id="custom-vehicle-input" class="form-input" placeholder="e.g. 2023 Hyundai Creta SX(O) Diesel - KA-05-MK-1234">
           </div>
         </div>
 
-        <!-- Step 2: Workshop & Time Slot -->
-        <h3 style="font-size:1.15rem; margin-bottom:16px; color:var(--color-primary); display:flex; align-items:center; gap:8px;">
-          <i data-lucide="clock"></i> 2. Select Workshop Center & Time Slot
-        </h3>
-
-        <div class="grid-3" style="gap:16px; margin-bottom:24px;">
-          <div class="form-group">
-            <label class="form-label">Preferred Service Center (Demo Network) *</label>
-            <select name="provider_id" class="form-select" required>
-              {% for prov in providers %}
-                <option value="{{ prov.id }}">{{ prov.name }} [Demo Center] — {{ prov.city }}</option>
-              {% endfor %}
-            </select>
-            <small style="font-size:0.72rem; color:var(--text-muted);">Seed service centers are demonstration simulation partners.</small>
+        <!-- STEP 3: Appointment Date & Live Available Slots -->
+        <div style="margin-bottom:32px; border-top:1px solid var(--border-subtle); padding-top:24px;">
+          <div style="display:flex; align-items:center; gap:10px; margin-bottom:16px;">
+            <div style="width:28px; height:28px; border-radius:50%; background:var(--color-primary); color:#fff; display:flex; align-items:center; justify-content:center; font-weight:700; font-size:0.85rem;">3</div>
+            <h3 style="font-size:1.2rem; font-weight:700; margin:0; color:var(--text-main);">Appointment Date & Available Bays</h3>
           </div>
 
-          <div class="form-group">
-            <label class="form-label">Preferred Date *</label>
-            <input type="date" name="booking_date" class="form-control" required id="booking-date-input">
-          </div>
-
-          <div class="form-group">
-            <label class="form-label">Available Time Slot *</label>
-            <select name="time_slot" class="form-select" required>
-              {% for code, label in time_slots %}
-                <option value="{{ code }}">{{ label }}</option>
-              {% endfor %}
-            </select>
-          </div>
-        </div>
-
-        <!-- Step 3: Location & Symptoms -->
-        <h3 style="font-size:1.15rem; margin-bottom:16px; color:var(--color-primary); display:flex; align-items:center; gap:8px;">
-          <i data-lucide="map-pin"></i> 3. Address & Problem Description
-        </h3>
-
-        <div class="grid-2" style="gap:20px; margin-bottom:20px;">
-          <div class="form-group">
-            <label class="form-label">Pickup Address / Customer City Address *</label>
-            <textarea name="customer_address" required class="form-control" style="min-height:80px;" placeholder="Full street address for pickup/drop assistance...">{{ user.profile.address|default:'Flat 402, Skyline Residency, Indiranagar, Bengaluru' }}</textarea>
-          </div>
-
-          <div>
-            <div class="form-group">
-              <label class="form-label">Contact Mobile Number *</label>
-              <input type="tel" name="customer_phone" required class="form-control" value="{{ user.profile.phone|default:'+91 98765 43210' }}">
+          <div class="grid-2" style="gap:20px; align-items:flex-start;">
+            <div>
+              <label style="display:block; font-size:0.85rem; font-weight:600; color:var(--text-muted); margin-bottom:6px;">Preferred Date *</label>
+              <input type="date" name="booking_date" id="booking-date-input" class="form-input" required>
+              <small style="font-size:0.75rem; color:var(--text-muted); display:block; margin-top:4px;">
+                Appointments can be booked up to 30 days in advance.
+              </small>
             </div>
 
-            <div class="form-group">
-              <label class="form-label">Specific Symptoms or Concerns</label>
-              <input type="text" name="problem_description" class="form-control" placeholder="e.g. Grinding sound during braking, AC cooling weak...">
+            <div>
+              <label style="display:block; font-size:0.85rem; font-weight:600; color:var(--text-muted); margin-bottom:6px;">Real-Time Operating Slot *</label>
+              <input type="hidden" name="time_slot" id="selected-time-slot" required>
+
+              <!-- Slot status container -->
+              <div id="slots-loading" style="display:none; padding:12px; background:var(--bg-surface-subtle); border-radius:var(--radius-sm); font-size:0.85rem; color:var(--color-primary);">
+                <i data-lucide="loader" style="width:14px; height:14px; animation:spin 1s linear infinite; vertical-align:middle;"></i> Checking workshop bay availability...
+              </div>
+
+              <div id="slots-message" style="display:none; padding:12px; border-radius:var(--radius-sm); font-size:0.85rem; margin-bottom:10px;"></div>
+
+              <div id="slots-grid" style="display:grid; grid-template-columns:repeat(auto-fill, minmax(130px, 1fr)); gap:8px;">
+                <!-- Dynamically populated via JS -->
+              </div>
+              <small id="slot-help" style="font-size:0.75rem; color:var(--text-muted); display:block; margin-top:6px;">
+                Select a workshop and date above to view real operating slots.
+              </small>
             </div>
           </div>
         </div>
 
-        <div class="alert-banner alert-info" style="margin-bottom:20px;">
-          <i data-lucide="info"></i>
+        <!-- STEP 4: Customer Details & Problem Symptoms -->
+        <div style="margin-bottom:32px; border-top:1px solid var(--border-subtle); padding-top:24px;">
+          <div style="display:flex; align-items:center; gap:10px; margin-bottom:16px;">
+            <div style="width:28px; height:28px; border-radius:50%; background:var(--color-primary); color:#fff; display:flex; align-items:center; justify-content:center; font-weight:700; font-size:0.85rem;">4</div>
+            <h3 style="font-size:1.2rem; font-weight:700; margin:0; color:var(--text-main);">Contact & Problem Symptoms</h3>
+          </div>
+
+          <div class="grid-2" style="gap:20px; margin-bottom:16px;">
+            <div>
+              <label style="display:block; font-size:0.85rem; font-weight:600; color:var(--text-muted); margin-bottom:6px;">Contact Mobile Number *</label>
+              <input type="text" name="customer_phone" value="{{ user.profile.phone|default:'' }}" class="form-input" placeholder="+91 98765 43210" required>
+            </div>
+            <div>
+              <label style="display:block; font-size:0.85rem; font-weight:600; color:var(--text-muted); margin-bottom:6px;">Pickup / Street Address (Optional)</label>
+              <input type="text" name="customer_address" value="{{ user.profile.address|default:'' }}" class="form-input" placeholder="Enter street/locality if valet pickup is desired">
+            </div>
+          </div>
+
           <div>
-            <strong>Notice:</strong> Appointment slots are locked dynamically. Duplicate appointments for the same workshop bay & time slot are automatically rejected by the server.
+            <label style="display:block; font-size:0.85rem; font-weight:600; color:var(--text-muted); margin-bottom:6px;">Describe Issues / Symptoms Observed (Optional)</label>
+            <textarea name="problem_description" class="form-textarea" rows="3" placeholder="e.g. Mild vibration at 80 km/h, AC taking 10 minutes to cool cabin, brake squeal on gentle pressing..."></textarea>
           </div>
         </div>
 
-        <button type="submit" class="btn btn-primary btn-lg" style="width:100%; justify-content:center;">
-          <i data-lucide="calendar-check"></i> Confirm Service Appointment (Demonstration)
-        </button>
+        <!-- STEP 5: Price Snapshot Summary & Confirmation -->
+        <div style="background:var(--bg-surface-elevated); border:1px solid var(--border-medium); border-radius:var(--radius-md); padding:20px; margin-bottom:28px;">
+          <h4 style="font-size:1.05rem; font-weight:700; margin:0 0 12px; color:var(--text-main);">Appointment Summary Snapshot</h4>
+          <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:16px;">
+            <div>
+              <div style="font-size:0.85rem; color:var(--text-muted);">Configured Starting Estimate:</div>
+              <div style="font-size:1.5rem; font-weight:800; color:var(--color-primary);" id="summary-price-display">₹3,499.00</div>
+              <div style="font-size:0.75rem; color:var(--text-muted);">* Pay at workshop upon completion. Final billing reflects authorized parts & labour.</div>
+            </div>
+
+            <div>
+              <button type="submit" id="confirm-booking-btn" class="btn btn-primary" style="padding:12px 28px; font-size:1rem;">
+                <i data-lucide="check-circle"></i> Confirm & Book Appointment
+              </button>
+            </div>
+          </div>
+        </div>
+
       </form>
     </div>
+
   </div>
 </div>
 
+<style>
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+.slot-pill-btn {
+  padding: 8px 10px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border-subtle);
+  background: var(--bg-surface-elevated);
+  color: var(--text-main);
+  font-size: 0.8rem;
+  font-weight: 600;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+.slot-pill-btn:hover:not(:disabled) {
+  border-color: var(--color-primary);
+  background: rgba(8, 126, 255, 0.08);
+}
+.slot-pill-btn.selected {
+  border-color: var(--color-primary);
+  background: var(--color-primary);
+  color: #fff;
+  box-shadow: 0 2px 8px rgba(8, 126, 255, 0.3);
+}
+.slot-pill-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+  background: var(--bg-surface-subtle);
+  border-color: transparent;
+  color: var(--text-muted);
+}
+</style>
+
 <script>
-  // Set default min date to tomorrow
-  document.addEventListener('DOMContentLoaded', () => {
-    const dInput = document.getElementById('booking-date-input');
-    if (dInput) {
-      const tomorrow = new Date();
-      tomorrow.setDate(tomorrow.getDate() + 1);
-      dInput.min = tomorrow.toISOString().split('T')[0];
-      dInput.value = tomorrow.toISOString().split('T')[0];
+document.addEventListener('DOMContentLoaded', function() {
+  const providerSelect = document.getElementById('provider-select');
+  const serviceSelect = document.getElementById('service-select');
+  const dateInput = document.getElementById('booking-date-input');
+  const slotInput = document.getElementById('selected-time-slot');
+  const slotsGrid = document.getElementById('slots-grid');
+  const slotsLoading = document.getElementById('slots-loading');
+  const slotsMessage = document.getElementById('slots-message');
+  const slotHelp = document.getElementById('slot-help');
+  const summaryPrice = document.getElementById('summary-price-display');
+
+  // Set min date to today
+  const today = new Date().toISOString().split('T')[0];
+  dateInput.min = today;
+  // Default to tomorrow
+  const tomorrow = new Date();
+  tomorrow.setDate(tomorrow.getDate() + 1);
+  dateInput.value = tomorrow.toISOString().split('T')[0];
+
+  // Vehicle source toggle
+  const srcGarage = document.getElementById('src-garage');
+  const srcCustom = document.getElementById('src-custom');
+  const garageBlock = document.getElementById('garage-vehicle-block');
+  const customBlock = document.getElementById('custom-vehicle-block');
+
+  if (srcGarage && srcCustom) {
+    srcGarage.addEventListener('change', () => {
+      garageBlock.style.display = 'block';
+      customBlock.style.display = 'none';
+    });
+    srcCustom.addEventListener('change', () => {
+      garageBlock.style.display = 'none';
+      customBlock.style.display = 'block';
+    });
+  }
+
+  // Update price display on service change
+  function updatePriceDisplay() {
+    const selectedOption = serviceSelect.options[serviceSelect.selectedIndex];
+    if (selectedOption && selectedOption.dataset.price) {
+      const price = parseFloat(selectedOption.dataset.price);
+      summaryPrice.textContent = '₹' + price.toLocaleString('en-IN', { minimumFractionDigits: 2 });
     }
-  });
+  }
+  serviceSelect.addEventListener('change', updatePriceDisplay);
+  updatePriceDisplay();
+
+  // Fetch real available slots
+  function fetchSlots() {
+    const providerId = providerSelect.value;
+    const dateVal = dateInput.value;
+
+    if (!providerId || !dateVal) {
+      slotsGrid.innerHTML = '';
+      slotsMessage.style.display = 'none';
+      slotHelp.style.display = 'block';
+      return;
+    }
+
+    slotsLoading.style.display = 'block';
+    slotsMessage.style.display = 'none';
+    slotsGrid.innerHTML = '';
+    slotHelp.style.display = 'none';
+    slotInput.value = '';
+
+    fetch(`/services/api/slots/?provider_id=${providerId}&date=${dateVal}`)
+      .then(res => res.json())
+      .then(data => {
+        slotsLoading.style.display = 'none';
+        if (!data.success || !data.is_open) {
+          slotsMessage.style.display = 'block';
+          slotsMessage.style.background = 'rgba(239, 68, 68, 0.1)';
+          slotsMessage.style.border = '1px solid rgba(239, 68, 68, 0.3)';
+          slotsMessage.style.color = '#ef4444';
+          slotsMessage.innerHTML = `<i data-lucide="alert-circle" style="width:14px; height:14px; vertical-align:middle;"></i> ${data.reason || 'Workshop is closed on this date.'}`;
+          if (window.lucide) lucide.createIcons();
+          return;
+        }
+
+        if (!data.slots || data.slots.length === 0) {
+          slotsMessage.style.display = 'block';
+          slotsMessage.style.background = 'rgba(245, 158, 11, 0.1)';
+          slotsMessage.style.border = '1px solid rgba(245, 158, 11, 0.3)';
+          slotsMessage.style.color = '#f59e0b';
+          slotsMessage.textContent = 'No remaining operating slots available on this date. Please choose another date.';
+          return;
+        }
+
+        // Render slots
+        data.slots.forEach((s, idx) => {
+          const btn = document.createElement('button');
+          btn.type = 'button';
+          btn.className = 'slot-pill-btn';
+          btn.innerHTML = `${s.formatted_start}<br><span style="font-size:0.7rem; font-weight:normal;">${s.status_text}</span>`;
+          
+          if (!s.is_available) {
+            btn.disabled = true;
+          } else {
+            btn.addEventListener('click', function() {
+              document.querySelectorAll('.slot-pill-btn').forEach(b => b.classList.remove('selected'));
+              btn.classList.add('selected');
+              slotInput.value = s.slot_label;
+            });
+            // Auto-select first available slot if none selected
+            if (!slotInput.value) {
+              btn.classList.add('selected');
+              slotInput.value = s.slot_label;
+            }
+          }
+          slotsGrid.appendChild(btn);
+        });
+      })
+      .catch(err => {
+        slotsLoading.style.display = 'none';
+        slotsMessage.style.display = 'block';
+        slotsMessage.style.color = '#ef4444';
+        slotsMessage.textContent = 'Could not load slots. Please check connection.';
+      });
+  }
+
+  providerSelect.addEventListener('change', fetchSlots);
+  dateInput.addEventListener('change', fetchSlots);
+
+  // Trigger initial slot load if provider is preselected
+  if (providerSelect.value) {
+    fetchSlots();
+  }
+});
 </script>
 {% endblock %}
