@@ -1,0 +1,168 @@
+{% extends 'base.html' %}
+
+{% block title %}Used Car Marketplace Moderation — AUTOVYNEX Admin{% endblock %}
+
+{% block content %}
+<div class="container" style="padding-top:24px;">
+  <!-- Header & Breadcrumbs -->
+  <div style="font-size:0.85rem; color:var(--text-muted); margin-bottom:12px;">
+    <a href="{% url 'custom_admin:dashboard_overview' %}">Admin Center</a> /
+    <strong>Used Cars Moderation</strong>
+  </div>
+
+  <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:16px; margin-bottom:28px;">
+    <div>
+      <h1 style="font-size:1.85rem; margin:0;">Used Car Marketplace Moderation</h1>
+      <p style="color:var(--text-muted); font-size:0.95rem; margin-top:4px;">
+        Review submitted vehicle listings, examine uploaded photographs, verify specifications, and enforce quality standards.
+      </p>
+    </div>
+
+    <div style="display:flex; gap:10px;">
+      <a href="{% url 'custom_admin:admin_used_car_reports' %}" class="btn btn-secondary btn-sm">
+        <i data-lucide="alert-triangle"></i> Reported Listings ({{ reports_count }})
+      </a>
+      <a href="{% url 'custom_admin:admin_used_car_enquiries' %}" class="btn btn-secondary btn-sm">
+        <i data-lucide="message-square"></i> Buyer Enquiries
+      </a>
+      <a href="{% url 'used_cars:marketplace' %}" target="_blank" class="btn btn-primary btn-sm">
+        <i data-lucide="external-link"></i> Live Marketplace
+      </a>
+    </div>
+  </div>
+
+  <!-- Metric Badges -->
+  <div class="grid-4" style="margin-bottom:28px;">
+    <div class="card" style="border-left:4px solid var(--color-primary); padding:16px 20px;">
+      <div style="font-size:0.8rem; color:var(--text-muted); text-transform:uppercase;">Total Listings</div>
+      <div style="font-family:var(--font-heading); font-size:1.6rem; font-weight:800; color:var(--color-primary);">{{ total_count }}</div>
+    </div>
+    <div class="card" style="border-left:4px solid #f59e0b; padding:16px 20px;">
+      <div style="font-size:0.8rem; color:var(--text-muted); text-transform:uppercase;">Pending Moderation</div>
+      <div style="font-family:var(--font-heading); font-size:1.6rem; font-weight:800; color:#f59e0b;">{{ pending_count }}</div>
+    </div>
+    <div class="card" style="border-left:4px solid #10b981; padding:16px 20px;">
+      <div style="font-size:0.8rem; color:var(--text-muted); text-transform:uppercase;">Active Published</div>
+      <div style="font-family:var(--font-heading); font-size:1.6rem; font-weight:800; color:#10b981;">{{ published_count }}</div>
+    </div>
+    <div class="card" style="border-left:4px solid #64748b; padding:16px 20px;">
+      <div style="font-size:0.8rem; color:var(--text-muted); text-transform:uppercase;">Sold Vehicles</div>
+      <div style="font-family:var(--font-heading); font-size:1.6rem; font-weight:800; color:#64748b;">{{ sold_count }}</div>
+    </div>
+  </div>
+
+  <!-- Filter & Search Toolbar -->
+  <div class="card" style="padding:16px 20px; margin-bottom:28px; background:var(--bg-surface-elevated);">
+    <form method="GET" style="display:flex; gap:12px; flex-wrap:wrap; align-items:center;">
+      <input type="text" name="q" value="{{ q|default:'' }}" placeholder="Search by title, brand, seller email..." class="form-control" style="flex:1; min-width:240px;">
+
+      <select name="status" class="form-select" style="width:200px;">
+        <option value="">All Statuses</option>
+        <option value="pending_review" {% if selected_status == 'pending_review' %}selected{% endif %}>Pending Review</option>
+        <option value="published" {% if selected_status == 'published' %}selected{% endif %}>Published</option>
+        <option value="rejected" {% if selected_status == 'rejected' %}selected{% endif %}>Rejected</option>
+        <option value="sold" {% if selected_status == 'sold' %}selected{% endif %}>Sold</option>
+        <option value="inactive" {% if selected_status == 'inactive' %}selected{% endif %}>Inactive</option>
+        <option value="draft" {% if selected_status == 'draft' %}selected{% endif %}>Draft</option>
+      </select>
+
+      <button type="submit" class="btn btn-primary btn-sm"><i data-lucide="filter"></i> Filter</button>
+      {% if q or selected_status %}
+        <a href="{% url 'custom_admin:admin_used_cars' %}" class="btn btn-secondary btn-sm">Clear</a>
+      {% endif %}
+    </form>
+  </div>
+
+  <!-- Listings Table -->
+  <div class="card" style="padding:0; overflow:hidden; margin-bottom:48px;">
+    <div style="overflow-x:auto;">
+      <table style="width:100%; border-collapse:collapse; text-align:left; font-size:0.88rem;">
+        <thead>
+          <tr style="background:var(--bg-surface-subtle); border-bottom:1px solid var(--border-subtle); color:var(--text-muted);">
+            <th style="padding:14px 16px;">Vehicle</th>
+            <th style="padding:14px 16px;">Seller</th>
+            <th style="padding:14px 16px;">Price</th>
+            <th style="padding:14px 16px;">Location</th>
+            <th style="padding:14px 16px;">Photos</th>
+            <th style="padding:14px 16px;">Status</th>
+            <th style="padding:14px 16px;">Submitted</th>
+            <th style="padding:14px 16px; text-align:right;">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for car in listings %}
+            <tr style="border-bottom:1px solid var(--border-subtle);">
+              <td style="padding:14px 16px;">
+                <div style="font-weight:700; color:var(--text-main);">
+                  <a href="{% url 'custom_admin:admin_used_car_detail' car.id %}">{{ car.title }}</a>
+                </div>
+                <div style="font-size:0.78rem; color:var(--text-muted);">
+                  {{ car.year }} • {{ car.mileage|floatformat:0 }} KM • {{ car.fuel_type }} • {{ car.transmission }}
+                  {% if car.is_sample_listing %}<span class="badge" style="background:#475569; color:#fff; font-size:0.7rem; margin-left:4px;">Sample</span>{% endif %}
+                  {% if car.is_verified %}<span class="badge badge-verified" style="font-size:0.7rem; margin-left:4px;">Certified</span>{% endif %}
+                </div>
+              </td>
+              <td style="padding:14px 16px;">
+                <div style="font-weight:600;">{{ car.seller.get_full_name|default:car.seller.username }}</div>
+                <div style="font-size:0.75rem; color:var(--text-muted);">{{ car.seller.email }}</div>
+              </td>
+              <td style="padding:14px 16px; font-weight:700; color:var(--color-primary);">
+                ₹{{ car.expected_price|floatformat:0 }}
+              </td>
+              <td style="padding:14px 16px; color:var(--text-muted); font-size:0.82rem;">
+                {{ car.location_city }}, {{ car.location_state }}
+              </td>
+              <td style="padding:14px 16px;">
+                <span class="badge" style="background:var(--bg-surface-subtle); color:var(--text-muted);">
+                  <i data-lucide="image" style="width:12px; vertical-align:middle;"></i> {{ car.images.count|add:1 }}
+                </span>
+              </td>
+              <td style="padding:14px 16px;">
+                {% if car.status == 'published' %}
+                  <span class="badge" style="background:#065f46; color:#a7f3d0;">Published</span>
+                {% elif car.status == 'pending_review' %}
+                  <span class="badge" style="background:#78350f; color:#fde68a;">Pending Review</span>
+                {% elif car.status == 'rejected' %}
+                  <span class="badge" style="background:#7f1d1d; color:#fecaca;">Rejected</span>
+                {% elif car.status == 'sold' %}
+                  <span class="badge" style="background:#334155; color:#cbd5e1;">Sold</span>
+                {% elif car.status == 'inactive' %}
+                  <span class="badge" style="background:#1e293b; color:#94a3b8;">Inactive</span>
+                {% else %}
+                  <span class="badge" style="background:#374151; color:#d1d5db;">Draft</span>
+                {% endif %}
+              </td>
+              <td style="padding:14px 16px; font-size:0.78rem; color:var(--text-muted);">
+                {{ car.created_at|date:"d M Y" }}
+              </td>
+              <td style="padding:14px 16px; text-align:right;">
+                <div style="display:flex; justify-content:flex-end; gap:6px;">
+                  <a href="{% url 'custom_admin:admin_used_car_detail' car.id %}" class="btn btn-secondary btn-sm" style="padding:4px 10px; font-size:0.78rem;">
+                    Inspect
+                  </a>
+                  {% if car.status == 'pending_review' %}
+                    <form method="POST" action="{% url 'custom_admin:admin_used_car_action' car.id %}" style="display:inline;">
+                      {% csrf_token %}
+                      <input type="hidden" name="action" value="approve">
+                      <button type="submit" class="btn btn-primary btn-sm" style="padding:4px 10px; font-size:0.78rem; background:#10b981; border-color:#10b981;">
+                        Approve
+                      </button>
+                    </form>
+                  {% endif %}
+                </div>
+              </td>
+            </tr>
+          {% empty %}
+            <tr>
+              <td colspan="8" style="padding:40px; text-align:center; color:var(--text-muted);">
+                <i data-lucide="car" style="width:48px; height:48px; margin-bottom:12px; opacity:0.4;"></i>
+                <p style="margin:0;">No vehicle listings match the selected criteria.</p>
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% endblock %}

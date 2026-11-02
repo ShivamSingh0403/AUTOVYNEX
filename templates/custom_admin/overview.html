@@ -64,11 +64,13 @@
 
   <!-- Quick Admin Domain Navigation Bar -->
   <div style="display:flex; gap:12px; margin-bottom:32px; overflow-x:auto; padding-bottom:6px;">
-    <a href="{% url 'custom_admin:admin_orders' %}" class="btn btn-secondary btn-sm"><i data-lucide="truck"></i> Orders Management ({{ total_orders }})</a>
+    <a href="{% url 'custom_admin:admin_orders' %}" class="btn btn-secondary btn-sm"><i data-lucide="truck"></i> Orders ({{ total_orders }})</a>
     <a href="{% url 'custom_admin:admin_inventory' %}" class="btn btn-secondary btn-sm"><i data-lucide="boxes"></i> Inventory & Stock</a>
+    <a href="{% url 'custom_admin:admin_used_cars' %}" class="btn btn-secondary btn-sm" style="{% if pending_cars > 0 %}border-color:var(--color-primary); color:var(--color-primary); font-weight:700;{% endif %}"><i data-lucide="car"></i> Used Cars ({{ pending_cars }} Pending)</a>
+    <a href="{% url 'custom_admin:admin_used_car_reports' %}" class="btn btn-secondary btn-sm"><i data-lucide="alert-triangle"></i> Car Reports ({{ pending_reports }})</a>
     <a href="{% url 'custom_admin:admin_enquiries' %}" class="btn btn-secondary btn-sm"><i data-lucide="search"></i> Part Enquiries ({{ pending_enquiries }})</a>
     <a href="{% url 'custom_admin:admin_services' %}" class="btn btn-secondary btn-sm"><i data-lucide="calendar"></i> Service Bookings ({{ total_bookings }})</a>
-    <a href="{% url 'custom_admin:admin_assistance' %}" class="btn btn-secondary btn-sm"><i data-lucide="life-buoy"></i> Roadside Assistance</a>
+    <a href="{% url 'custom_admin:admin_assistance' %}" class="btn btn-secondary btn-sm"><i data-lucide="life-buoy"></i> Roadside Help</a>
   </div>
 
   <!-- Dual Dashboard Grids -->

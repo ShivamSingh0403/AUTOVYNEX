@@ -1,102 +1,554 @@
 {% extends 'base.html' %}
+{% load static %}
 
-{% block title %}Sell Your Car — AUTOVYNEX Verified Listing{% endblock %}
+{% block title %}Sell Your Car — 10-Step Vehicle Submission Wizard | AUTOVYNEX{% endblock %}
 
 {% block content %}
-<div class="container" style="padding-top:24px;">
-  <div style="max-width:860px; margin:0 auto;">
-    <div style="text-align:center; margin-bottom:36px;">
-      <div class="demo-academic-badge" style="margin-bottom:12px;">
-        <i data-lucide="tag"></i>
-        <span>Direct Seller Listing Portal</span>
-      </div>
-      <h1>List Your Pre-Owned Car for Sale</h1>
-      <p style="color:var(--text-muted); font-size:1.05rem; max-width:620px; margin:8px auto 0;">
-        Reach thousands of genuine verified automotive enthusiasts and motorists with zero brokerage.
-      </p>
+<div class="container" style="padding-top:28px; max-width:920px; margin:0 auto;">
+
+  <!-- Header -->
+  <div style="text-align:center; margin-bottom:32px;">
+    <div style="display:inline-flex; align-items:center; gap:8px; background:rgba(8,126,255,0.12); color:var(--color-primary); padding:4px 14px; border-radius:999px; font-size:0.8rem; font-weight:700; margin-bottom:8px;">
+      <i data-lucide="shield-check" style="width:14px; height:14px;"></i>
+      <span>AUTOVYNEX Seller Studio</span>
+    </div>
+    <h1 style="font-size:2rem; margin:0 0 6px 0;">Sell Your Car Online</h1>
+    <p style="color:var(--text-muted); font-size:0.95rem; margin:0;">
+      List your vehicle across verified buyers in 10 transparent steps. Every listing undergoes quality review before going live.
+    </p>
+  </div>
+
+  <!-- Wizard Progress Bar Header -->
+  <div class="card" style="padding:16px 20px; margin-bottom:28px; background:var(--bg-surface-elevated); border:1px solid var(--border-subtle);">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+      <span style="font-size:0.85rem; font-weight:700; color:var(--color-primary);" id="step-indicator-text">Step 1 of 10: Vehicle Brand & Model</span>
+      <span style="font-size:0.8rem; color:var(--text-muted);"><span id="step-progress-percent">10</span>% Completed</span>
+    </div>
+    <!-- Progress Bar Track -->
+    <div style="width:100%; height:6px; background:var(--bg-surface-subtle); border-radius:999px; overflow:hidden;">
+      <div id="step-progress-bar" style="width:10%; height:100%; background:linear-gradient(90deg, var(--color-primary) 0%, #00D2FF 100%); transition:width 0.3s ease;"></div>
     </div>
 
-    <div class="card" style="margin-bottom:32px;">
-      <form method="POST" action="{% url 'used_cars:create_listing' %}" enctype="multipart/form-data">
-        {% csrf_token %}
+    <!-- Stepper Dots (10 steps) -->
+    <div style="display:flex; justify-content:space-between; margin-top:14px; overflow-x:auto; padding-bottom:4px;" id="stepper-dots-container">
+      <div class="step-dot active" data-step="1" title="Brand & Model">1. Brand</div>
+      <div class="step-dot" data-step="2" title="Year & Variant">2. Year</div>
+      <div class="step-dot" data-step="3" title="Fuel & Transmission">3. Fuel</div>
+      <div class="step-dot" data-step="4" title="Kilometres Driven">4. KM</div>
+      <div class="step-dot" data-step="5" title="Vehicle Condition">5. Condition</div>
+      <div class="step-dot" data-step="6" title="Asking Price">6. Price</div>
+      <div class="step-dot" data-step="7" title="Location">7. Location</div>
+      <div class="step-dot" data-step="8" title="Description">8. Details</div>
+      <div class="step-dot" data-step="9" title="Upload Photos">9. Photos</div>
+      <div class="step-dot" data-step="10" title="Review & Submit">10. Review</div>
+    </div>
+  </div>
 
-        <h3 style="font-size:1.15rem; margin-bottom:16px; color:var(--color-primary); display:flex; align-items:center; gap:8px;">
-          <i data-lucide="car"></i> 1. Vehicle Specifications
+  <!-- Main Multi-Step Form Card -->
+  <div class="card" style="padding:32px; background:var(--bg-surface-elevated); margin-bottom:48px;">
+    <form method="POST" action="{% url 'used_cars:create_listing' %}" enctype="multipart/form-data" id="multi-step-car-form">
+      {% csrf_token %}
+
+      <!-- Hidden Title for Autofill if not manually altered -->
+      <input type="hidden" name="title" id="id_title" value="">
+
+      <!-- STEP 1: Brand and Model -->
+      <div class="form-step active" id="step-1">
+        <h3 style="font-size:1.25rem; margin:0 0 8px 0; display:flex; align-items:center; gap:8px;">
+          <i data-lucide="car" style="color:var(--color-primary);"></i> Step 1: Vehicle Brand and Model
         </h3>
+        <p style="color:var(--text-muted); font-size:0.85rem; margin-bottom:24px;">
+          Specify the manufacturer make and nameplate model of your car.
+        </p>
 
-        <div class="form-group">
-          <label class="form-label">Listing Title *</label>
-          <input type="text" name="title" required class="form-control" placeholder="e.g. 2022 Hyundai Creta SX (O) Diesel AT (Single Owner, Pristine)">
-        </div>
-
-        <div class="grid-3" style="gap:16px; margin-bottom:16px;">
+        <div class="grid-2" style="gap:20px;">
           <div class="form-group">
-            <label class="form-label">Make / Manufacturer *</label>
-            <input type="text" name="make_name" required class="form-control" placeholder="e.g. Hyundai">
+            <label class="form-label">Brand / Make *</label>
+            <input type="text" name="make_name" id="step-make" class="form-control" placeholder="e.g. Hyundai, Maruti Suzuki, Tata, Toyota" required>
+            <small style="color:var(--text-muted); font-size:0.75rem;">Vehicle manufacturer</small>
           </div>
+
           <div class="form-group">
             <label class="form-label">Model Name *</label>
-            <input type="text" name="model_name" required class="form-control" placeholder="e.g. Creta">
-          </div>
-          <div class="form-group">
-            <label class="form-label">Variant Name *</label>
-            <input type="text" name="variant_name" required class="form-control" placeholder="e.g. 1.5 CRDi SX (O) AT">
+            <input type="text" name="model_name" id="step-model" class="form-control" placeholder="e.g. Creta, Swift, Nexon, Fortuner" required>
+            <small style="color:var(--text-muted); font-size:0.75rem;">Exact car model nameplate</small>
           </div>
         </div>
+      </div>
 
-        <div class="grid-4" style="gap:16px; margin-bottom:16px;">
+      <!-- STEP 2: Year and Variant -->
+      <div class="form-step" id="step-2" style="display:none;">
+        <h3 style="font-size:1.25rem; margin:0 0 8px 0; display:flex; align-items:center; gap:8px;">
+          <i data-lucide="calendar" style="color:var(--color-primary);"></i> Step 2: Year and Variant
+        </h3>
+        <p style="color:var(--text-muted); font-size:0.85rem; margin-bottom:24px;">
+          Specify the manufacturing year and trim variant level.
+        </p>
+
+        <div class="grid-3" style="gap:16px;">
           <div class="form-group">
-            <label class="form-label">Model Year *</label>
-            <input type="number" name="year" required class="form-control" value="2022" min="2005" max="2026">
+            <label class="form-label">Manufacturing Year *</label>
+            <input type="number" name="year" id="step-year" class="form-control" value="2022" min="1990" max="2026" required>
           </div>
+
           <div class="form-group">
-            <label class="form-label">Odometer (KM) *</label>
-            <input type="number" name="mileage" required class="form-control" value="32000" min="0">
+            <label class="form-label">Registration Year (If known)</label>
+            <input type="number" name="registration_year" id="step-reg-year" class="form-control" placeholder="e.g. 2022" min="1990" max="2026">
           </div>
+
+          <div class="form-group">
+            <label class="form-label">Trim / Variant Name</label>
+            <input type="text" name="variant_name" id="step-variant" class="form-control" placeholder="e.g. SX(O) Turbo, ZXi Plus, Fearless">
+          </div>
+        </div>
+      </div>
+
+      <!-- STEP 3: Fuel and Transmission -->
+      <div class="form-step" id="step-3" style="display:none;">
+        <h3 style="font-size:1.25rem; margin:0 0 8px 0; display:flex; align-items:center; gap:8px;">
+          <i data-lucide="fuel" style="color:var(--color-primary);"></i> Step 3: Fuel Type and Transmission
+        </h3>
+        <p style="color:var(--text-muted); font-size:0.85rem; margin-bottom:24px;">
+          Choose the powertrain type and gearbox mechanism.
+        </p>
+
+        <div class="grid-2" style="gap:20px;">
           <div class="form-group">
             <label class="form-label">Fuel Type *</label>
-            <select name="fuel_type" class="form-select">
-              <option value="Petrol">Petrol</option>
-              <option value="Diesel" selected>Diesel</option>
+            <select name="fuel_type" id="step-fuel" class="form-select" required>
+              <option value="Petrol" selected>Petrol</option>
+              <option value="Diesel">Diesel</option>
               <option value="CNG">CNG</option>
               <option value="EV">Electric (EV)</option>
               <option value="Hybrid">Hybrid</option>
+              <option value="LPG">LPG</option>
             </select>
           </div>
+
           <div class="form-group">
             <label class="form-label">Transmission *</label>
-            <select name="transmission" class="form-select">
-              <option value="Manual">Manual</option>
-              <option value="Automatic" selected>Automatic</option>
+            <select name="transmission" id="step-trans" class="form-select" required>
+              <option value="Manual" selected>Manual</option>
+              <option value="Automatic">Automatic (AT / DCT / CVT / AMT)</option>
             </select>
           </div>
         </div>
+      </div>
 
-        <div class="grid-3" style="gap:16px; margin-bottom:20px;">
+      <!-- STEP 4: Kilometres Driven -->
+      <div class="form-step" id="step-4" style="display:none;">
+        <h3 style="font-size:1.25rem; margin:0 0 8px 0; display:flex; align-items:center; gap:8px;">
+          <i data-lucide="gauge" style="color:var(--color-primary);"></i> Step 4: Kilometres Driven
+        </h3>
+        <p style="color:var(--text-muted); font-size:0.85rem; margin-bottom:24px;">
+          Enter the current odometer reading shown on your vehicle's instrument cluster.
+        </p>
+
+        <div class="form-group" style="max-width:440px;">
+          <label class="form-label">Odometer Reading in KM *</label>
+          <input type="number" name="mileage" id="step-mileage" class="form-control" placeholder="e.g. 35000" min="0" max="999999" value="32000" required>
+          <small style="color:var(--text-muted); font-size:0.75rem;">Honest odometer reporting increases buyer enquiry rate by 40%</small>
+        </div>
+      </div>
+
+      <!-- STEP 5: Vehicle Condition -->
+      <div class="form-step" id="step-5" style="display:none;">
+        <h3 style="font-size:1.25rem; margin:0 0 8px 0; display:flex; align-items:center; gap:8px;">
+          <i data-lucide="check-circle-2" style="color:var(--color-primary);"></i> Step 5: Vehicle Condition
+        </h3>
+        <p style="color:var(--text-muted); font-size:0.85rem; margin-bottom:24px;">
+          Select the option that most honestly reflects your car's physical and mechanical status.
+        </p>
+
+        <div class="form-group" style="max-width:560px;">
+          <label class="form-label">Reported Condition *</label>
+          <select name="condition" id="step-condition" class="form-select" required>
+            <option value="excellent">Excellent — Showroom maintained, pristine body & full records</option>
+            <option value="very_good">Very Good — Minor cosmetic wear, mechanically flawless</option>
+            <option value="good" selected>Good — Normal age-related wear, fully reliable daily driver</option>
+            <option value="fair">Fair — Minor dents, scratches, or upcoming tyre/brake wear</option>
+            <option value="needs_repair">Needs Repair — Accidental or mechanical attention needed</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- STEP 6: Asking Price -->
+      <div class="form-step" id="step-6" style="display:none;">
+        <h3 style="font-size:1.25rem; margin:0 0 8px 0; display:flex; align-items:center; gap:8px;">
+          <i data-lucide="indian-rupee" style="color:var(--color-primary);"></i> Step 6: Asking Price
+        </h3>
+        <p style="color:var(--text-muted); font-size:0.85rem; margin-bottom:24px;">
+          Set your expected selling price in Indian Rupees (₹).
+        </p>
+
+        <div class="form-group" style="max-width:440px;">
+          <label class="form-label">Expected Price in INR (₹) *</label>
+          <input type="number" name="expected_price" id="step-price" class="form-control" placeholder="e.g. 1450000" min="10000" step="5000" required>
+          <div style="font-size:0.85rem; color:var(--color-primary); font-weight:700; margin-top:6px;" id="price-formatted-preview"></div>
+        </div>
+      </div>
+
+      <!-- STEP 7: Location -->
+      <div class="form-step" id="step-7" style="display:none;">
+        <h3 style="font-size:1.25rem; margin:0 0 8px 0; display:flex; align-items:center; gap:8px;">
+          <i data-lucide="map-pin" style="color:var(--color-primary);"></i> Step 7: Location & Registration State
+        </h3>
+        <p style="color:var(--text-muted); font-size:0.85rem; margin-bottom:24px;">
+          Specify where potential buyers can inspect the vehicle.
+        </p>
+
+        <div class="grid-3" style="gap:16px;">
           <div class="form-group">
-            <label class="form-label">Previous Owners *</label>
-            <input type="number" name="owners_count" required class="form-control" value="1" min="1" max="6">
+            <label class="form-label">Metro City *</label>
+            <input type="text" name="location_city" id="step-city" class="form-control" value="Bengaluru" required>
           </div>
+
           <div class="form-group">
-            <label class="form-label">Asking Price (₹) *</label>
-            <input type="number" name="expected_price" required class="form-control" placeholder="e.g. 1550000" min="50000" step="5000">
+            <label class="form-label">Locality / Area</label>
+            <input type="text" name="location_area" id="step-area" class="form-control" placeholder="e.g. Indiranagar, Whitefield">
           </div>
+
           <div class="form-group">
-            <label class="form-label">City Location *</label>
-            <input type="text" name="location_city" required class="form-control" value="Bengaluru">
+            <label class="form-label">Registration State *</label>
+            <input type="text" name="registration_state" id="step-state" class="form-control" value="Karnataka (KA)" required>
           </div>
         </div>
+      </div>
+
+      <!-- STEP 8: Description & Details -->
+      <div class="form-step" id="step-8" style="display:none;">
+        <h3 style="font-size:1.25rem; margin:0 0 8px 0; display:flex; align-items:center; gap:8px;">
+          <i data-lucide="file-text" style="color:var(--color-primary);"></i> Step 8: Description & Ownership Details
+        </h3>
+        <p style="color:var(--text-muted); font-size:0.85rem; margin-bottom:24px;">
+          Share maintenance history, ownership count, and contact preferences.
+        </p>
+
+        <div class="grid-2" style="gap:16px; margin-bottom:16px;">
+          <div class="form-group">
+            <label class="form-label">Number of Previous Owners</label>
+            <input type="number" name="owners_count" id="step-owners" class="form-control" value="1" min="1" max="10">
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Insurance Valid Till (Optional)</label>
+            <input type="date" name="insurance_valid_till" id="step-insurance" class="form-control">
+          </div>
+        </div>
+
+        <div class="form-group" style="margin-bottom:16px;">
+          <label class="form-label">Detailed Vehicle Description *</label>
+          <textarea name="description" id="step-desc" rows="4" class="form-control" placeholder="Mention service history, aftermarket accessories, warranty, reason for sale..." required></textarea>
+        </div>
+
+        <div style="padding:14px; background:var(--bg-surface-subtle); border-radius:8px;">
+          <div class="form-group" style="margin-bottom:8px;">
+            <label style="display:flex; align-items:center; gap:8px; cursor:pointer;">
+              <input type="checkbox" name="allow_phone_contact" id="step-allow-phone">
+              <span style="font-size:0.85rem; font-weight:600;">Display my contact phone number to signed-in buyers</span>
+            </label>
+          </div>
+          <div class="form-group" style="margin:0;">
+            <label class="form-label" style="font-size:0.75rem;">Contact Phone Number</label>
+            <input type="text" name="contact_phone" id="step-phone" class="form-control" placeholder="+91 98765 43210" style="font-size:0.85rem;">
+          </div>
+        </div>
+      </div>
+
+      <!-- STEP 9: Upload Photographs -->
+      <div class="form-step" id="step-9" style="display:none;">
+        <h3 style="font-size:1.25rem; margin:0 0 8px 0; display:flex; align-items:center; gap:8px;">
+          <i data-lucide="camera" style="color:var(--color-primary);"></i> Step 9: Upload Vehicle Photographs
+        </h3>
+        <p style="color:var(--text-muted); font-size:0.85rem; margin-bottom:24px;">
+          Upload clear, high-resolution exterior and interior photos of your vehicle.
+        </p>
 
         <div class="form-group" style="margin-bottom:20px;">
-          <label class="form-label">Detailed Vehicle Condition & Maintenance History *</label>
-          <textarea name="description" required class="form-control" style="min-height:90px;" placeholder="Highlight tyre condition, authorized service records, insurance status, and any upgrades..."></textarea>
+          <label class="form-label">Primary Front 3/4 Exterior Cover Photo *</label>
+          <input type="file" name="primary_image" id="step-primary-photo" class="form-control" accept="image/*" required>
+          <small style="color:var(--text-muted); font-size:0.75rem;">Main listing photo shown on search cards (JPG, PNG, WEBP, Max 8MB)</small>
         </div>
 
-        <button type="submit" class="btn btn-primary btn-lg" style="width:100%; justify-content:center;">
-          <i data-lucide="check-circle"></i> Submit Used Car Listing
+        <div class="form-group" style="margin-bottom:16px;">
+          <label class="form-label">Additional Gallery Photos (Interior, Engine, Boot, Tyres)</label>
+          <input type="file" name="gallery_images" id="step-gallery-photos" class="form-control" accept="image/*" multiple>
+          <small style="color:var(--text-muted); font-size:0.75rem;">Select multiple photos simultaneously (Max 8MB each)</small>
+        </div>
+
+        <!-- Live Preview Container -->
+        <div id="photos-live-preview" style="display:flex; gap:10px; flex-wrap:wrap; margin-top:12px;"></div>
+      </div>
+
+      <!-- STEP 10: Review and Submit -->
+      <div class="form-step" id="step-10" style="display:none;">
+        <h3 style="font-size:1.25rem; margin:0 0 8px 0; display:flex; align-items:center; gap:8px;">
+          <i data-lucide="clipboard-check" style="color:var(--color-primary);"></i> Step 10: Review & Confirm Submission
+        </h3>
+        <p style="color:var(--text-muted); font-size:0.85rem; margin-bottom:24px;">
+          Please review the summary below before submitting your listing for review.
+        </p>
+
+        <!-- Summary Card -->
+        <div class="card" style="padding:20px; background:var(--bg-surface-subtle); margin-bottom:24px; border:1px solid var(--border-subtle);">
+          <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:16px; border-bottom:1px solid var(--border-subtle); padding-bottom:12px;">
+            <div>
+              <div style="font-size:0.75rem; color:var(--text-muted); text-transform:uppercase;">Listing Title</div>
+              <h4 id="review-title" style="font-size:1.25rem; margin:2px 0 0 0; color:var(--color-primary);"></h4>
+            </div>
+            <div style="text-align:right;">
+              <div style="font-size:0.75rem; color:var(--text-muted); text-transform:uppercase;">Asking Price</div>
+              <div id="review-price" style="font-size:1.4rem; font-weight:800; color:var(--color-primary);"></div>
+            </div>
+          </div>
+
+          <div class="grid-3" style="gap:12px; font-size:0.85rem; margin-bottom:16px;">
+            <div><strong>Year:</strong> <span id="review-year"></span></div>
+            <div><strong>Variant:</strong> <span id="review-variant"></span></div>
+            <div><strong>Odometer:</strong> <span id="review-mileage"></span></div>
+            <div><strong>Fuel:</strong> <span id="review-fuel"></span></div>
+            <div><strong>Gearbox:</strong> <span id="review-trans"></span></div>
+            <div><strong>Condition:</strong> <span id="review-condition"></span></div>
+            <div><strong>Owners:</strong> <span id="review-owners"></span></div>
+            <div><strong>Location:</strong> <span id="review-location"></span></div>
+            <div><strong>Reg State:</strong> <span id="review-state"></span></div>
+          </div>
+
+          <div style="border-top:1px solid var(--border-subtle); padding-top:12px; font-size:0.85rem;">
+            <div style="color:var(--text-muted); font-size:0.75rem; margin-bottom:4px;">Description:</div>
+            <div id="review-desc" style="color:var(--text-main); white-space:pre-wrap;"></div>
+          </div>
+        </div>
+
+        <div style="padding:14px; background:rgba(8,126,255,0.08); border-left:4px solid var(--color-primary); border-radius:6px; font-size:0.85rem; color:var(--text-muted); margin-bottom:24px;">
+          <strong style="color:var(--text-main);">Quality Moderation Note:</strong>
+          Upon submission, your listing enters the <em>Pending Review</em> queue. Our operations team verifies vehicle details to prevent fraud and ensure high standards. You can edit or deactivate your listing anytime from your seller dashboard.
+        </div>
+      </div>
+
+      <!-- Wizard Navigation Buttons Strip -->
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-top:32px; border-top:1px solid var(--border-subtle); padding-top:20px;">
+        <button type="button" class="btn btn-secondary" id="btn-wizard-prev" style="display:none;">
+          <i data-lucide="arrow-left"></i> Previous Step
         </button>
-      </form>
-    </div>
+
+        <div style="display:flex; gap:12px; margin-left:auto;">
+          <!-- Save as Draft (Available on Step 10) -->
+          <button type="submit" name="save_as_draft" value="1" class="btn btn-secondary" id="btn-save-draft" style="display:none;">
+            <i data-lucide="save"></i> Save as Draft
+          </button>
+
+          <!-- Next Step Button -->
+          <button type="button" class="btn btn-primary" id="btn-wizard-next">
+            Next Step <i data-lucide="arrow-right"></i>
+          </button>
+
+          <!-- Submit for Review Button (Step 10 only) -->
+          <button type="submit" name="submit_for_review" value="1" class="btn btn-primary" id="btn-submit-listing" style="display:none; background:#10b981; border-color:#10b981;">
+            <i data-lucide="check-circle"></i> Submit Listing For Review
+          </button>
+        </div>
+      </div>
+    </form>
   </div>
 </div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+  let currentStep = 1;
+  const totalSteps = 10;
+
+  const stepIndicatorText = document.getElementById('step-indicator-text');
+  const stepProgressBar = document.getElementById('step-progress-bar');
+  const stepProgressPercent = document.getElementById('step-progress-percent');
+  const btnPrev = document.getElementById('btn-wizard-prev');
+  const btnNext = document.getElementById('btn-wizard-next');
+  const btnSubmit = document.getElementById('btn-submit-listing');
+  const btnDraft = document.getElementById('btn-save-draft');
+
+  const stepTitles = [
+    "Step 1 of 10: Vehicle Brand & Model",
+    "Step 2 of 10: Year and Variant",
+    "Step 3 of 10: Fuel & Transmission",
+    "Step 4 of 10: Kilometres Driven",
+    "Step 5 of 10: Vehicle Condition",
+    "Step 6 of 10: Asking Price in INR",
+    "Step 7 of 10: Location & State",
+    "Step 8 of 10: Description & History",
+    "Step 9 of 10: Upload Photographs",
+    "Step 10 of 10: Review & Confirm"
+  ];
+
+  function showStep(step) {
+    document.querySelectorAll('.form-step').forEach(el => el.style.display = 'none');
+    const target = document.getElementById(`step-${step}`);
+    if (target) target.style.display = 'block';
+
+    // Update progress
+    const pct = Math.round((step / totalSteps) * 100);
+    stepProgressBar.style.width = `${pct}%`;
+    stepProgressPercent.innerText = pct;
+    stepIndicatorText.innerText = stepTitles[step - 1];
+
+    // Update dots
+    document.querySelectorAll('.step-dot').forEach(dot => {
+      const dStep = parseInt(dot.getAttribute('data-step'));
+      if (dStep === step) {
+        dot.style.fontWeight = '700';
+        dot.style.color = 'var(--color-primary)';
+      } else if (dStep < step) {
+        dot.style.color = '#10b981';
+      } else {
+        dot.style.color = 'var(--text-muted)';
+      }
+    });
+
+    // Nav buttons
+    btnPrev.style.display = step > 1 ? 'inline-flex' : 'none';
+    if (step === totalSteps) {
+      btnNext.style.display = 'none';
+      btnSubmit.style.display = 'inline-flex';
+      btnDraft.style.display = 'inline-flex';
+      populateReviewSummary();
+    } else {
+      btnNext.style.display = 'inline-flex';
+      btnSubmit.style.display = 'none';
+      btnDraft.style.display = 'none';
+    }
+
+    if (typeof lucide !== 'undefined') lucide.createIcons();
+    window.scrollTo({ top: 120, behavior: 'smooth' });
+  }
+
+  function validateStep(step) {
+    if (step === 1) {
+      const make = document.getElementById('step-make').value.trim();
+      const model = document.getElementById('step-model').value.trim();
+      if (!make || !model) {
+        alert('Please specify both Brand (Make) and Model.');
+        return false;
+      }
+    } else if (step === 2) {
+      const year = parseInt(document.getElementById('step-year').value);
+      if (!year || year < 1990 || year > 2026) {
+        alert('Please enter a valid manufacturing year between 1990 and 2026.');
+        return false;
+      }
+    } else if (step === 4) {
+      const mileage = parseInt(document.getElementById('step-mileage').value);
+      if (isNaN(mileage) || mileage < 0) {
+        alert('Please enter a valid non-negative odometer reading.');
+        return false;
+      }
+    } else if (step === 6) {
+      const price = parseFloat(document.getElementById('step-price').value);
+      if (isNaN(price) || price < 10000) {
+        alert('Please set an asking price of at least ₹10,000.');
+        return false;
+      }
+    } else if (step === 7) {
+      const city = document.getElementById('step-city').value.trim();
+      if (!city) {
+        alert('Please provide the city where the vehicle is located.');
+        return false;
+      }
+    } else if (step === 8) {
+      const desc = document.getElementById('step-desc').value.trim();
+      if (!desc || desc.length < 10) {
+        alert('Please provide a vehicle description of at least 10 characters.');
+        return false;
+      }
+    } else if (step === 9) {
+      const primaryPhoto = document.getElementById('step-primary-photo');
+      if (!primaryPhoto.files || primaryPhoto.files.length === 0) {
+        alert('Please select at least one primary exterior photograph.');
+        return false;
+      }
+    }
+    return true;
+  }
+
+  function populateReviewSummary() {
+    const make = document.getElementById('step-make').value.trim();
+    const model = document.getElementById('step-model').value.trim();
+    const year = document.getElementById('step-year').value;
+    const variant = document.getElementById('step-variant').value.trim();
+    const fuel = document.getElementById('step-fuel').value;
+    const trans = document.getElementById('step-trans').value;
+    const mileage = document.getElementById('step-mileage').value;
+    const condition = document.getElementById('step-condition');
+    const conditionText = condition.options[condition.selectedIndex].text;
+    const price = document.getElementById('step-price').value;
+    const city = document.getElementById('step-city').value.trim();
+    const area = document.getElementById('step-area').value.trim();
+    const state = document.getElementById('step-state').value.trim();
+    const owners = document.getElementById('step-owners').value;
+    const desc = document.getElementById('step-desc').value.trim();
+
+    // Generate listing title
+    const computedTitle = `${year} ${make} ${model} ${variant}`.trim();
+    document.getElementById('id_title').value = computedTitle;
+
+    document.getElementById('review-title').innerText = computedTitle;
+    document.getElementById('review-price').innerText = `₹${parseFloat(price || 0).toLocaleString('en-IN')}`;
+    document.getElementById('review-year').innerText = year;
+    document.getElementById('review-variant').innerText = variant || 'Base';
+    document.getElementById('review-mileage').innerText = `${parseInt(mileage || 0).toLocaleString('en-IN')} KM`;
+    document.getElementById('review-fuel').innerText = fuel;
+    document.getElementById('review-trans').innerText = trans;
+    document.getElementById('review-condition').innerText = conditionText.split('—')[0];
+    document.getElementById('review-owners').innerText = `${owners} Owner(s)`;
+    document.getElementById('review-location').innerText = `${city}${area ? ', ' + area : ''}`;
+    document.getElementById('review-state').innerText = state;
+    document.getElementById('review-desc').innerText = desc;
+  }
+
+  btnNext.addEventListener('click', () => {
+    if (validateStep(currentStep)) {
+      currentStep++;
+      showStep(currentStep);
+    }
+  });
+
+  btnPrev.addEventListener('click', () => {
+    if (currentStep > 1) {
+      currentStep--;
+      showStep(currentStep);
+    }
+  });
+
+  // Price live formatter
+  document.getElementById('step-price').addEventListener('input', (e) => {
+    const val = parseFloat(e.target.value);
+    const prev = document.getElementById('price-formatted-preview');
+    if (!isNaN(val) && val > 0) {
+      if (val >= 10000000) {
+        prev.innerText = `₹${(val / 10000000).toFixed(2)} Crore`;
+      } else if (val >= 100000) {
+        prev.innerText = `₹${(val / 100000).toFixed(2)} Lakh`;
+      } else {
+        prev.innerText = `₹${val.toLocaleString('en-IN')}`;
+      }
+    } else {
+      prev.innerText = '';
+    }
+  });
+
+  // Photo live previews
+  document.getElementById('step-primary-photo').addEventListener('change', function(e) {
+    const container = document.getElementById('photos-live-preview');
+    container.innerHTML = '';
+    if (this.files && this.files[0]) {
+      const reader = new FileReader();
+      reader.onload = function(evt) {
+        const div = document.createElement('div');
+        div.style.cssText = 'width:90px; height:65px; border-radius:6px; overflow:hidden; border:2px solid var(--color-primary);';
+        div.innerHTML = `<img src="${evt.target.result}" style="width:100%; height:100%; object-fit:cover;">`;
+        container.appendChild(div);
+      };
+      reader.readAsDataURL(this.files[0]);
+    }
+  });
+</script>
 {% endblock %}

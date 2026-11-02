@@ -1,0 +1,119 @@
+{% extends 'base.html' %}
+
+{% block title %}Reported Used Car Listings — AUTOVYNEX Moderation{% endblock %}
+
+{% block content %}
+<div class="container" style="padding-top:24px;">
+  <!-- Breadcrumbs -->
+  <div style="font-size:0.85rem; color:var(--text-muted); margin-bottom:12px;">
+    <a href="{% url 'custom_admin:dashboard_overview' %}">Admin Center</a> /
+    <a href="{% url 'custom_admin:admin_used_cars' %}">Used Cars</a> /
+    <strong>Reported Listings</strong>
+  </div>
+
+  <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:16px; margin-bottom:28px;">
+    <div>
+      <h1 style="font-size:1.85rem; margin:0;">Reported Used Car Listings</h1>
+      <p style="color:var(--text-muted); font-size:0.95rem; margin-top:4px;">
+        Review community flags regarding suspicious pricing, fraudulent listings, misleading information, or already sold vehicles.
+      </p>
+    </div>
+
+    <div style="display:flex; gap:10px;">
+      <a href="{% url 'custom_admin:admin_used_cars' %}" class="btn btn-secondary btn-sm">
+        <i data-lucide="arrow-left"></i> All Listings
+      </a>
+    </div>
+  </div>
+
+  <!-- Reports Table -->
+  <div class="card" style="padding:0; overflow:hidden; margin-bottom:48px;">
+    <div style="overflow-x:auto;">
+      <table style="width:100%; border-collapse:collapse; text-align:left; font-size:0.88rem;">
+        <thead>
+          <tr style="background:var(--bg-surface-subtle); border-bottom:1px solid var(--border-subtle); color:var(--text-muted);">
+            <th style="padding:14px 16px;">Listing</th>
+            <th style="padding:14px 16px;">Flag Reason</th>
+            <th style="padding:14px 16px;">Reporter Details</th>
+            <th style="padding:14px 16px;">Report Summary</th>
+            <th style="padding:14px 16px;">Status</th>
+            <th style="padding:14px 16px;">Date</th>
+            <th style="padding:14px 16px; text-align:right;">Resolution Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for r in reports %}
+            <tr style="border-bottom:1px solid var(--border-subtle);">
+              <td style="padding:14px 16px;">
+                <div style="font-weight:700;">
+                  <a href="{% url 'custom_admin:admin_used_car_detail' r.listing.id %}">{{ r.listing.title }}</a>
+                </div>
+                <div style="font-size:0.75rem; color:var(--text-muted);">
+                  Seller: {{ r.listing.seller.username }} • ₹{{ r.listing.expected_price|floatformat:0 }}
+                </div>
+              </td>
+              <td style="padding:14px 16px;">
+                <span class="badge" style="background:#7f1d1d; color:#fecaca;">{{ r.get_reason_display }}</span>
+              </td>
+              <td style="padding:14px 16px; font-size:0.82rem;">
+                {% if r.reporter %}
+                  <strong>{{ r.reporter.get_full_name|default:r.reporter.username }}</strong>
+                  <div style="color:var(--text-muted);">{{ r.reporter.email }}</div>
+                {% else %}
+                  {{ r.reporter_name|default:"Anonymous Visitor" }}
+                  {% if r.reporter_email %}<div style="color:var(--text-muted);">{{ r.reporter_email }}</div>{% endif %}
+                {% endif %}
+              </td>
+              <td style="padding:14px 16px; max-width:280px; font-size:0.82rem; color:var(--text-main);">
+                {{ r.details|truncatechars:120 }}
+              </td>
+              <td style="padding:14px 16px;">
+                {% if r.status == 'pending' %}
+                  <span class="badge" style="background:#78350f; color:#fde68a;">Pending</span>
+                {% elif r.status == 'dismissed' %}
+                  <span class="badge" style="background:#334155; color:#cbd5e1;">Dismissed</span>
+                {% elif r.status == 'action_taken' %}
+                  <span class="badge" style="background:#065f46; color:#a7f3d0;">Action Taken</span>
+                {% endif %}
+              </td>
+              <td style="padding:14px 16px; font-size:0.78rem; color:var(--text-muted);">
+                {{ r.created_at|date:"d M Y" }}
+              </td>
+              <td style="padding:14px 16px; text-align:right;">
+                {% if r.status == 'pending' %}
+                  <div style="display:flex; justify-content:flex-end; gap:6px;">
+                    <form method="POST" action="{% url 'custom_admin:admin_used_car_report_action' r.id %}">
+                      {% csrf_token %}
+                      <input type="hidden" name="action" value="dismiss">
+                      <button type="submit" class="btn btn-secondary btn-sm" style="padding:4px 8px; font-size:0.75rem;">
+                        Dismiss
+                      </button>
+                    </form>
+                    <form method="POST" action="{% url 'custom_admin:admin_used_car_report_action' r.id %}">
+                      {% csrf_token %}
+                      <input type="hidden" name="action" value="action_taken">
+                      <input type="hidden" name="deactivate_listing" value="1">
+                      <button type="submit" class="btn btn-primary btn-sm" style="padding:4px 8px; font-size:0.75rem; background:#dc2626; border-color:#dc2626;">
+                        Suspend Car
+                      </button>
+                    </form>
+                  </div>
+                {% else %}
+                  <span style="font-size:0.78rem; color:var(--text-muted);">Resolved</span>
+                {% endif %}
+              </td>
+            </tr>
+          {% empty %}
+            <tr>
+              <td colspan="7" style="padding:40px; text-align:center; color:var(--text-muted);">
+                <i data-lucide="shield-check" style="width:48px; height:48px; margin-bottom:12px; color:#10b981; opacity:0.6;"></i>
+                <p style="margin:0;">No reported vehicle listings. Platform is healthy!</p>
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% endblock %}

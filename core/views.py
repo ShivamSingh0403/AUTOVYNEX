@@ -79,6 +79,7 @@ def offers(request):
 
 def car_valuation(request):
     valuation_record = None
+    factors_breakdown = None
     if request.method == 'POST':
         make_name = request.POST.get('make_name', 'Maruti Suzuki').strip()
         model_name = request.POST.get('model_name', 'Swift').strip()
@@ -89,17 +90,22 @@ def car_valuation(request):
         condition = request.POST.get('condition', 'good').strip()
         orig_price = float(request.POST.get('original_price', 1000000))
 
-        # Algorithmic depreciation estimation
-        age = max(0, 2026 - year)
-        depreciation_rate = min(0.70, 0.15 + (age * 0.08) + (mileage / 100000 * 0.10))
-        if condition == 'excellent':
-            depreciation_rate -= 0.05
-        elif condition == 'fair':
-            depreciation_rate += 0.08
+        from used_cars.valuation import estimate_resale_value
+        res = estimate_resale_value(
+            make_name=make_name,
+            model_name=model_name,
+            year=year,
+            fuel_type=fuel_type,
+            transmission=transmission,
+            mileage=mileage,
+            condition=condition,
+            user_orig_price=orig_price
+        )
 
-        base_val = orig_price * (1 - depreciation_rate)
-        min_val = round(base_val * 0.94, -2)
-        max_val = round(base_val * 1.06, -2)
+        min_val = res['estimated_min']
+        max_val = res['estimated_max']
+        fair_val = res['fair_market_value']
+        factors_breakdown = res['factors']
 
         from used_cars.models import CarValuationRecord
         valuation_record = CarValuationRecord.objects.create(
@@ -111,8 +117,13 @@ def car_valuation(request):
             fuel_type=fuel_type,
             transmission=transmission,
             condition=condition,
+            original_price=orig_price,
             estimated_price_min=min_val,
             estimated_price_max=max_val,
+            fair_market_value=fair_val,
+            factors_summary=res['factors_json'],
+            comparable_count=res['comparables_count'],
+            comparable_avg_price=res['comparables_avg'],
             is_estimate_only=True
         )
 
@@ -122,10 +133,15 @@ def car_valuation(request):
                 'status': 'success',
                 'min_price': float(min_val),
                 'max_price': float(max_val),
+                'fair_market_value': float(fair_val),
+                'factors': factors_breakdown,
                 'disclaimer': 'Estimated fair market value range. Not a guaranteed purchase offer.'
             })
 
-    return render(request, 'core/car_valuation.html', {'valuation_record': valuation_record})
+    return render(request, 'core/car_valuation.html', {
+        'valuation_record': valuation_record,
+        'factors_breakdown': factors_breakdown
+    })
 
 
 def fuel_calculator(request):

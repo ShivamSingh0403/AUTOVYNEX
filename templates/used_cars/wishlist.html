@@ -1,0 +1,125 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}My Saved Used Cars — Wishlist | AUTOVYNEX{% endblock %}
+
+{% block content %}
+<div class="container" style="padding-top:24px;">
+
+  <!-- Breadcrumbs & Header -->
+  <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:16px; margin-bottom:28px;">
+    <div>
+      <div style="font-size:0.85rem; color:var(--text-muted); margin-bottom:6px;">
+        <a href="{% url 'used_cars:marketplace' %}">Used Cars</a> /
+        <strong>Wishlist</strong>
+      </div>
+      <h1 style="font-size:1.85rem; margin:0;">Saved Pre-Owned Vehicles ({{ total_count }})</h1>
+      <p style="color:var(--text-muted); font-size:0.95rem; margin-top:4px;">
+        Track cars you are interested in. Status automatically updates if a listing becomes sold or inactive.
+      </p>
+    </div>
+
+    <div style="display:flex; gap:10px;">
+      <a href="{% url 'used_cars:marketplace' %}" class="btn btn-primary btn-sm">
+        <i data-lucide="car"></i> Browse Marketplace
+      </a>
+    </div>
+  </div>
+
+  {% if wishlist_items %}
+    <div class="grid-3" style="gap:24px; margin-bottom:48px;">
+      {% for item in wishlist_items %}
+        {% with car=item.listing %}
+          <div class="card card-interactive" style="padding:0; overflow:hidden; display:flex; flex-direction:column; border:1px solid var(--border-subtle); border-radius:var(--radius-lg); position:relative; {% if car.is_sold or car.status == 'inactive' %}opacity:0.8;{% endif %}">
+
+            <!-- Car Photo -->
+            <div style="height:200px; background:#101820; position:relative; overflow:hidden; display:flex; align-items:center; justify-content:center;">
+              {% if car.primary_image %}
+                <img src="{{ car.primary_image.url }}" alt="{{ car.title }}" style="width:100%; height:100%; object-fit:cover;">
+              {% else %}
+                <i data-lucide="car" style="width:56px; height:56px; color:#38bdf8;"></i>
+              {% endif %}
+
+              <!-- Status Badge (Sold / Inactive / Live) -->
+              <div style="position:absolute; top:12px; left:12px;">
+                {% if car.is_sold or car.status == 'sold' %}
+                  <span class="badge" style="background:#dc2626; color:#fff; font-weight:700;">
+                    <i data-lucide="tag" style="width:12px; vertical-align:middle;"></i> SOLD OUT
+                  </span>
+                {% elif car.status == 'inactive' %}
+                  <span class="badge" style="background:#64748b; color:#fff; font-weight:700;">
+                    <i data-lucide="eye-off" style="width:12px; vertical-align:middle;"></i> INACTIVE / REMOVED
+                  </span>
+                {% elif car.status == 'published' %}
+                  <span class="badge" style="background:#065f46; color:#a7f3d0;">
+                    Live Available
+                  </span>
+                {% endif %}
+              </div>
+
+              <!-- Remove from Wishlist Action -->
+              <a href="{% url 'used_cars:toggle_wishlist' car.id %}" style="position:absolute; top:12px; right:12px; width:34px; height:34px; border-radius:50%; background:rgba(0,0,0,0.65); display:flex; align-items:center; justify-content:center; color:#ef4444; border:1px solid rgba(255,255,255,0.2); text-decoration:none;" title="Remove from wishlist">
+                <i data-lucide="trash-2" style="width:16px; height:16px;"></i>
+              </a>
+
+              <!-- Location Tag -->
+              <div style="position:absolute; bottom:10px; left:12px; background:rgba(0,0,0,0.7); backdrop-filter:blur(4px); color:#e2e8f0; font-size:0.75rem; padding:3px 8px; border-radius:4px;">
+                {{ car.location_city }}
+              </div>
+            </div>
+
+            <!-- Card Details -->
+            <div style="padding:18px; display:flex; flex-direction:column; flex-grow:1;">
+              <h3 style="font-size:1.1rem; margin:0 0 6px 0;">
+                <a href="{% url 'used_cars:listing_detail' car.slug %}" style="color:var(--text-main); text-decoration:none;">{{ car.title }}</a>
+              </h3>
+
+              <div style="font-size:0.8rem; color:var(--text-muted); margin-bottom:12px;">
+                {{ car.year }} • {{ car.mileage|floatformat:0 }} KM • {{ car.fuel_type }} • {{ car.transmission }}
+              </div>
+
+              <!-- Sold Notice if Sold -->
+              {% if car.is_sold or car.status == 'sold' %}
+                <div style="padding:8px 10px; background:rgba(220, 38, 38, 0.08); border-left:3px solid #dc2626; border-radius:4px; font-size:0.78rem; color:#dc2626; margin-bottom:12px;">
+                  This vehicle has been marked as sold by the seller.
+                </div>
+              {% elif car.status == 'inactive' %}
+                <div style="padding:8px 10px; background:rgba(100, 116, 139, 0.08); border-left:3px solid #64748b; border-radius:4px; font-size:0.78rem; color:var(--text-muted); margin-bottom:12px;">
+                  This listing is currently suspended by the seller.
+                </div>
+              {% endif %}
+
+              <div style="display:flex; justify-content:space-between; align-items:center; border-top:1px solid var(--border-subtle); padding-top:14px; margin-top:auto;">
+                <div>
+                  <div style="font-size:0.72rem; color:var(--text-muted); text-transform:uppercase;">Asking Price</div>
+                  <div style="font-family:var(--font-heading); font-size:1.35rem; font-weight:800; color:var(--color-primary);">
+                    {{ car.formatted_inr_price }}
+                  </div>
+                </div>
+
+                <a href="{% url 'used_cars:listing_detail' car.slug %}" class="btn btn-primary btn-sm" style="padding:6px 14px; font-weight:700;">
+                  View Vehicle
+                </a>
+              </div>
+            </div>
+          </div>
+        {% endwith %}
+      {% endfor %}
+    </div>
+  {% else %}
+    <!-- Empty Wishlist State -->
+    <div class="card" style="padding:64px 20px; text-align:center; max-width:620px; margin:0 auto 48px auto;">
+      <div style="width:72px; height:72px; border-radius:50%; background:rgba(239, 68, 68, 0.1); color:#ef4444; display:flex; align-items:center; justify-content:center; margin:0 auto 16px auto;">
+        <i data-lucide="heart" style="width:36px; height:36px;"></i>
+      </div>
+      <h3 style="font-size:1.3rem; margin:0 0 8px 0;">Your Used Car Wishlist is Empty</h3>
+      <p style="color:var(--text-muted); font-size:0.95rem; margin:0 0 24px 0;">
+        Save pre-owned vehicles while exploring the marketplace to keep track of asking prices and receive alerts if vehicles are sold.
+      </p>
+      <a href="{% url 'used_cars:marketplace' %}" class="btn btn-primary">
+        <i data-lucide="car"></i> Explore Pre-Owned Cars
+      </a>
+    </div>
+  {% endif %}
+</div>
+{% endblock %}

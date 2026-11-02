@@ -12,4 +12,12 @@ urlpatterns = [
     path('enquiries/<int:enquiry_id>/', views.admin_enquiry_update, name='admin_enquiry_update'),
     path('services/', views.admin_services, name='admin_services'),
     path('assistance/', views.admin_assistance, name='admin_assistance'),
+
+    # AUTOVYNEX Part 7: Used-Car Marketplace Administration
+    path('used-cars/', views.admin_used_cars, name='admin_used_cars'),
+    path('used-cars/<int:car_id>/', views.admin_used_car_detail, name='admin_used_car_detail'),
+    path('used-cars/<int:car_id>/action/', views.admin_used_car_action, name='admin_used_car_action'),
+    path('used-cars/reports/', views.admin_used_car_reports, name='admin_used_car_reports'),
+    path('used-cars/reports/<int:report_id>/action/', views.admin_used_car_report_action, name='admin_used_car_report_action'),
+    path('used-cars/enquiries/', views.admin_used_car_enquiries, name='admin_used_car_enquiries'),
 ]

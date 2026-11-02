@@ -1,0 +1,177 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}My Pre-Owned Car Listings — Seller Studio | AUTOVYNEX{% endblock %}
+
+{% block content %}
+<div class="container" style="padding-top:24px;">
+
+  <!-- Breadcrumbs & Actions -->
+  <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:16px; margin-bottom:28px;">
+    <div>
+      <div style="font-size:0.85rem; color:var(--text-muted); margin-bottom:6px;">
+        <a href="{% url 'used_cars:marketplace' %}">Used Cars</a> /
+        <strong>My Listings</strong>
+      </div>
+      <h1 style="font-size:1.85rem; margin:0;">Seller Studio & Vehicle Listings</h1>
+      <p style="color:var(--text-muted); font-size:0.95rem; margin-top:4px;">
+        Manage your submitted cars, monitor moderation status, review buyer enquiries, and mark vehicles sold.
+      </p>
+    </div>
+
+    <div style="display:flex; gap:10px;">
+      <a href="{% url 'used_cars:create_listing' %}" class="btn btn-primary btn-sm">
+        <i data-lucide="plus-circle"></i> Submit New Car
+      </a>
+      <a href="{% url 'used_cars:my_received_enquiries' %}" class="btn btn-secondary btn-sm">
+        <i data-lucide="message-square"></i> Buyer Enquiries
+      </a>
+    </div>
+  </div>
+
+  <!-- Metric Badges Strip -->
+  <div class="grid-4" style="margin-bottom:28px;">
+    <div class="card" style="border-left:4px solid var(--color-primary); padding:16px 20px;">
+      <div style="font-size:0.8rem; color:var(--text-muted); text-transform:uppercase;">Total Listings</div>
+      <div style="font-family:var(--font-heading); font-size:1.6rem; font-weight:800; color:var(--color-primary);">{{ total }}</div>
+    </div>
+    <div class="card" style="border-left:4px solid #10b981; padding:16px 20px;">
+      <div style="font-size:0.8rem; color:var(--text-muted); text-transform:uppercase;">Live Published</div>
+      <div style="font-family:var(--font-heading); font-size:1.6rem; font-weight:800; color:#10b981;">{{ published }}</div>
+    </div>
+    <div class="card" style="border-left:4px solid #f59e0b; padding:16px 20px;">
+      <div style="font-size:0.8rem; color:var(--text-muted); text-transform:uppercase;">Pending Review</div>
+      <div style="font-family:var(--font-heading); font-size:1.6rem; font-weight:800; color:#f59e0b;">{{ pending }}</div>
+    </div>
+    <div class="card" style="border-left:4px solid #64748b; padding:16px 20px;">
+      <div style="font-size:0.8rem; color:var(--text-muted); text-transform:uppercase;">Sold Vehicles</div>
+      <div style="font-family:var(--font-heading); font-size:1.6rem; font-weight:800; color:#64748b;">{{ sold }}</div>
+    </div>
+  </div>
+
+  <!-- Listings List -->
+  <div class="card" style="padding:0; overflow:hidden; margin-bottom:48px;">
+    <div style="overflow-x:auto;">
+      <table style="width:100%; border-collapse:collapse; text-align:left; font-size:0.88rem;">
+        <thead>
+          <tr style="background:var(--bg-surface-subtle); border-bottom:1px solid var(--border-subtle); color:var(--text-muted);">
+            <th style="padding:14px 16px;">Vehicle</th>
+            <th style="padding:14px 16px;">Asking Price</th>
+            <th style="padding:14px 16px;">Location</th>
+            <th style="padding:14px 16px;">Status</th>
+            <th style="padding:14px 16px;">Enquiries</th>
+            <th style="padding:14px 16px;">Date</th>
+            <th style="padding:14px 16px; text-align:right;">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for car in listings %}
+            <tr style="border-bottom:1px solid var(--border-subtle);">
+              <td style="padding:14px 16px;">
+                <div style="display:flex; align-items:center; gap:12px;">
+                  <div style="width:60px; height:45px; border-radius:6px; overflow:hidden; background:#101820; flex-shrink:0;">
+                    {% if car.primary_image %}
+                      <img src="{{ car.primary_image.url }}" alt="{{ car.title }}" style="width:100%; height:100%; object-fit:cover;">
+                    {% else %}
+                      <div style="display:flex; align-items:center; justify-content:center; height:100%; color:#64748b;">
+                        <i data-lucide="car" style="width:24px; height:24px;"></i>
+                      </div>
+                    {% endif %}
+                  </div>
+                  <div>
+                    <div style="font-weight:700; color:var(--text-main);">
+                      <a href="{% url 'used_cars:listing_detail' car.slug %}">{{ car.title }}</a>
+                    </div>
+                    <div style="font-size:0.75rem; color:var(--text-muted);">
+                      {{ car.year }} • {{ car.mileage|floatformat:0 }} KM • {{ car.fuel_type }} • {{ car.transmission }}
+                    </div>
+                    {% if car.rejection_reason %}
+                      <div style="font-size:0.75rem; color:#ef4444; margin-top:2px;">
+                        <i data-lucide="alert-circle" style="width:12px; vertical-align:middle;"></i> Moderation note: {{ car.rejection_reason }}
+                      </div>
+                    {% endif %}
+                  </div>
+                </div>
+              </td>
+
+              <td style="padding:14px 16px; font-weight:700; color:var(--color-primary);">
+                ₹{{ car.expected_price|floatformat:0 }}
+              </td>
+
+              <td style="padding:14px 16px; color:var(--text-muted); font-size:0.82rem;">
+                {{ car.location_city }}
+              </td>
+
+              <td style="padding:14px 16px;">
+                {% if car.status == 'published' %}
+                  <span class="badge" style="background:#065f46; color:#a7f3d0;">Live Published</span>
+                {% elif car.status == 'pending_review' %}
+                  <span class="badge" style="background:#78350f; color:#fde68a;">Pending Review</span>
+                {% elif car.status == 'rejected' %}
+                  <span class="badge" style="background:#7f1d1d; color:#fecaca;">Rejected</span>
+                {% elif car.status == 'sold' %}
+                  <span class="badge" style="background:#334155; color:#cbd5e1;">Sold</span>
+                {% elif car.status == 'inactive' %}
+                  <span class="badge" style="background:#1e293b; color:#94a3b8;">Inactive</span>
+                {% else %}
+                  <span class="badge" style="background:#374151; color:#d1d5db;">Draft</span>
+                {% endif %}
+              </td>
+
+              <td style="padding:14px 16px;">
+                <a href="{% url 'used_cars:my_received_enquiries' %}" style="text-decoration:none;">
+                  <span class="badge" style="background:var(--bg-surface-subtle); color:var(--text-muted);">
+                    <i data-lucide="message-square" style="width:12px; vertical-align:middle;"></i> {{ car.enquiries.count }}
+                  </span>
+                </a>
+              </td>
+
+              <td style="padding:14px 16px; font-size:0.78rem; color:var(--text-muted);">
+                {{ car.created_at|date:"d M Y" }}
+              </td>
+
+              <td style="padding:14px 16px; text-align:right;">
+                <div style="display:flex; justify-content:flex-end; gap:6px;">
+                  <!-- Edit Action -->
+                  <a href="{% url 'used_cars:edit_listing' car.id %}" class="btn btn-secondary btn-sm" style="padding:4px 8px; font-size:0.75rem;" title="Edit specifications">
+                    <i data-lucide="edit-3" style="width:12px;"></i> Edit
+                  </a>
+
+                  <!-- Toggle Active/Inactive -->
+                  {% if car.status == 'published' or car.status == 'inactive' %}
+                    <a href="{% url 'used_cars:toggle_listing_active' car.id %}" class="btn btn-secondary btn-sm" style="padding:4px 8px; font-size:0.75rem;" title="Toggle visibility">
+                      {% if car.status == 'published' %}
+                        <i data-lucide="eye-off" style="width:12px;"></i> Pause
+                      {% else %}
+                        <i data-lucide="eye" style="width:12px;"></i> Activate
+                      {% endif %}
+                    </a>
+                  {% endif %}
+
+                  <!-- Mark Sold -->
+                  {% if car.status != 'sold' %}
+                    <a href="{% url 'used_cars:mark_listing_sold' car.id %}" class="btn btn-secondary btn-sm" style="padding:4px 8px; font-size:0.75rem; color:#10b981; border-color:#10b981;" title="Mark vehicle sold" onclick="return confirm('Mark this vehicle as SOLD?');">
+                      <i data-lucide="check" style="width:12px;"></i> Sold
+                    </a>
+                  {% endif %}
+                </div>
+              </td>
+            </tr>
+          {% empty %}
+            <tr>
+              <td colspan="7" style="padding:48px; text-align:center; color:var(--text-muted);">
+                <i data-lucide="car" style="width:48px; height:48px; margin-bottom:12px; opacity:0.4;"></i>
+                <h3 style="font-size:1.1rem; margin:0 0 6px 0; color:var(--text-main);">You Haven't Listed Any Vehicles Yet</h3>
+                <p style="margin:0 0 16px 0; font-size:0.88rem;">Sell your car directly to genuine automotive buyers in 10 simple steps.</p>
+                <a href="{% url 'used_cars:create_listing' %}" class="btn btn-primary btn-sm">
+                  <i data-lucide="plus-circle"></i> Start Selling Now
+                </a>
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,102 @@
+{% extends 'base.html' %}
+
+{% block title %}Used Car Buyer Enquiries — AUTOVYNEX Admin{% endblock %}
+
+{% block content %}
+<div class="container" style="padding-top:24px;">
+  <!-- Breadcrumbs -->
+  <div style="font-size:0.85rem; color:var(--text-muted); margin-bottom:12px;">
+    <a href="{% url 'custom_admin:dashboard_overview' %}">Admin Center</a> /
+    <a href="{% url 'custom_admin:admin_used_cars' %}">Used Cars</a> /
+    <strong>Buyer Enquiries</strong>
+  </div>
+
+  <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:16px; margin-bottom:28px;">
+    <div>
+      <h1 style="font-size:1.85rem; margin:0;">Used Car Buyer Enquiries</h1>
+      <p style="color:var(--text-muted); font-size:0.95rem; margin-top:4px;">
+        Overview of all purchase interests, inspection requests, and buyer messages submitted across vehicle listings.
+      </p>
+    </div>
+
+    <div style="display:flex; gap:10px;">
+      <a href="{% url 'custom_admin:admin_used_cars' %}" class="btn btn-secondary btn-sm">
+        <i data-lucide="arrow-left"></i> Moderation Center
+      </a>
+    </div>
+  </div>
+
+  <!-- Enquiries Table -->
+  <div class="card" style="padding:0; overflow:hidden; margin-bottom:48px;">
+    <div style="overflow-x:auto;">
+      <table style="width:100%; border-collapse:collapse; text-align:left; font-size:0.88rem;">
+        <thead>
+          <tr style="background:var(--bg-surface-subtle); border-bottom:1px solid var(--border-subtle); color:var(--text-muted);">
+            <th style="padding:14px 16px;">Reference</th>
+            <th style="padding:14px 16px;">Target Vehicle</th>
+            <th style="padding:14px 16px;">Buyer Contact</th>
+            <th style="padding:14px 16px;">Enquiry Type</th>
+            <th style="padding:14px 16px;">Offer Amount</th>
+            <th style="padding:14px 16px;">Status</th>
+            <th style="padding:14px 16px;">Date</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for eq in enquiries %}
+            <tr style="border-bottom:1px solid var(--border-subtle);">
+              <td style="padding:14px 16px; font-weight:700; color:var(--color-primary);">
+                {{ eq.reference_code }}
+              </td>
+              <td style="padding:14px 16px;">
+                <div style="font-weight:600;">
+                  <a href="{% url 'custom_admin:admin_used_car_detail' eq.listing.id %}">{{ eq.listing.title }}</a>
+                </div>
+                <div style="font-size:0.75rem; color:var(--text-muted);">
+                  Seller: {{ eq.listing.seller.username }} (₹{{ eq.listing.expected_price|floatformat:0 }})
+                </div>
+              </td>
+              <td style="padding:14px 16px;">
+                <div style="font-weight:600;">{{ eq.sender_name }}</div>
+                <div style="font-size:0.75rem; color:var(--text-muted);">{{ eq.sender_email }} • {{ eq.sender_phone }}</div>
+              </td>
+              <td style="padding:14px 16px;">
+                <span class="badge" style="background:var(--bg-surface-subtle); color:var(--text-muted);">
+                  {{ eq.get_enquiry_type_display }}
+                </span>
+              </td>
+              <td style="padding:14px 16px;">
+                {% if eq.offer_amount %}
+                  <strong style="color:var(--color-primary);">₹{{ eq.offer_amount|floatformat:0 }}</strong>
+                {% else %}
+                  <span style="color:var(--text-muted);">None</span>
+                {% endif %}
+              </td>
+              <td style="padding:14px 16px;">
+                {% if eq.status == 'new' %}
+                  <span class="badge" style="background:#78350f; color:#fde68a;">New</span>
+                {% elif eq.status == 'in_review' %}
+                  <span class="badge" style="background:#1e3a8a; color:#93c5fd;">In Review</span>
+                {% elif eq.status == 'contacted' %}
+                  <span class="badge" style="background:#065f46; color:#a7f3d0;">Contacted</span>
+                {% elif eq.status == 'closed' %}
+                  <span class="badge" style="background:#334155; color:#cbd5e1;">Closed</span>
+                {% endif %}
+              </td>
+              <td style="padding:14px 16px; font-size:0.78rem; color:var(--text-muted);">
+                {{ eq.created_at|date:"d M Y, H:i" }}
+              </td>
+            </tr>
+          {% empty %}
+            <tr>
+              <td colspan="7" style="padding:40px; text-align:center; color:var(--text-muted);">
+                <i data-lucide="message-square" style="width:48px; height:48px; margin-bottom:12px; opacity:0.4;"></i>
+                <p style="margin:0;">No buyer enquiries recorded yet.</p>
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% endblock %}

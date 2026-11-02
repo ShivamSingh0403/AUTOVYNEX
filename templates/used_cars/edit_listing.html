@@ -1,0 +1,168 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Edit Listing: {{ listing.title }} — AUTOVYNEX Seller Studio{% endblock %}
+
+{% block content %}
+<div class="container" style="padding-top:24px; max-width:880px; margin:0 auto;">
+
+  <!-- Breadcrumbs -->
+  <div style="font-size:0.85rem; color:var(--text-muted); margin-bottom:12px;">
+    <a href="{% url 'used_cars:marketplace' %}">Used Cars</a> /
+    <a href="{% url 'used_cars:my_listings' %}">My Listings</a> /
+    <strong>Edit Listing</strong>
+  </div>
+
+  <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:16px; margin-bottom:28px;">
+    <div>
+      <h1 style="font-size:1.85rem; margin:0;">Edit Vehicle Listing</h1>
+      <p style="color:var(--text-muted); font-size:0.95rem; margin-top:4px;">
+        Update asking price, odometer reading, vehicle condition notes, or upload additional photographs.
+      </p>
+    </div>
+
+    <a href="{% url 'used_cars:my_listings' %}" class="btn btn-secondary btn-sm">
+      <i data-lucide="arrow-left"></i> Cancel & Back
+    </a>
+  </div>
+
+  <div class="card" style="padding:32px; background:var(--bg-surface-elevated); margin-bottom:48px;">
+    <form method="POST" action="{% url 'used_cars:edit_listing' listing.id %}" enctype="multipart/form-data">
+      {% csrf_token %}
+
+      <div class="form-group" style="margin-bottom:20px;">
+        <label class="form-label">Listing Title *</label>
+        {{ form.title }}
+      </div>
+
+      <div class="grid-3" style="gap:16px; margin-bottom:20px;">
+        <div class="form-group">
+          <label class="form-label">Make / Brand *</label>
+          {{ form.make_name }}
+        </div>
+        <div class="form-group">
+          <label class="form-label">Model Name *</label>
+          {{ form.model_name }}
+        </div>
+        <div class="form-group">
+          <label class="form-label">Variant Trim</label>
+          {{ form.variant_name }}
+        </div>
+      </div>
+
+      <div class="grid-3" style="gap:16px; margin-bottom:20px;">
+        <div class="form-group">
+          <label class="form-label">Manufacturing Year *</label>
+          {{ form.year }}
+        </div>
+        <div class="form-group">
+          <label class="form-label">Registration Year</label>
+          {{ form.registration_year }}
+        </div>
+        <div class="form-group">
+          <label class="form-label">Kilometres Driven *</label>
+          {{ form.mileage }}
+        </div>
+      </div>
+
+      <div class="grid-3" style="gap:16px; margin-bottom:20px;">
+        <div class="form-group">
+          <label class="form-label">Fuel Type *</label>
+          {{ form.fuel_type }}
+        </div>
+        <div class="form-group">
+          <label class="form-label">Transmission *</label>
+          {{ form.transmission }}
+        </div>
+        <div class="form-group">
+          <label class="form-label">Reported Condition *</label>
+          {{ form.condition }}
+        </div>
+      </div>
+
+      <div class="grid-2" style="gap:20px; margin-bottom:20px;">
+        <div class="form-group">
+          <label class="form-label">Asking Price (₹ INR) *</label>
+          {{ form.expected_price }}
+        </div>
+        <div class="form-group">
+          <label class="form-label">Number of Previous Owners</label>
+          {{ form.owners_count }}
+        </div>
+      </div>
+
+      <div class="grid-3" style="gap:16px; margin-bottom:20px;">
+        <div class="form-group">
+          <label class="form-label">City *</label>
+          {{ form.location_city }}
+        </div>
+        <div class="form-group">
+          <label class="form-label">Locality / Area</label>
+          {{ form.location_area }}
+        </div>
+        <div class="form-group">
+          <label class="form-label">Registration State</label>
+          {{ form.registration_state }}
+        </div>
+      </div>
+
+      <div class="form-group" style="margin-bottom:20px;">
+        <label class="form-label">Description & Seller Notes *</label>
+        {{ form.description }}
+      </div>
+
+      <!-- Current Primary Image -->
+      <div class="form-group" style="margin-bottom:20px;">
+        <label class="form-label">Replace Primary Cover Image</label>
+        {% if listing.primary_image %}
+          <div style="width:120px; height:80px; border-radius:6px; overflow:hidden; margin-bottom:8px; border:1px solid var(--border-subtle);">
+            <img src="{{ listing.primary_image.url }}" alt="Cover" style="width:100%; height:100%; object-fit:cover;">
+          </div>
+        {% endif %}
+        {{ form.primary_image }}
+      </div>
+
+      <!-- Existing Gallery Photos -->
+      {% if gallery_images %}
+        <div style="margin-bottom:20px;">
+          <label class="form-label">Existing Gallery Photographs ({{ gallery_images.count }})</label>
+          <div style="display:flex; gap:10px; flex-wrap:wrap; margin-top:6px;">
+            {% for g in gallery_images %}
+              <div style="width:90px; height:65px; border-radius:6px; overflow:hidden; border:1px solid var(--border-subtle);">
+                <img src="{{ g.image.url }}" alt="Gallery" style="width:100%; height:100%; object-fit:cover;">
+              </div>
+            {% endfor %}
+          </div>
+        </div>
+      {% endif %}
+
+      <!-- Upload Additional Gallery Photos -->
+      <div class="form-group" style="margin-bottom:24px;">
+        <label class="form-label">Upload Additional Gallery Photos</label>
+        {{ form.gallery_images }}
+      </div>
+
+      <!-- Contact Permission -->
+      <div style="padding:14px; background:var(--bg-surface-subtle); border-radius:8px; margin-bottom:28px;">
+        <div class="form-group" style="margin-bottom:8px;">
+          <label style="display:flex; align-items:center; gap:8px; cursor:pointer;">
+            {{ form.allow_phone_contact }}
+            <span style="font-size:0.85rem; font-weight:600;">Display phone contact number to signed-in buyers</span>
+          </label>
+        </div>
+        <div class="form-group" style="margin:0;">
+          <label class="form-label" style="font-size:0.75rem;">Contact Phone</label>
+          {{ form.contact_phone }}
+        </div>
+      </div>
+
+      <div style="display:flex; justify-content:flex-end; gap:12px;">
+        <a href="{% url 'used_cars:my_listings' %}" class="btn btn-secondary">Cancel</a>
+        <button type="submit" class="btn btn-primary" style="padding:10px 24px; font-weight:700;">
+          <i data-lucide="check"></i> Save & Update Listing
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}

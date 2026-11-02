@@ -1,136 +1,428 @@
 {% extends 'base.html' %}
+{% load static %}
 
 {% block title %}{{ listing.title }} — AUTOVYNEX Pre-Owned{% endblock %}
 
 {% block content %}
 <div class="container" style="padding-top:24px;">
-  <!-- Breadcrumbs -->
-  <div style="font-size:0.85rem; color:var(--text-muted); margin-bottom:20px;">
-    <a href="{% url 'used_cars:marketplace' %}">Used Cars</a> /
-    <a href="{% url 'used_cars:marketplace' %}?make={{ listing.make_name }}">{{ listing.make_name }}</a> /
-    <strong>{{ listing.title|truncatewords:5 }}</strong>
-  </div>
 
-  <div style="display:grid; grid-template-columns: 1.2fr 0.8fr; gap:40px; margin-bottom:48px;" class="grid-car-detail">
-    <!-- Visual & Inspection Column -->
-    <div>
-      <div class="card" style="height:320px; background:#0f172a; color:#fff; display:flex; flex-direction:column; justify-content:center; align-items:center; position:relative; border-radius:var(--radius-xl); overflow:hidden; margin-bottom:24px;">
-        <i data-lucide="car" style="width:120px; height:120px; color:#38bdf8; stroke-width:1.2;"></i>
-        <span class="badge badge-verified" style="position:absolute; top:20px; right:20px; font-size:0.88rem; padding:6px 14px;">
-          ★ {{ listing.condition_rating }} Inspection Score
-        </span>
-        <div style="position:absolute; bottom:20px; left:24px; font-size:0.9rem; background:rgba(0,0,0,0.65); padding:4px 12px; border-radius:6px;">
-          <i data-lucide="map-pin" style="width:14px; vertical-align:middle;"></i> {{ listing.location_city }}, {{ listing.registration_state }}
-        </div>
-      </div>
-
-      <!-- 100-Point Inspection Highlights -->
-      <div class="card" style="margin-bottom:24px;">
-        <h3 style="font-size:1.15rem; margin-bottom:14px; color:var(--color-primary); display:flex; align-items:center; gap:8px;">
-          <i data-lucide="shield-check"></i> AUTOVYNEX 100-Point Inspection Checklist
-        </h3>
-        <div class="grid-2" style="gap:12px; font-size:0.88rem;">
-          <div style="display:flex; align-items:center; gap:8px; color:#047857;">
-            <i data-lucide="check" style="width:16px;"></i> Engine Compression Tested (Normal)
-          </div>
-          <div style="display:flex; align-items:center; gap:8px; color:#047857;">
-            <i data-lucide="check" style="width:16px;"></i> Non-Accidental Chassis Alignment
-          </div>
-          <div style="display:flex; align-items:center; gap:8px; color:#047857;">
-            <i data-lucide="check" style="width:16px;"></i> Brake Pad Wear: 6.5mm (Good)
-          </div>
-          <div style="display:flex; align-items:center; gap:8px; color:#047857;">
-            <i data-lucide="check" style="width:16px;"></i> AC Temperature: 7.2°C at vent
-          </div>
-          <div style="display:flex; align-items:center; gap:8px; color:#047857;">
-            <i data-lucide="check" style="width:16px;"></i> No Structural Flood/Water Immersion
-          </div>
-          <div style="display:flex; align-items:center; gap:8px; color:#047857;">
-            <i data-lucide="check" style="width:16px;"></i> Electrical OBD Scanner: 0 Trouble Codes
-          </div>
-        </div>
-      </div>
-
-      <!-- Vehicle Description -->
-      <div class="card">
-        <h3 style="font-size:1.15rem; margin-bottom:12px;">Seller's Description & Condition Notes</h3>
-        <p style="color:var(--text-muted); line-height:1.7; font-size:0.95rem; margin:0;">
-          {{ listing.description }}
-        </p>
-      </div>
+  <!-- Breadcrumbs & Quick Actions -->
+  <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px; margin-bottom:20px;">
+    <div style="font-size:0.85rem; color:var(--text-muted);">
+      <a href="{% url 'used_cars:marketplace' %}">Used Cars</a> /
+      <a href="{% url 'used_cars:marketplace' %}?make={{ listing.make_name }}">{{ listing.make_name }}</a> /
+      <strong style="color:var(--text-main);">{{ listing.title|truncatewords:6 }}</strong>
     </div>
 
-    <!-- Pricing, Specs & Contact Seller Column -->
-    <div>
-      <div class="card" style="position:sticky; top:calc(var(--nav-height) + 20px);">
-        <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:8px;">
-          <span class="badge badge-universal">{{ listing.year }} Model</span>
-          <a href="{% url 'used_cars:toggle_compare' listing.id %}" class="btn btn-secondary btn-sm" style="padding:4px 10px; font-size:0.75rem;">
-            <i data-lucide="columns-3"></i> {% if is_in_compare %}In Matrix{% else %}+ Compare{% endif %}
-          </a>
-        </div>
+    <div style="display:flex; gap:8px; align-items:center;">
+      <!-- Wishlist Action -->
+      {% if user.is_authenticated %}
+        <a href="{% url 'used_cars:toggle_wishlist' listing.id %}" class="btn btn-secondary btn-sm" style="{% if is_wishlisted %}color:#ef4444; border-color:#ef4444;{% endif %}">
+          <i data-lucide="heart" style="width:16px; {% if is_wishlisted %}fill:#ef4444;{% endif %}"></i>
+          <span>{% if is_wishlisted %}Saved in Wishlist{% else %}Save to Wishlist{% endif %}</span>
+        </a>
+      {% else %}
+        <a href="{% url 'accounts:login' %}?next={{ request.get_full_path }}" class="btn btn-secondary btn-sm">
+          <i data-lucide="heart" style="width:16px;"></i> Save to Wishlist
+        </a>
+      {% endif %}
 
-        <h1 style="font-size:1.6rem; margin-bottom:12px; line-height:1.3;">{{ listing.title }}</h1>
+      <!-- Compare Action -->
+      <a href="{% url 'used_cars:toggle_compare' listing.id %}" class="btn btn-secondary btn-sm" style="{% if is_in_compare %}background:var(--color-primary); color:#fff; border-color:var(--color-primary);{% endif %}">
+        <i data-lucide="columns-3" style="width:16px;"></i>
+        <span>{% if is_in_compare %}In Comparison (View){% else %}+ Compare{% endif %}</span>
+      </a>
 
-        <!-- Price -->
-        <div style="margin-bottom:20px; padding-bottom:16px; border-bottom:1px solid var(--border-subtle);">
-          <div style="font-size:0.8rem; color:var(--text-muted);">Expected Asking Price</div>
-          <div style="font-family:var(--font-heading); font-size:2.2rem; font-weight:800; color:var(--color-primary);">
-            ₹{{ listing.expected_price|floatformat:0 }}
-          </div>
-        </div>
+      <!-- Share Action -->
+      <button type="button" class="btn btn-secondary btn-sm" id="btn-share-listing" title="Copy listing link">
+        <i data-lucide="share-2" style="width:16px;"></i> Share
+      </button>
 
-        <!-- Specifications Matrix -->
-        <div style="display:flex; flex-direction:column; gap:10px; font-size:0.88rem; margin-bottom:24px;">
-          <div style="display:flex; justify-content:space-between;">
-            <span style="color:var(--text-muted);">Odometer</span>
-            <strong>{{ listing.mileage|floatformat:0 }} KM</strong>
-          </div>
-          <div style="display:flex; justify-content:space-between;">
-            <span style="color:var(--text-muted);">Fuel Type</span>
-            <strong>{{ listing.fuel_type }}</strong>
-          </div>
-          <div style="display:flex; justify-content:space-between;">
-            <span style="color:var(--text-muted);">Transmission</span>
-            <strong>{{ listing.transmission }}</strong>
-          </div>
-          <div style="display:flex; justify-content:space-between;">
-            <span style="color:var(--text-muted);">Previous Owners</span>
-            <strong>{{ listing.owners_count }}</strong>
-          </div>
-          <div style="display:flex; justify-content:space-between;">
-            <span style="color:var(--text-muted);">Registration State</span>
-            <strong>{{ listing.registration_state }}</strong>
-          </div>
-        </div>
+      <!-- Report Listing Trigger -->
+      <button type="button" class="btn btn-secondary btn-sm" id="btn-open-report-modal" style="color:var(--text-muted); font-size:0.75rem;" title="Report inaccurate listing">
+        <i data-lucide="flag" style="width:14px;"></i> Report
+      </button>
+    </div>
+  </div>
 
-        <!-- Contact Seller Lead Form -->
-        <div style="background:var(--bg-surface-subtle); padding:16px; border-radius:var(--radius-md); border:1px solid var(--border-subtle); margin-bottom:16px;">
-          <h4 style="font-size:0.95rem; margin-bottom:10px; color:var(--color-primary);"><i data-lucide="mail"></i> Contact Verified Seller</h4>
-          <form method="POST" action="{% url 'used_cars:listing_detail' listing.slug %}">
-            {% csrf_token %}
-            <div class="form-group" style="margin-bottom:10px;">
-              <input type="text" name="buyer_name" required placeholder="Your Name" class="form-control" style="font-size:0.85rem; padding:8px 12px;" value="{{ user.get_full_name|default:user.username }}">
+  <!-- Main 2-Column Detail Layout -->
+  <div style="display:grid; grid-template-columns: 1.3fr 0.7fr; gap:36px; margin-bottom:48px;" class="grid-car-detail">
+
+    <!-- Left Column: Gallery, Specs, Description, Similar -->
+    <div style="display:flex; flex-direction:column; gap:28px;">
+
+      <!-- Image Gallery Hero + Thumbnails -->
+      <div class="card" style="padding:16px; background:var(--bg-surface-elevated); border-radius:var(--radius-xl); overflow:hidden;">
+        <!-- Large Hero Preview -->
+        <div style="height:420px; background:#0f172a; border-radius:var(--radius-lg); overflow:hidden; position:relative; display:flex; align-items:center; justify-content:center;">
+          {% if listing.primary_image %}
+            <img id="main-gallery-hero" src="{{ listing.primary_image.url }}" alt="{{ listing.title }}" style="width:100%; height:100%; object-fit:cover; transition:opacity 0.2s ease;">
+          {% elif gallery_images %}
+            <img id="main-gallery-hero" src="{{ gallery_images.0.image.url }}" alt="{{ listing.title }}" style="width:100%; height:100%; object-fit:cover; transition:opacity 0.2s ease;">
+          {% else %}
+            <div style="text-align:center; color:#64748b;">
+              <i data-lucide="car" style="width:96px; height:96px; stroke-width:1.2; color:#38bdf8;"></i>
+              <div style="margin-top:8px; font-size:0.9rem;">No Photographs Provided</div>
             </div>
-            <div class="form-group" style="margin-bottom:10px;">
-              <input type="tel" name="buyer_phone" required placeholder="Your Phone Number" class="form-control" style="font-size:0.85rem; padding:8px 12px;" value="{{ user.profile.phone|default:'+91 98765 43210' }}">
-            </div>
-            <div class="form-group" style="margin-bottom:12px;">
-              <input type="number" name="offer_amount" placeholder="Your Counter Offer in ₹ (Optional)" class="form-control" style="font-size:0.85rem; padding:8px 12px;">
-            </div>
-            <button type="submit" class="btn btn-primary btn-sm" style="width:100%; justify-content:center;">
-              <i data-lucide="send"></i> Request Inspection Callback
-            </button>
-          </form>
+          {% endif %}
+
+          <!-- Badges Overlay -->
+          <div style="position:absolute; top:16px; left:16px; display:flex; gap:8px;">
+            {% if listing.is_sample_listing %}
+              <span class="badge" style="background:rgba(15, 23, 42, 0.85); color:#94a3b8; border:1px solid rgba(255,255,255,0.2);">
+                <i data-lucide="sparkles" style="width:12px; vertical-align:middle;"></i> Sample Listing
+              </span>
+            {% else %}
+              <span class="badge" style="background:#087EFF; color:#fff;">
+                <i data-lucide="user-check" style="width:12px; vertical-align:middle;"></i> Genuine Seller
+              </span>
+            {% endif %}
+
+            {% if listing.is_verified %}
+              <span class="badge badge-verified">
+                <i data-lucide="shield-check" style="width:12px; vertical-align:middle;"></i> Certified Inspection
+              </span>
+            {% endif %}
+          </div>
+
+          <div style="position:absolute; bottom:16px; left:16px; background:rgba(0,0,0,0.7); backdrop-filter:blur(4px); color:#fff; font-size:0.85rem; padding:4px 12px; border-radius:6px; display:flex; align-items:center; gap:6px;">
+            <i data-lucide="map-pin" style="width:14px; height:14px; color:#38bdf8;"></i>
+            <span>{{ listing.location_city }}, {{ listing.location_state }}</span>
+          </div>
         </div>
 
-        <!-- Demo Notice as required -->
-        <div style="font-size:0.75rem; color:var(--text-muted); text-align:center;">
-          <i data-lucide="info" style="width:12px; vertical-align:middle;"></i>
-          Demonstration Listing: Not an active vehicle for real retail purchase.
+        <!-- Gallery Thumbnails Switcher Strip -->
+        {% if gallery_images or listing.primary_image %}
+          <div style="display:flex; gap:10px; overflow-x:auto; padding-top:14px; scrollbar-width:thin;">
+            {% if listing.primary_image %}
+              <div class="gallery-thumb active" onclick="switchGalleryHero('{{ listing.primary_image.url }}', this)" style="width:84px; height:60px; border-radius:6px; overflow:hidden; border:2px solid var(--color-primary); cursor:pointer; flex-shrink:0;">
+                <img src="{{ listing.primary_image.url }}" alt="Cover" style="width:100%; height:100%; object-fit:cover;">
+              </div>
+            {% endif %}
+
+            {% for img in gallery_images %}
+              <div class="gallery-thumb" onclick="switchGalleryHero('{{ img.image.url }}', this)" style="width:84px; height:60px; border-radius:6px; overflow:hidden; border:2px solid transparent; cursor:pointer; flex-shrink:0; position:relative;">
+                <img src="{{ img.image.url }}" alt="{{ img.caption|default:'Photo' }}" style="width:100%; height:100%; object-fit:cover;">
+                <span style="position:absolute; bottom:2px; right:2px; background:rgba(0,0,0,0.6); color:#fff; font-size:0.6rem; padding:1px 4px; border-radius:2px;">{{ img.photo_type|slice:":3"|upper }}</span>
+              </div>
+            {% endfor %}
+          </div>
+        {% endif %}
+      </div>
+
+      <!-- Vehicle Specifications Matrix Table -->
+      <div class="card" style="padding:24px;">
+        <h3 style="font-size:1.2rem; margin:0 0 16px 0; display:flex; align-items:center; gap:8px;">
+          <i data-lucide="info" style="color:var(--color-primary);"></i> Technical Specifications
+        </h3>
+
+        <div class="grid-3" style="gap:14px; font-size:0.88rem;">
+          <div style="padding:12px; background:var(--bg-surface-subtle); border-radius:8px;">
+            <div style="font-size:0.75rem; color:var(--text-muted); text-transform:uppercase;">Brand & Model</div>
+            <strong style="font-size:0.95rem; color:var(--text-main);">{{ listing.make_name }} {{ listing.model_name }}</strong>
+          </div>
+
+          <div style="padding:12px; background:var(--bg-surface-subtle); border-radius:8px;">
+            <div style="font-size:0.75rem; color:var(--text-muted); text-transform:uppercase;">Variant</div>
+            <strong style="font-size:0.95rem; color:var(--text-main);">{{ listing.variant_name|default:"Not specified" }}</strong>
+          </div>
+
+          <div style="padding:12px; background:var(--bg-surface-subtle); border-radius:8px;">
+            <div style="font-size:0.75rem; color:var(--text-muted); text-transform:uppercase;">Manufacturing Year</div>
+            <strong style="font-size:0.95rem; color:var(--text-main);">{{ listing.year }}</strong>
+          </div>
+
+          <div style="padding:12px; background:var(--bg-surface-subtle); border-radius:8px;">
+            <div style="font-size:0.75rem; color:var(--text-muted); text-transform:uppercase;">Registration Year</div>
+            <strong style="font-size:0.95rem; color:var(--text-main);">
+              {% if listing.registration_year %}{{ listing.registration_year }}{% else %}Not provided{% endif %}
+            </strong>
+          </div>
+
+          <div style="padding:12px; background:var(--bg-surface-subtle); border-radius:8px;">
+            <div style="font-size:0.75rem; color:var(--text-muted); text-transform:uppercase;">Kilometres Driven</div>
+            <strong style="font-size:0.95rem; color:var(--text-main);">{{ listing.mileage|floatformat:0 }} KM</strong>
+          </div>
+
+          <div style="padding:12px; background:var(--bg-surface-subtle); border-radius:8px;">
+            <div style="font-size:0.75rem; color:var(--text-muted); text-transform:uppercase;">Fuel Type</div>
+            <strong style="font-size:0.95rem; color:var(--text-main);">{{ listing.fuel_type }}</strong>
+          </div>
+
+          <div style="padding:12px; background:var(--bg-surface-subtle); border-radius:8px;">
+            <div style="font-size:0.75rem; color:var(--text-muted); text-transform:uppercase;">Transmission</div>
+            <strong style="font-size:0.95rem; color:var(--text-main);">{{ listing.transmission }}</strong>
+          </div>
+
+          <div style="padding:12px; background:var(--bg-surface-subtle); border-radius:8px;">
+            <div style="font-size:0.75rem; color:var(--text-muted); text-transform:uppercase;">Previous Owners</div>
+            <strong style="font-size:0.95rem; color:var(--text-main);">
+              {% if listing.owners_count %}{{ listing.owners_count }} Owner{% if listing.owners_count > 1 %}s{% endif %}{% else %}Not provided{% endif %}
+            </strong>
+          </div>
+
+          <div style="padding:12px; background:var(--bg-surface-subtle); border-radius:8px;">
+            <div style="font-size:0.75rem; color:var(--text-muted); text-transform:uppercase;">Vehicle Condition</div>
+            <strong style="font-size:0.95rem; color:var(--text-main);">{{ listing.get_condition_display }}</strong>
+          </div>
+
+          <div style="padding:12px; background:var(--bg-surface-subtle); border-radius:8px;">
+            <div style="font-size:0.75rem; color:var(--text-muted); text-transform:uppercase;">Registration State</div>
+            <strong style="font-size:0.95rem; color:var(--text-main);">{{ listing.registration_state|default:"Not specified" }}</strong>
+          </div>
+
+          <div style="padding:12px; background:var(--bg-surface-subtle); border-radius:8px;">
+            <div style="font-size:0.75rem; color:var(--text-muted); text-transform:uppercase;">Insurance Valid Till</div>
+            <strong style="font-size:0.95rem; color:var(--text-main);">
+              {% if listing.insurance_valid_till %}{{ listing.insurance_valid_till|date:"d M Y" }}{% else %}Not provided{% endif %}
+            </strong>
+          </div>
+
+          <div style="padding:12px; background:var(--bg-surface-subtle); border-radius:8px;">
+            <div style="font-size:0.75rem; color:var(--text-muted); text-transform:uppercase;">Location</div>
+            <strong style="font-size:0.95rem; color:var(--text-main);">{{ listing.location_city }}, {{ listing.location_state }}</strong>
+          </div>
         </div>
       </div>
+
+      <!-- Seller Description -->
+      <div class="card" style="padding:24px;">
+        <h3 style="font-size:1.2rem; margin:0 0 14px 0;">Seller's Description & Condition Notes</h3>
+        <p style="color:var(--text-muted); line-height:1.75; font-size:0.95rem; margin:0; white-space:pre-wrap;">{{ listing.description }}</p>
+      </div>
+
+      <!-- Honest Information Disclaimer Notice -->
+      <div style="padding:16px 20px; background:rgba(245, 158, 11, 0.08); border-left:4px solid #f59e0b; border-radius:var(--radius-md);">
+        <div style="display:flex; gap:12px; align-items:flex-start;">
+          <i data-lucide="alert-circle" style="width:20px; height:20px; color:#f59e0b; flex-shrink:0; margin-top:2px;"></i>
+          <div style="font-size:0.85rem; color:var(--text-muted); line-height:1.6;">
+            <strong style="color:var(--text-main);">Important Marketplace Advisory:</strong>
+            All specifications, condition statements, and odometer readings displayed for this vehicle are provided directly by the seller. AUTOVYNEX has not conducted an independent mechanical diagnosis unless explicitly certified with an official workshop report. We recommend having any used car physically inspected before transferring funds.
+          </div>
+        </div>
+      </div>
+
+      <!-- Similar Vehicles -->
+      {% if similar_cars %}
+        <div>
+          <h3 style="font-size:1.2rem; margin:0 0 16px 0;">Similar Pre-Owned Vehicles</h3>
+          <div class="grid-3" style="gap:16px;">
+            {% for s in similar_cars %}
+              <div class="card card-interactive" style="padding:0; overflow:hidden; display:flex; flex-direction:column; border:1px solid var(--border-subtle);">
+                <div style="height:140px; background:#101820; position:relative; overflow:hidden; display:flex; align-items:center; justify-content:center;">
+                  {% if s.primary_image %}
+                    <img src="{{ s.primary_image.url }}" alt="{{ s.title }}" style="width:100%; height:100%; object-fit:cover;">
+                  {% else %}
+                    <i data-lucide="car" style="width:40px; height:40px; color:#38bdf8;"></i>
+                  {% endif %}
+                  <div style="position:absolute; bottom:6px; left:8px; font-size:0.72rem; background:rgba(0,0,0,0.65); color:#fff; padding:2px 6px; border-radius:4px;">
+                    {{ s.year }} • {{ s.fuel_type }}
+                  </div>
+                </div>
+                <div style="padding:12px; display:flex; flex-direction:column; flex-grow:1;">
+                  <h4 style="font-size:0.95rem; margin:0 0 6px 0;">
+                    <a href="{% url 'used_cars:listing_detail' s.slug %}" style="color:var(--text-main); text-decoration:none;">{{ s.title|truncatewords:5 }}</a>
+                  </h4>
+                  <div style="font-size:0.78rem; color:var(--text-muted); margin-bottom:8px;">{{ s.location_city }} • {{ s.mileage|floatformat:0 }} KM</div>
+                  <div style="margin-top:auto; font-weight:800; color:var(--color-primary); font-size:1.1rem;">
+                    {{ s.formatted_inr_price }}
+                  </div>
+                </div>
+              </div>
+            {% endfor %}
+          </div>
+        </div>
+      {% endif %}
+    </div>
+
+    <!-- Right Column: Price, Seller Card, Enquiry Form -->
+    <div style="display:flex; flex-direction:column; gap:24px;">
+
+      <!-- Price & Overview Card -->
+      <div class="card" style="padding:24px; position:sticky; top:calc(var(--nav-height) + 16px);">
+        <div style="font-size:0.8rem; color:var(--text-muted); text-transform:uppercase; font-weight:600;">Asking Price</div>
+        <div style="font-family:var(--font-heading); font-size:2.2rem; font-weight:800; color:var(--color-primary); margin:4px 0 12px 0;">
+          {{ listing.formatted_inr_price }}
+        </div>
+        <div style="font-size:0.85rem; color:var(--text-muted); margin-bottom:20px;">
+          Ex-Showroom Estimate Base: <strong>₹{{ listing.expected_price|floatformat:0 }} INR</strong>
+        </div>
+
+        <!-- Seller Overview Box -->
+        <div style="padding:14px; background:var(--bg-surface-subtle); border-radius:var(--radius-md); margin-bottom:24px;">
+          <div style="font-size:0.75rem; color:var(--text-muted); text-transform:uppercase; margin-bottom:6px;">Seller Information</div>
+          <div style="display:flex; align-items:center; gap:10px; margin-bottom:8px;">
+            <div style="width:36px; height:36px; border-radius:50%; background:var(--color-primary); color:#fff; display:flex; align-items:center; justify-content:center; font-weight:700;">
+              {{ listing.seller.username|slice:":1"|upper }}
+            </div>
+            <div>
+              <div style="font-weight:700; font-size:0.95rem; color:var(--text-main);">
+                {{ listing.seller.get_full_name|default:listing.seller.username }}
+              </div>
+              <div style="font-size:0.75rem; color:var(--text-muted);">
+                Member on AUTOVYNEX since {{ listing.seller.date_joined|date:"M Y" }}
+              </div>
+            </div>
+          </div>
+
+          {% if listing.allow_phone_contact and user.is_authenticated and listing.contact_phone %}
+            <div style="padding:8px 12px; background:rgba(8,126,255,0.08); border:1px solid rgba(8,126,255,0.2); border-radius:6px; font-size:0.85rem; margin-top:8px;">
+              <i data-lucide="phone" style="width:14px; vertical-align:middle; color:var(--color-primary);"></i>
+              Direct Phone: <strong>{{ listing.contact_phone }}</strong>
+            </div>
+          {% else %}
+            <div style="font-size:0.78rem; color:var(--text-muted); margin-top:6px; display:flex; align-items:center; gap:6px;">
+              <i data-lucide="shield" style="width:14px; color:#10b981;"></i>
+              <span>Direct seller communication is secured via the enquiry form below to prevent unsolicited spam.</span>
+            </div>
+          {% endif %}
+        </div>
+
+        <!-- Contact Seller Enquiry Form -->
+        <h4 style="font-size:1.05rem; margin:0 0 12px 0; color:var(--text-main);">Contact Seller / Send Enquiry</h4>
+        <form method="POST" action="{% url 'used_cars:listing_detail' listing.slug %}">
+          {% csrf_token %}
+          <input type="hidden" name="submit_enquiry" value="1">
+
+          <div class="form-group" style="margin-bottom:12px;">
+            <label class="form-label" style="font-size:0.8rem;">Your Full Name *</label>
+            {{ enquiry_form.sender_name }}
+          </div>
+
+          <div class="form-group" style="margin-bottom:12px;">
+            <label class="form-label" style="font-size:0.8rem;">Email Address *</label>
+            {{ enquiry_form.sender_email }}
+          </div>
+
+          <div class="form-group" style="margin-bottom:12px;">
+            <label class="form-label" style="font-size:0.8rem;">Mobile Number *</label>
+            {{ enquiry_form.sender_phone }}
+          </div>
+
+          <div class="form-group" style="margin-bottom:12px;">
+            <label class="form-label" style="font-size:0.8rem;">Enquiry Purpose</label>
+            {{ enquiry_form.enquiry_type }}
+          </div>
+
+          <div class="form-group" style="margin-bottom:12px;">
+            <label class="form-label" style="font-size:0.8rem;">Purchase Offer (₹ INR, Optional)</label>
+            {{ enquiry_form.offer_amount }}
+          </div>
+
+          <div class="form-group" style="margin-bottom:16px;">
+            <label class="form-label" style="font-size:0.8rem;">Message / Specific Questions *</label>
+            {{ enquiry_form.message }}
+          </div>
+
+          <button type="submit" class="btn btn-primary" style="width:100%; padding:10px; font-weight:700;">
+            <i data-lucide="send"></i> Dispatch Enquiry to Seller
+          </button>
+        </form>
+      </div>
+
     </div>
   </div>
 </div>
+
+<!-- Report Listing Modal -->
+<div id="report-listing-modal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.6); z-index:1200; align-items:center; justify-content:center; padding:20px;">
+  <div class="card" style="max-width:500px; width:100%; padding:24px; background:var(--bg-surface-elevated); border-radius:var(--radius-lg);">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
+      <h3 style="font-size:1.2rem; margin:0; display:flex; align-items:center; gap:8px;">
+        <i data-lucide="flag" style="color:#ef4444;"></i> Report This Listing
+      </h3>
+      <button type="button" id="btn-close-report-modal" style="background:none; border:none; color:var(--text-muted); cursor:pointer;">
+        <i data-lucide="x"></i>
+      </button>
+    </div>
+
+    <p style="font-size:0.85rem; color:var(--text-muted); margin-bottom:16px;">
+      Help us keep AUTOVYNEX trusted. If this listing has misleading details, fraudulent intent, or incorrect pricing, let our moderation team know.
+    </p>
+
+    <form method="POST" action="{% url 'used_cars:listing_detail' listing.slug %}">
+      {% csrf_token %}
+      <input type="hidden" name="submit_report" value="1">
+
+      <div class="form-group" style="margin-bottom:12px;">
+        <label class="form-label" style="font-size:0.8rem;">Reason for Flagging *</label>
+        {{ report_form.reason }}
+      </div>
+
+      <div class="form-group" style="margin-bottom:12px;">
+        <label class="form-label" style="font-size:0.8rem;">Specific Details / Explanation *</label>
+        {{ report_form.details }}
+      </div>
+
+      <div class="form-group" style="margin-bottom:12px;">
+        <label class="form-label" style="font-size:0.8rem;">Your Name (Optional)</label>
+        {{ report_form.reporter_name }}
+      </div>
+
+      <div class="form-group" style="margin-bottom:18px;">
+        <label class="form-label" style="font-size:0.8rem;">Your Email (Optional)</label>
+        {{ report_form.reporter_email }}
+      </div>
+
+      <div style="display:flex; gap:10px; justify-content:flex-end;">
+        <button type="button" class="btn btn-secondary btn-sm" id="btn-cancel-report">Cancel</button>
+        <button type="submit" class="btn btn-primary btn-sm" style="background:#dc2626; border-color:#dc2626;">Submit Report</button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+  // Gallery Hero Switcher
+  function switchGalleryHero(imgUrl, element) {
+    const hero = document.getElementById('main-gallery-hero');
+    if (hero) {
+      hero.style.opacity = '0.4';
+      setTimeout(() => {
+        hero.src = imgUrl;
+        hero.style.opacity = '1';
+      }, 100);
+    }
+    document.querySelectorAll('.gallery-thumb').forEach(t => {
+      t.style.borderColor = 'transparent';
+    });
+    if (element) {
+      element.style.borderColor = 'var(--color-primary)';
+    }
+  }
+
+  // Share Listing Action (Clipboard copy with toast)
+  document.getElementById('btn-share-listing')?.addEventListener('click', () => {
+    navigator.clipboard.writeText(window.location.href).then(() => {
+      if (typeof showToast === 'function') {
+        showToast('Listing URL copied to clipboard!', 'success');
+      } else {
+        alert('Listing link copied to clipboard!');
+      }
+    }).catch(() => {
+      alert(window.location.href);
+    });
+  });
+
+  // Report Modal Toggling
+  const reportModal = document.getElementById('report-listing-modal');
+  const openReportBtn = document.getElementById('btn-open-report-modal');
+  const closeReportBtn = document.getElementById('btn-close-report-modal');
+  const cancelReportBtn = document.getElementById('btn-cancel-report');
+
+  if (openReportBtn && reportModal) {
+    openReportBtn.addEventListener('click', () => {
+      reportModal.style.display = 'flex';
+      if (typeof lucide !== 'undefined') lucide.createIcons();
+    });
+  }
+  if (closeReportBtn) {
+    closeReportBtn.addEventListener('click', () => { reportModal.style.display = 'none'; });
+  }
+  if (cancelReportBtn) {
+    cancelReportBtn.addEventListener('click', () => { reportModal.style.display = 'none'; });
+  }
+</script>
 {% endblock %}

@@ -1,0 +1,96 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}My Submitted Car Enquiries — AUTOVYNEX{% endblock %}
+
+{% block content %}
+<div class="container" style="padding-top:24px;">
+
+  <!-- Breadcrumbs & Header -->
+  <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:16px; margin-bottom:28px;">
+    <div>
+      <div style="font-size:0.85rem; color:var(--text-muted); margin-bottom:6px;">
+        <a href="{% url 'used_cars:marketplace' %}">Used Cars</a> /
+        <strong>My Sent Enquiries</strong>
+      </div>
+      <h1 style="font-size:1.85rem; margin:0;">My Vehicle Enquiries ({{ enquiries.count }})</h1>
+      <p style="color:var(--text-muted); font-size:0.95rem; margin-top:4px;">
+        Track the status of your purchase offers, inspection requests, and seller communications.
+      </p>
+    </div>
+
+    <div style="display:flex; gap:10px;">
+      <a href="{% url 'used_cars:marketplace' %}" class="btn btn-primary btn-sm">
+        <i data-lucide="car"></i> Browse Pre-Owned Cars
+      </a>
+    </div>
+  </div>
+
+  {% if enquiries %}
+    <div style="display:flex; flex-direction:column; gap:16px; margin-bottom:48px;">
+      {% for eq in enquiries %}
+        <div class="card" style="padding:20px; background:var(--bg-surface-elevated); border:1px solid var(--border-subtle); border-radius:var(--radius-lg);">
+          <div style="display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:12px; margin-bottom:12px;">
+            <div>
+              <div style="display:flex; align-items:center; gap:8px;">
+                <span style="font-family:monospace; font-weight:700; color:var(--color-primary); font-size:0.85rem;">
+                  {{ eq.reference_code }}
+                </span>
+                <span class="badge" style="background:var(--bg-surface-subtle); color:var(--text-muted);">
+                  {{ eq.get_enquiry_type_display }}
+                </span>
+                {% if eq.status == 'new' %}
+                  <span class="badge" style="background:#78350f; color:#fde68a;">Sent — Awaiting Seller Response</span>
+                {% elif eq.status == 'in_review' %}
+                  <span class="badge" style="background:#1e3a8a; color:#93c5fd;">Seller Reviewing</span>
+                {% elif eq.status == 'contacted' %}
+                  <span class="badge" style="background:#065f46; color:#a7f3d0;">Seller Responded</span>
+                {% elif eq.status == 'closed' %}
+                  <span class="badge" style="background:#334155; color:#cbd5e1;">Resolved / Closed</span>
+                {% endif %}
+              </div>
+              <h3 style="font-size:1.1rem; margin:6px 0 0 0;">
+                <a href="{% url 'used_cars:listing_detail' eq.listing.slug %}" style="color:var(--text-main);">{{ eq.listing.title }}</a>
+              </h3>
+            </div>
+
+            <div style="text-align:right;">
+              <div style="font-size:0.75rem; color:var(--text-muted);">Sent on {{ eq.created_at|date:"d M Y, h:i A" }}</div>
+              {% if eq.offer_amount %}
+                <div style="margin-top:2px; font-size:0.85rem;">
+                  Your Offer: <strong style="color:var(--color-primary);">₹{{ eq.offer_amount|floatformat:0 }}</strong>
+                </div>
+              {% endif %}
+            </div>
+          </div>
+
+          <div style="padding:12px 14px; background:var(--bg-surface-subtle); border-radius:6px; font-size:0.85rem; color:var(--text-muted); line-height:1.5;">
+            <strong style="color:var(--text-main);">Your Query:</strong> {{ eq.message }}
+          </div>
+
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-top:14px; font-size:0.8rem; color:var(--text-muted);">
+            <div>Seller: <strong>{{ eq.listing.seller.username }}</strong> ({{ eq.listing.location_city }})</div>
+            <a href="{% url 'used_cars:listing_detail' eq.listing.slug %}" class="btn btn-secondary btn-sm" style="font-size:0.75rem; padding:4px 10px;">
+              View Listing
+            </a>
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+  {% else %}
+    <!-- Empty State -->
+    <div class="card" style="padding:64px 20px; text-align:center; max-width:600px; margin:0 auto 48px auto;">
+      <div style="width:72px; height:72px; border-radius:50%; background:rgba(8,126,255,0.1); color:var(--color-primary); display:flex; align-items:center; justify-content:center; margin:0 auto 16px auto;">
+        <i data-lucide="send" style="width:36px; height:36px;"></i>
+      </div>
+      <h3 style="font-size:1.3rem; margin:0 0 8px 0;">No Sent Enquiries Found</h3>
+      <p style="color:var(--text-muted); font-size:0.95rem; margin:0 0 24px 0;">
+        When you submit purchase offers, request inspection details, or contact sellers on the marketplace, your enquiries will be tracked here.
+      </p>
+      <a href="{% url 'used_cars:marketplace' %}" class="btn btn-primary">
+        <i data-lucide="car"></i> Explore Marketplace
+      </a>
+    </div>
+  {% endif %}
+</div>
+{% endblock %}

@@ -1,0 +1,134 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Received Buyer Enquiries — Seller Studio | AUTOVYNEX{% endblock %}
+
+{% block content %}
+<div class="container" style="padding-top:24px;">
+
+  <!-- Breadcrumbs & Header -->
+  <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:16px; margin-bottom:28px;">
+    <div>
+      <div style="font-size:0.85rem; color:var(--text-muted); margin-bottom:6px;">
+        <a href="{% url 'used_cars:marketplace' %}">Used Cars</a> /
+        <a href="{% url 'used_cars:my_listings' %}">Seller Studio</a> /
+        <strong>Received Enquiries</strong>
+      </div>
+      <h1 style="font-size:1.85rem; margin:0;">Received Buyer Enquiries ({{ enquiries.count }})</h1>
+      <p style="color:var(--text-muted); font-size:0.95rem; margin-top:4px;">
+        Review buyer contact requests, inspection queries, and purchase offers for your listed vehicles.
+      </p>
+    </div>
+
+    <div style="display:flex; gap:10px;">
+      <a href="{% url 'used_cars:my_listings' %}" class="btn btn-secondary btn-sm">
+        <i data-lucide="arrow-left"></i> My Listings
+      </a>
+      <a href="{% url 'used_cars:create_listing' %}" class="btn btn-primary btn-sm">
+        <i data-lucide="plus"></i> Add Another Car
+      </a>
+    </div>
+  </div>
+
+  {% if enquiries %}
+    <div style="display:flex; flex-direction:column; gap:20px; margin-bottom:48px;">
+      {% for eq in enquiries %}
+        <div class="card" style="padding:24px; background:var(--bg-surface-elevated); border:1px solid var(--border-subtle); border-radius:var(--radius-lg);">
+          <div style="display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:12px; margin-bottom:16px; border-bottom:1px solid var(--border-subtle); padding-bottom:12px;">
+            <div>
+              <div style="display:flex; align-items:center; gap:8px;">
+                <span style="font-family:monospace; font-weight:700; color:var(--color-primary); font-size:0.9rem;">
+                  {{ eq.reference_code }}
+                </span>
+                <span class="badge" style="background:var(--bg-surface-subtle); color:var(--text-muted);">
+                  {{ eq.get_enquiry_type_display }}
+                </span>
+                {% if eq.status == 'new' %}
+                  <span class="badge" style="background:#78350f; color:#fde68a;">New</span>
+                {% elif eq.status == 'in_review' %}
+                  <span class="badge" style="background:#1e3a8a; color:#93c5fd;">In Review</span>
+                {% elif eq.status == 'contacted' %}
+                  <span class="badge" style="background:#065f46; color:#a7f3d0;">Contacted</span>
+                {% elif eq.status == 'closed' %}
+                  <span class="badge" style="background:#334155; color:#cbd5e1;">Closed</span>
+                {% endif %}
+              </div>
+              <h3 style="font-size:1.15rem; margin:6px 0 0 0;">
+                Regarding: <a href="{% url 'used_cars:listing_detail' eq.listing.slug %}" style="color:var(--text-main);">{{ eq.listing.title }}</a>
+              </h3>
+            </div>
+
+            <div style="text-align:right;">
+              <div style="font-size:0.75rem; color:var(--text-muted);">Received on {{ eq.created_at|date:"d M Y, h:i A" }}</div>
+              {% if eq.offer_amount %}
+                <div style="margin-top:4px;">
+                  <span style="font-size:0.75rem; color:var(--text-muted);">Buyer Offer:</span>
+                  <strong style="font-size:1.2rem; color:var(--color-primary);">₹{{ eq.offer_amount|floatformat:0 }}</strong>
+                </div>
+              {% endif %}
+            </div>
+          </div>
+
+          <div class="grid-2" style="gap:24px; margin-bottom:18px;">
+            <!-- Buyer Contact & Message -->
+            <div>
+              <div style="font-size:0.75rem; color:var(--text-muted); text-transform:uppercase; margin-bottom:4px;">Buyer Details</div>
+              <div style="font-weight:700; font-size:0.95rem; color:var(--text-main);">{{ eq.sender_name }}</div>
+              <div style="font-size:0.85rem; color:var(--text-muted); margin-bottom:12px;">
+                <i data-lucide="mail" style="width:12px; vertical-align:middle;"></i> {{ eq.sender_email }} •
+                <i data-lucide="phone" style="width:12px; vertical-align:middle;"></i> {{ eq.sender_phone }}
+              </div>
+
+              <div style="font-size:0.75rem; color:var(--text-muted); text-transform:uppercase; margin-bottom:4px;">Buyer Message</div>
+              <div style="padding:12px 14px; background:var(--bg-surface-subtle); border-radius:6px; font-size:0.88rem; color:var(--text-main); line-height:1.6;">
+                {{ eq.message }}
+              </div>
+            </div>
+
+            <!-- Seller Follow-Up Form -->
+            <div style="background:var(--bg-surface-subtle); padding:16px; border-radius:8px;">
+              <div style="font-size:0.75rem; color:var(--text-muted); text-transform:uppercase; margin-bottom:10px;">Update Enquiry Status & Notes</div>
+
+              <form method="POST" action="{% url 'used_cars:update_enquiry_status' eq.id %}">
+                {% csrf_token %}
+                <div class="form-group" style="margin-bottom:10px;">
+                  <label class="form-label" style="font-size:0.75rem;">Status</label>
+                  <select name="status" class="form-select" style="font-size:0.85rem; padding:6px 10px;">
+                    <option value="new" {% if eq.status == 'new' %}selected{% endif %}>New</option>
+                    <option value="in_review" {% if eq.status == 'in_review' %}selected{% endif %}>In Review</option>
+                    <option value="contacted" {% if eq.status == 'contacted' %}selected{% endif %}>Buyer Contacted / Followed Up</option>
+                    <option value="closed" {% if eq.status == 'closed' %}selected{% endif %}>Deal Closed / Resolved</option>
+                  </select>
+                </div>
+
+                <div class="form-group" style="margin-bottom:12px;">
+                  <label class="form-label" style="font-size:0.75rem;">Private Seller Notes / Follow-Up Details</label>
+                  <textarea name="seller_notes" rows="2" class="form-control" style="font-size:0.82rem;" placeholder="e.g. Spoke over WhatsApp, scheduled inspection for Saturday 11am...">{{ eq.seller_notes }}</textarea>
+                </div>
+
+                <button type="submit" class="btn btn-primary btn-sm" style="font-size:0.8rem; padding:6px 14px;">
+                  <i data-lucide="save"></i> Save Follow-Up Status
+                </button>
+              </form>
+            </div>
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+  {% else %}
+    <!-- Empty Enquiries State -->
+    <div class="card" style="padding:64px 20px; text-align:center; max-width:600px; margin:0 auto 48px auto;">
+      <div style="width:72px; height:72px; border-radius:50%; background:rgba(8,126,255,0.1); color:var(--color-primary); display:flex; align-items:center; justify-content:center; margin:0 auto 16px auto;">
+        <i data-lucide="message-square" style="width:36px; height:36px;"></i>
+      </div>
+      <h3 style="font-size:1.3rem; margin:0 0 8px 0;">No Buyer Enquiries Yet</h3>
+      <p style="color:var(--text-muted); font-size:0.95rem; margin:0 0 24px 0;">
+        When potential buyers express interest, make purchase offers, or ask questions regarding your vehicles, their enquiries will appear here.
+      </p>
+      <a href="{% url 'used_cars:my_listings' %}" class="btn btn-secondary">
+        <i data-lucide="car"></i> View Your Listings
+      </a>
+    </div>
+  {% endif %}
+</div>
+{% endblock %}

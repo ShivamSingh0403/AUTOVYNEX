@@ -1,119 +1,217 @@
 {% extends 'base.html' %}
+{% load static %}
 
-{% block title %}Compare Used Cars — Side-by-Side Matrix | AUTOVYNEX{% endblock %}
+{% block title %}Compare Pre-Owned Vehicles Side-by-Side | AUTOVYNEX{% endblock %}
 
 {% block content %}
 <div class="container" style="padding-top:24px;">
+
+  <!-- Breadcrumbs & Header -->
   <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:16px; margin-bottom:28px;">
     <div>
-      <div style="font-size:0.85rem; color:var(--text-muted); margin-bottom:4px;">
-        <a href="{% url 'used_cars:marketplace' %}">Marketplace</a> / <span>Comparison Matrix</span>
+      <div style="font-size:0.85rem; color:var(--text-muted); margin-bottom:6px;">
+        <a href="{% url 'used_cars:marketplace' %}">Used Cars</a> /
+        <strong>Comparison Matrix</strong>
       </div>
-      <h1 style="font-size:1.85rem; margin:0;">Side-by-Side Car Comparison</h1>
+      <h1 style="font-size:1.85rem; margin:0;">Vehicle Comparison Matrix</h1>
+      <p style="color:var(--text-muted); font-size:0.95rem; margin-top:4px;">
+        Side-by-side technical evaluation for up to 3 cars with transparent specification diff highlighting.
+      </p>
     </div>
 
-    {% if cars %}
     <div style="display:flex; gap:10px;">
-      <a href="{% url 'used_cars:clear_compare' %}" class="btn btn-secondary btn-sm" style="color:var(--color-danger);">
-        <i data-lucide="trash-2"></i> Clear Matrix
-      </a>
+      {% if cars %}
+        <a href="{% url 'used_cars:clear_compare' %}" class="btn btn-secondary btn-sm" onclick="return confirm('Clear all cars from comparison matrix?');">
+          <i data-lucide="trash-2"></i> Clear Matrix
+        </a>
+      {% endif %}
       <a href="{% url 'used_cars:marketplace' %}" class="btn btn-primary btn-sm">
-        <i data-lucide="plus"></i> Add Another Car
+        <i data-lucide="plus"></i> Browse More Cars
       </a>
     </div>
-    {% endif %}
   </div>
 
   {% if cars %}
-  <div class="card" style="padding:0; overflow-x:auto;">
-    <table style="width:100%; border-collapse:collapse; min-width:600px; font-size:0.92rem;">
-      <thead>
-        <tr style="background:var(--bg-surface-subtle); border-bottom:1px solid var(--border-subtle);">
-          <th style="padding:16px 20px; text-align:left; width:220px; color:var(--text-muted);">Vehicle Attribute</th>
-          {% for car in cars %}
-            <th style="padding:16px 20px; text-align:left; font-size:1.05rem;">
-              <div style="display:flex; justify-content:space-between; align-items:center;">
-                <a href="{% url 'used_cars:listing_detail' car.slug %}" style="color:var(--text-main); font-weight:700;">{{ car.make_name }} {{ car.model_name }}</a>
-                <a href="{% url 'used_cars:toggle_compare' car.id %}" style="color:var(--color-danger); font-size:0.75rem; text-decoration:none;"><i data-lucide="x" style="width:16px;"></i></a>
-              </div>
-            </th>
-          {% endfor %}
-        </tr>
-      </thead>
-      <tbody>
-        <tr style="border-bottom:1px solid var(--border-subtle);">
-          <td style="padding:14px 20px; font-weight:600; color:var(--text-muted);">Offered Price</td>
-          {% for car in cars %}
-            <td style="padding:14px 20px; font-family:var(--font-heading); font-size:1.25rem; font-weight:800; color:var(--color-primary);">₹{{ car.expected_price|floatformat:0 }}</td>
-          {% endfor %}
-        </tr>
+    <!-- Differences Legend Pill -->
+    <div style="display:flex; align-items:center; gap:8px; margin-bottom:20px; font-size:0.82rem; color:var(--text-muted);">
+      <span style="display:inline-block; width:12px; height:12px; background:rgba(8,126,255,0.18); border:1px solid var(--color-primary); border-radius:2px;"></span>
+      <span>Highlighted rows signify differing specifications between compared vehicles.</span>
+    </div>
 
-        <tr style="border-bottom:1px solid var(--border-subtle); background:var(--bg-surface-subtle);">
-          <td style="padding:14px 20px; font-weight:600; color:var(--text-muted);">Registration Year</td>
-          {% for car in cars %}
-            <td style="padding:14px 20px; font-weight:700;">{{ car.year }}</td>
-          {% endfor %}
-        </tr>
+    <!-- Comparison Table Container -->
+    <div class="card" style="padding:0; overflow:hidden; margin-bottom:48px; border:1px solid var(--border-subtle); border-radius:var(--radius-xl);">
+      <div style="overflow-x:auto;">
+        <table style="width:100%; border-collapse:collapse; min-width:680px; font-size:0.9rem;">
+          <thead>
+            <tr style="background:var(--bg-surface-subtle); border-bottom:2px solid var(--border-subtle);">
+              <th style="padding:20px; width:22%; font-size:0.85rem; color:var(--text-muted); text-transform:uppercase; vertical-align:top;">
+                Vehicle Card
+              </th>
+              {% for car in cars %}
+                <th style="padding:20px; width:26%; vertical-align:top; border-left:1px solid var(--border-subtle); position:relative;">
+                  <!-- Remove Car Action -->
+                  <a href="{% url 'used_cars:toggle_compare' car.id %}" style="position:absolute; top:12px; right:12px; color:var(--text-muted); background:rgba(0,0,0,0.06); width:28px; height:28px; border-radius:50%; display:flex; align-items:center; justify-content:center; text-decoration:none;" title="Remove car">
+                    <i data-lucide="x" style="width:14px; height:14px;"></i>
+                  </a>
 
-        <tr style="border-bottom:1px solid var(--border-subtle);">
-          <td style="padding:14px 20px; font-weight:600; color:var(--text-muted);">Odometer Reading</td>
-          {% for car in cars %}
-            <td style="padding:14px 20px;"><strong>{{ car.mileage|floatformat:0 }}</strong> KM</td>
-          {% endfor %}
-        </tr>
+                  <!-- Image -->
+                  <div style="height:150px; background:#101820; border-radius:var(--radius-md); overflow:hidden; margin-bottom:12px; display:flex; align-items:center; justify-content:center;">
+                    {% if car.primary_image %}
+                      <img src="{{ car.primary_image.url }}" alt="{{ car.title }}" style="width:100%; height:100%; object-fit:cover;">
+                    {% else %}
+                      <i data-lucide="car" style="width:48px; height:48px; color:#38bdf8;"></i>
+                    {% endif %}
+                  </div>
 
-        <tr style="border-bottom:1px solid var(--border-subtle); background:var(--bg-surface-subtle);">
-          <td style="padding:14px 20px; font-weight:600; color:var(--text-muted);">Fuel & Powertrain</td>
-          {% for car in cars %}
-            <td style="padding:14px 20px;"><span class="badge badge-universal">{{ car.fuel_type }}</span></td>
-          {% endfor %}
-        </tr>
+                  <h3 style="font-size:1.1rem; margin:0 0 6px 0; line-height:1.3;">
+                    <a href="{% url 'used_cars:listing_detail' car.slug %}" style="color:var(--text-main); text-decoration:none;">{{ car.title }}</a>
+                  </h3>
+                  <div style="font-family:var(--font-heading); font-size:1.4rem; font-weight:800; color:var(--color-primary); margin-bottom:10px;">
+                    {{ car.formatted_inr_price }}
+                  </div>
+                  <a href="{% url 'used_cars:listing_detail' car.slug %}" class="btn btn-primary btn-sm" style="width:100%; font-size:0.8rem; padding:6px;">
+                    View Details
+                  </a>
+                </th>
+              {% endfor %}
 
-        <tr style="border-bottom:1px solid var(--border-subtle);">
-          <td style="padding:14px 20px; font-weight:600; color:var(--text-muted);">Transmission</td>
-          {% for car in cars %}
-            <td style="padding:14px 20px;">{{ car.transmission }}</td>
-          {% endfor %}
-        </tr>
+              {% for slot in empty_slots %}
+                <th style="padding:20px; width:26%; vertical-align:middle; text-align:center; border-left:1px solid var(--border-subtle); background:var(--bg-surface-elevated);">
+                  <div style="border:2px dashed var(--border-subtle); border-radius:var(--radius-lg); padding:36px 16px;">
+                    <i data-lucide="plus-circle" style="width:36px; height:36px; color:var(--text-muted); margin-bottom:8px;"></i>
+                    <div style="font-size:0.85rem; color:var(--text-muted); margin-bottom:12px;">Add Vehicle Slot</div>
+                    <a href="{% url 'used_cars:marketplace' %}" class="btn btn-secondary btn-sm" style="font-size:0.78rem;">
+                      Browse Cars
+                    </a>
+                  </div>
+                </th>
+              {% endfor %}
+            </tr>
+          </thead>
 
-        <tr style="border-bottom:1px solid var(--border-subtle); background:var(--bg-surface-subtle);">
-          <td style="padding:14px 20px; font-weight:600; color:var(--text-muted);">Inspection Score</td>
-          {% for car in cars %}
-            <td style="padding:14px 20px;"><span class="badge badge-verified">★ {{ car.condition_rating }} / 5.0</span></td>
-          {% endfor %}
-        </tr>
+          <tbody>
+            <!-- Brand & Model -->
+            <tr style="border-bottom:1px solid var(--border-subtle); {% if diff_matrix.make_model %}background:rgba(8,126,255,0.05);{% endif %}">
+              <td style="padding:14px 20px; font-weight:700; color:var(--text-muted); font-size:0.82rem; text-transform:uppercase;">Brand & Model</td>
+              {% for car in cars %}
+                <td style="padding:14px 20px; border-left:1px solid var(--border-subtle); font-weight:600;">
+                  {{ car.make_name }} {{ car.model_name }}
+                  <span style="font-size:0.78rem; color:var(--text-muted); display:block;">{{ car.variant_name|default:"Not specified" }}</span>
+                </td>
+              {% endfor %}
+              {% for slot in empty_slots %}<td style="border-left:1px solid var(--border-subtle);"></td>{% endfor %}
+            </tr>
 
-        <tr style="border-bottom:1px solid var(--border-subtle);">
-          <td style="padding:14px 20px; font-weight:600; color:var(--text-muted);">City & RTO State</td>
-          {% for car in cars %}
-            <td style="padding:14px 20px;">{{ car.location_city }}, {{ car.registration_state }}</td>
-          {% endfor %}
-        </tr>
+            <!-- Manufacturing Year -->
+            <tr style="border-bottom:1px solid var(--border-subtle); {% if diff_matrix.year %}background:rgba(8,126,255,0.05);{% endif %}">
+              <td style="padding:14px 20px; font-weight:700; color:var(--text-muted); font-size:0.82rem; text-transform:uppercase;">Manufacturing Year</td>
+              {% for car in cars %}
+                <td style="padding:14px 20px; border-left:1px solid var(--border-subtle); font-weight:600;">
+                  {{ car.year }}
+                  {% if car.registration_year %}<span style="font-size:0.75rem; color:var(--text-muted); display:block;">Reg: {{ car.registration_year }}</span>{% endif %}
+                </td>
+              {% endfor %}
+              {% for slot in empty_slots %}<td style="border-left:1px solid var(--border-subtle);"></td>{% endfor %}
+            </tr>
 
-        <tr>
-          <td style="padding:16px 20px;"></td>
-          {% for car in cars %}
-            <td style="padding:16px 20px;">
-              <a href="{% url 'used_cars:listing_detail' car.slug %}" class="btn btn-primary btn-sm" style="width:100%; justify-content:center;">
-                View Details
-              </a>
-            </td>
-          {% endfor %}
-        </tr>
-      </tbody>
-    </table>
-  </div>
+            <!-- Asking Price -->
+            <tr style="border-bottom:1px solid var(--border-subtle); {% if diff_matrix.price %}background:rgba(8,126,255,0.05);{% endif %}">
+              <td style="padding:14px 20px; font-weight:700; color:var(--text-muted); font-size:0.82rem; text-transform:uppercase;">Asking Price</td>
+              {% for car in cars %}
+                <td style="padding:14px 20px; border-left:1px solid var(--border-subtle); font-weight:800; color:var(--color-primary); font-size:1.05rem;">
+                  ₹{{ car.expected_price|floatformat:0 }}
+                </td>
+              {% endfor %}
+              {% for slot in empty_slots %}<td style="border-left:1px solid var(--border-subtle);"></td>{% endfor %}
+            </tr>
+
+            <!-- Fuel Type -->
+            <tr style="border-bottom:1px solid var(--border-subtle); {% if diff_matrix.fuel %}background:rgba(8,126,255,0.05);{% endif %}">
+              <td style="padding:14px 20px; font-weight:700; color:var(--text-muted); font-size:0.82rem; text-transform:uppercase;">Fuel Type</td>
+              {% for car in cars %}
+                <td style="padding:14px 20px; border-left:1px solid var(--border-subtle);">
+                  <span class="badge" style="background:var(--bg-surface-subtle); color:var(--text-main);">{{ car.fuel_type }}</span>
+                </td>
+              {% endfor %}
+              {% for slot in empty_slots %}<td style="border-left:1px solid var(--border-subtle);"></td>{% endfor %}
+            </tr>
+
+            <!-- Transmission -->
+            <tr style="border-bottom:1px solid var(--border-subtle); {% if diff_matrix.trans %}background:rgba(8,126,255,0.05);{% endif %}">
+              <td style="padding:14px 20px; font-weight:700; color:var(--text-muted); font-size:0.82rem; text-transform:uppercase;">Transmission</td>
+              {% for car in cars %}
+                <td style="padding:14px 20px; border-left:1px solid var(--border-subtle);">
+                  <span class="badge" style="background:var(--bg-surface-subtle); color:var(--text-main);">{{ car.transmission }}</span>
+                </td>
+              {% endfor %}
+              {% for slot in empty_slots %}<td style="border-left:1px solid var(--border-subtle);"></td>{% endfor %}
+            </tr>
+
+            <!-- Kilometres Driven -->
+            <tr style="border-bottom:1px solid var(--border-subtle); {% if diff_matrix.mileage %}background:rgba(8,126,255,0.05);{% endif %}">
+              <td style="padding:14px 20px; font-weight:700; color:var(--text-muted); font-size:0.82rem; text-transform:uppercase;">Kilometres Driven</td>
+              {% for car in cars %}
+                <td style="padding:14px 20px; border-left:1px solid var(--border-subtle); font-weight:700;">
+                  {{ car.mileage|floatformat:0 }} KM
+                </td>
+              {% endfor %}
+              {% for slot in empty_slots %}<td style="border-left:1px solid var(--border-subtle);"></td>{% endfor %}
+            </tr>
+
+            <!-- Previous Owners -->
+            <tr style="border-bottom:1px solid var(--border-subtle); {% if diff_matrix.owners %}background:rgba(8,126,255,0.05);{% endif %}">
+              <td style="padding:14px 20px; font-weight:700; color:var(--text-muted); font-size:0.82rem; text-transform:uppercase;">Previous Owners</td>
+              {% for car in cars %}
+                <td style="padding:14px 20px; border-left:1px solid var(--border-subtle);">
+                  {% if car.owners_count %}
+                    {{ car.owners_count }} Owner{% if car.owners_count > 1 %}s{% endif %}
+                  {% else %}
+                    <span style="color:var(--text-muted); font-style:italic;">Not provided</span>
+                  {% endif %}
+                </td>
+              {% endfor %}
+              {% for slot in empty_slots %}<td style="border-left:1px solid var(--border-subtle);"></td>{% endfor %}
+            </tr>
+
+            <!-- Condition -->
+            <tr style="border-bottom:1px solid var(--border-subtle); {% if diff_matrix.condition %}background:rgba(8,126,255,0.05);{% endif %}">
+              <td style="padding:14px 20px; font-weight:700; color:var(--text-muted); font-size:0.82rem; text-transform:uppercase;">Condition</td>
+              {% for car in cars %}
+                <td style="padding:14px 20px; border-left:1px solid var(--border-subtle);">
+                  {{ car.get_condition_display }}
+                </td>
+              {% endfor %}
+              {% for slot in empty_slots %}<td style="border-left:1px solid var(--border-subtle);"></td>{% endfor %}
+            </tr>
+
+            <!-- Location -->
+            <tr style="border-bottom:1px solid var(--border-subtle); {% if diff_matrix.city %}background:rgba(8,126,255,0.05);{% endif %}">
+              <td style="padding:14px 20px; font-weight:700; color:var(--text-muted); font-size:0.82rem; text-transform:uppercase;">Location</td>
+              {% for car in cars %}
+                <td style="padding:14px 20px; border-left:1px solid var(--border-subtle);">
+                  {{ car.location_city }}, {{ car.location_state }}
+                </td>
+              {% endfor %}
+              {% for slot in empty_slots %}<td style="border-left:1px solid var(--border-subtle);"></td>{% endfor %}
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
   {% else %}
-  <div class="card" style="text-align:center; padding:64px 20px;">
-    <i data-lucide="columns-3" style="width:54px; height:54px; color:var(--text-muted); margin-bottom:16px;"></i>
-    <h3>No Cars Selected for Comparison</h3>
-    <p style="color:var(--text-muted); max-width:440px; margin:8px auto 20px;">
-      Explore our used-car inventory and click the compare icon on any listing to contrast price, mileage, fuel, and inspection scores side-by-side.
-    </p>
-    <a href="{% url 'used_cars:marketplace' %}" class="btn btn-primary">
-      <i data-lucide="car"></i> Browse Marketplace
-    </a>
-  </div>
+    <!-- Empty Comparison State -->
+    <div class="card" style="padding:64px 20px; text-align:center; max-width:640px; margin:0 auto 48px auto;">
+      <div style="width:72px; height:72px; border-radius:50%; background:rgba(8,126,255,0.1); color:var(--color-primary); display:flex; align-items:center; justify-content:center; margin:0 auto 16px auto;">
+        <i data-lucide="columns-3" style="width:36px; height:36px;"></i>
+      </div>
+      <h3 style="font-size:1.3rem; margin:0 0 8px 0;">No Cars Selected for Comparison</h3>
+      <p style="color:var(--text-muted); font-size:0.95rem; margin:0 0 24px 0;">
+        You can select up to three pre-owned cars from the marketplace to evaluate specifications, pricing, odometer readings, and condition side by side.
+      </p>
+      <a href="{% url 'used_cars:marketplace' %}" class="btn btn-primary">
+        <i data-lucide="car"></i> Browse Used Cars to Compare
+      </a>
+    </div>
   {% endif %}
 </div>
 {% endblock %}
